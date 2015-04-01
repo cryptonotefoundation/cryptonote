@@ -80,7 +80,7 @@
 #define ALLOW_DEBUG_COMMANDS
 
 //TODO Put here the name of your currency
-#define CRYPTONOTE_NAME                         
+#define CRYPTONOTE_NAME                         "worldnote"
 #define CRYPTONOTE_BLOCKS_FILENAME              "blocks.dat"
 #define CRYPTONOTE_BLOCKINDEXES_FILENAME        "blockindexes.dat"
 #define CRYPTONOTE_BLOCKSCACHE_FILENAME         "blockscache.dat"
