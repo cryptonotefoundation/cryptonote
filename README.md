@@ -205,7 +205,7 @@ Recompile everything again. Your coin code is ready now. Make an announcement fo
 
 ### On *nix
 
-Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.55.
+Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.53 (except 1.54, more details here: http://goo.gl/RrCFmA).
 
 You may download them from:
 
