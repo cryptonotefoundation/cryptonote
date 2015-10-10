@@ -86,7 +86,7 @@ const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;
 
 //TODO This port will be used by the daemon to establish connections with p2p network
 const int      P2P_DEFAULT_PORT                              = ;
-//TODO This port will be used by the daemon to interact with simlewallet
+//TODO This port will be used by the daemon to interact with simplewallet
 const int      RPC_DEFAULT_PORT                              = ;
 
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000;
