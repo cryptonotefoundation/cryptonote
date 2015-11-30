@@ -113,8 +113,8 @@ const std::initializer_list<const char*> SEED_NODES = {
 struct CheckpointData {
   uint32_t height;
   const char* blockId;
-};
 
+};
 #ifdef __GNUC__
 __attribute__((unused))
 #endif
