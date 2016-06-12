@@ -230,7 +230,7 @@ Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may 
 * http://www.cmake.org/
 * http://www.boost.org/
 
-To build, change to a directory where this file is located, and run theas commands: 
+To build, change to a directory where this file is located, and run these commands: 
 ```
 mkdir build
 cd build
