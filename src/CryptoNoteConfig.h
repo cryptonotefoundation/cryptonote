@@ -2,6 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+// Modified for the Atomik Crypto Security
+// Rahim Khoja
+// Khoja Holding Corp
+
 #pragma once
 
 #include <cstdint>
@@ -36,7 +40,7 @@ const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 8;
 //TODO Define minimum fee for transactions
 const uint64_t MINIMUM_FEE                                   = 0;
-const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE;
+const uint64_t DEFAULT_DUST_THRESHOLD                        = 0;
 
 //TODO Define preferred block's target time
 const uint64_t DIFFICULTY_TARGET                             = 120; // seconds
@@ -48,8 +52,8 @@ const size_t   DIFFICULTY_CUT                                = 60;  // timestamp
 const size_t   DIFFICULTY_LAG                                = 15;
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-const size_t   MAX_BLOCK_SIZE_INITIAL                        =  20 * 1024;
-const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 100 * 1024;
+const size_t   MAX_BLOCK_SIZE_INITIAL                        =  30 * 512;
+const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 128 * 1280;
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET;
 
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1;
@@ -72,8 +76,7 @@ const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      = "blockchainindice
 const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json";
 } // parameters
 
-//TODO Put here the name of your currency
-const char     CRYPTONOTE_NAME[]                             = "Atomik";
+const char     CRYPTONOTE_NAME[]                             = "Atomik Crypto Security";
 const char     GENESIS_COINBASE_TX_HEX[]                     = "";
 
 const uint8_t  CURRENT_TRANSACTION_VERSION                   =  1;
@@ -106,8 +109,8 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "8f80f9a5a434a9f1
 
 //TODO Add here your network seed nodes
 const std::initializer_list<const char*> SEED_NODES = {
-  //"your_seed_ip1.com:8080",
-  //"your_seed_ip2.com:8080",
+  "seed-01.atomik.io:8080",
+  "seed-01.atomik.io:8080",
 };
 
 struct CheckpointData {
