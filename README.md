@@ -50,7 +50,7 @@ const uint64_t MONEY_SUPPLY = (uint64_t)(-1);
 
 **2. Emission curve** (src/CryptoNoteConfig.h)
 
-Be default CryptoNote provides emission formula with slight decrease of block reward with each block. This is different from Bitcoin where block reward halves every 4 years.
+By default CryptoNote provides emission formula with slight decrease of block reward with each block. This is different from Bitcoin where block reward halves every 4 years.
 
 `EMISSION_SPEED_FACTOR` constant defines emission curve slope. This parameter is required to calulate block reward. 
 
