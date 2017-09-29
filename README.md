@@ -1,5 +1,5 @@
 
-* Drachmes is based on [Bytecoin](htts://bytecoin.org) and [CryptoNote](https://cryptonote.org)
+* Drachmes is based on [Bytecoin](https://bytecoin.org) and [CryptoNote](https://cryptonote.org)
 * Discussion board and support: [Drachmes Forum](https://forum.drachmes.org) - Coming soon.
 
 ## How to build Drachmes
