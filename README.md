@@ -1,9 +1,8 @@
 
-* Drachmes is based on Bytecoin and CryptoNote
-* CryptoNote reference implementation: [CryptoNoteCoin](https://cryptonote-coin.org)
+* Drachmes is based on [Bytecoin](htts://bytecoin.org) and [CryptoNote](https://cryptonote.org)
 * Discussion board and support: [Drachmes Forum](https://forum.drachmes.org) - Coming soon.
 
-## Build CryptoNote
+## How to build Drachmes
 
 ### On *nix:
 
@@ -22,7 +21,7 @@ Debug build: run `make build-debug'.
 Test suite: run `make test-release' to run tests in addition to building. Running `make test-debug' will do the same to the debug version.
 Building with Clang: it may be possible to use Clang instead of GCC, but this may not work everywhere. To build, run `export CC=clang CXX=clang++' before running `make'.
 
-On Windows:
+### On Windows:
 Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may download them from:
 http://www.microsoft.com/
 http://www.cmake.org/
