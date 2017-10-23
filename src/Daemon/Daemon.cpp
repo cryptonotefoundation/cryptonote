@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-Dopesd --print-genesis-tx
+
 #include "version.h"
 
 #include <boost/filesystem.hpp>
@@ -51,7 +51,7 @@ namespace
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
 
-void print_genesis_tx_hex() {
+void Dopesd --print-genesis-tx() {
   Logging::ConsoleLogger logger;
   CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logger).generateGenesisTransaction();
   CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
