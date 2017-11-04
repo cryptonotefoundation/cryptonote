@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -27,7 +40,7 @@ namespace CryptoNote {
     ~miner();
 
     bool init(const MinerConfig& config);
-    bool set_block_template(const Block& bl, const difficulty_type& diffic);
+    bool set_block_template(const BlockTemplate& bl, const Difficulty& diffic);
     bool on_block_chain_update();
     bool start(const AccountPublicAddress& adr, size_t threads_count);
     uint64_t get_speed();
@@ -37,7 +50,7 @@ namespace CryptoNote {
     bool on_idle();
     void on_synchronized();
     //synchronous analog (for fast calls)
-    static bool find_nonce_for_given_block(Crypto::cn_context &context, Block& bl, const difficulty_type& diffic);
+    static bool find_nonce_for_given_block(Crypto::cn_context &context, BlockTemplate& bl, const Difficulty& diffic);
     void pause();
     void resume();
     void do_print_hashrate(bool do_hr);
@@ -60,10 +73,10 @@ namespace CryptoNote {
 
     std::atomic<bool> m_stop;
     std::mutex m_template_lock;
-    Block m_template;
+    BlockTemplate m_template;
     std::atomic<uint32_t> m_template_no;
     std::atomic<uint32_t> m_starter_nonce;
-    difficulty_type m_diffic;
+    Difficulty m_diffic;
 
     std::atomic<uint32_t> m_threads_total;
     std::atomic<int32_t> m_pausers_count;

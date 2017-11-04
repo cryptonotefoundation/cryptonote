@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <gtest/gtest.h>
 
@@ -95,12 +108,12 @@ void loadBlockchainInfo(const std::string& filename, BlockchainInfo& bc) {
 
 
 class NodeTest: public BaseTest {
-
 protected:
-
   void startNetworkWithBlockchain(const std::string& sourcePath);
   void readBlockchainInfo(INode& node, BlockchainInfo& bc);
   void dumpBlockchainInfo(INode& node);
+
+  const std::string TEST_WALLET_FILE = "wallet.bin";
 };
 
 void NodeTest::startNetworkWithBlockchain(const std::string& sourcePath) {
@@ -167,7 +180,10 @@ void NodeTest::dumpBlockchainInfo(INode& node) {
 
 
 TEST_F(NodeTest, generateBlockchain) {
-  
+  if (boost::filesystem::exists(TEST_WALLET_FILE)) {
+    boost::filesystem::remove(TEST_WALLET_FILE);
+  }
+
   auto networkCfg = TestNetworkBuilder(2, Topology::Ring).build();
   networkCfg[0].cleanupDataDir = false;
   network.addNodes(networkCfg);
@@ -180,9 +196,9 @@ TEST_F(NodeTest, generateBlockchain) {
     ASSERT_TRUE(daemon.makeINode(mainNode));
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode);
+    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
-    wallet.initialize(password);
+    wallet.initialize(TEST_WALLET_FILE, password);
 
     std::string minerAddress = wallet.createAddress();
     daemon.startMining(1, minerAddress);
@@ -196,8 +212,7 @@ TEST_F(NodeTest, generateBlockchain) {
 
     daemon.stopMining();
 
-    std::ofstream walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
-    wallet.save(walletFile);
+    wallet.save();
     wallet.shutdown();
 
     dumpBlockchainInfo(*mainNode);
@@ -206,7 +221,7 @@ TEST_F(NodeTest, generateBlockchain) {
 
 TEST_F(NodeTest, dumpBlockchain) {
   startNetworkWithBlockchain("testnet_300");
-  auto& daemon = network.getNode(0);
+  //auto& daemon = network.getNode(0);
   auto mainNode = network.getNode(0).makeINode();
   dumpBlockchainInfo(*mainNode);
 }
@@ -228,12 +243,8 @@ TEST_F(NodeTest, addMoreBlocks) {
     auto startHeight = daemon.getLocalHeight();
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode);
-
-    {
-      std::ifstream walletFile("wallet.bin", std::ios::binary);
-      wallet.load(walletFile, password);
-    }
+    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
+    wallet.load(TEST_WALLET_FILE, password);
 
     std::string minerAddress = wallet.getAddress(0);
     daemon.startMining(1, minerAddress);
@@ -247,8 +258,7 @@ TEST_F(NodeTest, addMoreBlocks) {
 
     daemon.stopMining();
 
-    std::ofstream walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
-    wallet.save(walletFile);
+    wallet.save();
     wallet.shutdown();
 
     dumpBlockchainInfo(*mainNode);
@@ -296,7 +306,7 @@ TEST_F(NodeTest, queryBlocks) {
   auto startBlockIter = std::find_if(blocks.begin(), blocks.end(), [](const BlockShortEntry& e) { return e.hasBlock; });
   ASSERT_TRUE(startBlockIter != blocks.end());
 
-  const Block& startBlock = startBlockIter->block;
+  const BlockTemplate& startBlock = startBlockIter->block;
 
   std::cout << "Starting block timestamp: " << startBlock.timestamp << std::endl;
   auto startFullIndex = std::distance(blocks.begin(), startBlockIter);

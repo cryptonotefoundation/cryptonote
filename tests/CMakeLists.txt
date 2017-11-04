@@ -13,15 +13,18 @@ file(GLOB_RECURSE SystemTests System/*)
 file(GLOB_RECURSE TestGenerator TestGenerator/*)
 file(GLOB_RECURSE TransfersTests TransfersTests/*)
 file(GLOB_RECURSE UnitTests UnitTests/*)
+file(GLOB_RECURSE TestsCommon Common/*)
 
 file(GLOB_RECURSE CryptoNoteProtocol ../src/CryptoNoteProtocol/*)
 file(GLOB_RECURSE P2p ../src/P2p/*)
 
-source_group("" FILES ${CoreTests} ${CryptoTests} ${FunctionalTests} ${IntegrationTestLibrary} ${IntegrationTests} ${NodeRpcProxyTests} ${PerformanceTests} ${SystemTests} ${TestGenerator} ${TransfersTests} ${UnitTests})
+source_group("" FILES ${CryptoTests} ${FunctionalTests} ${IntegrationTestLibrary} ${IntegrationTests} ${NodeRpcProxyTests} ${PerformanceTests} ${SystemTests} ${TestGenerator} ${TransfersTests} ${UnitTests})
 source_group("" FILES ${CryptoNoteProtocol} ${P2p})
 
 add_library(IntegrationTestLibrary ${IntegrationTestLibrary})
 add_library(TestGenerator ${TestGenerator})
+add_library(UnitTestsLib ${UnitTests})
+add_library(TestsCommon ${TestsCommon})
 
 add_executable(CoreTests ${CoreTests})
 add_executable(CryptoTests ${CryptoTests})
@@ -36,8 +39,8 @@ add_executable(DifficultyTests Difficulty/Difficulty.cpp)
 add_executable(HashTargetTests HashTarget.cpp)
 add_executable(HashTests Hash/main.cpp)
 
-target_link_libraries(CoreTests TestGenerator CryptoNoteCore Serialization System Logging Common Crypto BlockchainExplorer ${Boost_LIBRARIES})
-target_link_libraries(IntegrationTests IntegrationTestLibrary Wallet NodeRpcProxy InProcessNode P2P Rpc Http Transfers Serialization System CryptoNoteCore Logging Common Crypto BlockchainExplorer gtest upnpc-static ${Boost_LIBRARIES})
+target_link_libraries(CoreTests TestGenerator TestsCommon CryptoNoteCore Serialization System Logging Common Crypto BlockchainExplorer UnitTestsLib ${Boost_LIBRARIES})
+target_link_libraries(IntegrationTests IntegrationTestLibrary TestsCommon Wallet NodeRpcProxy InProcessNode P2P Rpc Http Transfers Serialization System CryptoNoteCore Logging Common Crypto BlockchainExplorer gtest upnpc-static ${Boost_LIBRARIES})
 target_link_libraries(NodeRpcProxyTests NodeRpcProxy CryptoNoteCore Rpc Http Serialization System Logging Common Crypto ${Boost_LIBRARIES})
 target_link_libraries(PerformanceTests CryptoNoteCore Serialization Logging Common Crypto ${Boost_LIBRARIES})
 target_link_libraries(SystemTests System gtest_main)
@@ -47,8 +50,8 @@ if (MSVC)
   target_link_libraries(CoreTests ws2_32)
 endif ()
 
-target_link_libraries(TransfersTests IntegrationTestLibrary Wallet gtest_main InProcessNode NodeRpcProxy P2P Rpc Http BlockchainExplorer CryptoNoteCore Serialization System Logging Transfers Common Crypto upnpc-static ${Boost_LIBRARIES})
-target_link_libraries(UnitTests gtest_main PaymentGate Wallet TestGenerator InProcessNode NodeRpcProxy Rpc Http Transfers Serialization System Logging BlockchainExplorer Common CryptoNoteCore Crypto ${Boost_LIBRARIES})
+target_link_libraries(TransfersTests IntegrationTestLibrary TestsCommon Wallet gtest_main InProcessNode NodeRpcProxy P2P Rpc Http BlockchainExplorer CryptoNoteCore Serialization System Logging Transfers Common Crypto upnpc-static ${Boost_LIBRARIES})
+target_link_libraries(UnitTests gtest_main PaymentGate Wallet TestGenerator InProcessNode NodeRpcProxy Rpc P2P upnpc-static Http Transfers Serialization System Logging BlockchainExplorer CryptoNoteCore Common Crypto ${Boost_LIBRARIES})
 
 target_link_libraries(DifficultyTests CryptoNoteCore Serialization Crypto Logging Common ${Boost_LIBRARIES})
 target_link_libraries(HashTargetTests CryptoNoteCore Crypto)
@@ -58,7 +61,7 @@ if(NOT MSVC)
   set_property(TARGET gtest gtest_main IntegrationTestLibrary IntegrationTests TestGenerator UnitTests SystemTests HashTargetTests TransfersTests APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-undef -Wno-sign-compare")
 endif()
 
-add_custom_target(tests DEPENDS CoreTests IntegrationTests NodeRpcProxyTests PerformanceTests SystemTests TransfersTests UnitTests DifficultyTests HashTargetTests)
+add_custom_target(tests DEPENDS IntegrationTests NodeRpcProxyTests PerformanceTests SystemTests TransfersTests UnitTests DifficultyTests HashTargetTests)
 
 set_property(TARGET
   tests

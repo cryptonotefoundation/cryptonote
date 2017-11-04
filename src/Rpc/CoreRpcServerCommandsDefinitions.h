@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -9,7 +22,11 @@
 #include "CryptoNoteCore/Difficulty.h"
 #include "crypto/hash.h"
 
+#include "BlockchainExplorerData.h"
+
 #include "Serialization/SerializationOverloads.h"
+#include "Serialization/BlockchainExplorerDataSerialization.h"
+#include <CryptoNoteCore/ICoreDefinitions.h>
 
 namespace CryptoNote {
 //-----------------------------------------------
@@ -53,17 +70,10 @@ struct COMMAND_RPC_GET_BLOCKS_FAST {
   };
 
   struct response {
-    std::vector<block_complete_entry> blocks;
+    std::vector<RawBlock> blocks;
     uint64_t start_height;
     uint64_t current_height;
     std::string status;
-
-    void serialize(ISerializer &s) {
-      KV_MEMBER(blocks)
-      KV_MEMBER(start_height)
-      KV_MEMBER(current_height)
-      KV_MEMBER(status)
-    }
   };
 };
 //-----------------------------------------------
@@ -165,7 +175,7 @@ struct COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES {
 //-----------------------------------------------
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request {
   std::vector<uint64_t> amounts;
-  uint64_t outs_count;
+  uint16_t outs_count;
 
   void serialize(ISerializer &s) {
     KV_MEMBER(amounts)
@@ -175,7 +185,7 @@ struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request {
 
 #pragma pack(push, 1)
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry {
-  uint64_t global_amount_index;
+  uint32_t global_amount_index;
   Crypto::PublicKey out_key;
 };
 #pragma pack(pop)
@@ -366,10 +376,10 @@ struct block_header_response {
   std::string prev_hash;
   uint32_t nonce;
   bool orphan_status;
-  uint64_t height;
-  uint64_t depth;
+  uint32_t height;
+  uint32_t depth;
   std::string hash;
-  difficulty_type difficulty;
+  Difficulty difficulty;
   uint64_t reward;
 
   void serialize(ISerializer &s) {
@@ -479,6 +489,88 @@ struct COMMAND_RPC_QUERY_BLOCKS_LITE {
       KV_MEMBER(currentHeight)
       KV_MEMBER(fullOffset)
       KV_MEMBER(items)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HASHES {
+  struct request {
+    std::vector<Crypto::Hash> blockHashes;
+
+    void serialize(ISerializer& s) {
+      serializeAsBinary(blockHashes, "blockHashes", s);
+    }
+  };
+
+  struct response {
+    std::vector<BlockDetails> blocks;
+    std::string status;
+
+    void serialize(ISerializer& s) {
+      KV_MEMBER(status)
+      KV_MEMBER(blocks)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_BLOCKS_HASHES_BY_TIMESTAMPS {
+  struct request {
+    uint64_t timestampBegin;
+    uint64_t secondsCount;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(timestampBegin)
+      KV_MEMBER(secondsCount)
+    }
+  };
+
+  struct response {
+    std::vector<Crypto::Hash> blockHashes;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(status)
+      KV_MEMBER(blockHashes)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_TRANSACTION_HASHES_BY_PAYMENT_ID {
+  struct request {
+    Crypto::Hash paymentId;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(paymentId)
+    }
+  };
+
+  struct response {
+    std::vector<Crypto::Hash> transactionHashes;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(status)
+      serializeAsBinary(transactionHashes, "transactionHashes", s);
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_TRANSACTION_DETAILS_BY_HASHES {
+  struct request {
+    std::vector<Crypto::Hash> transactionHashes;
+
+    void serialize(ISerializer &s) {
+      serializeAsBinary(transactionHashes, "transactionHashes", s);
+    }
+  };
+
+  struct response {
+    std::vector<TransactionDetails> transactions;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(status)
+      KV_MEMBER(transactions)
     }
   };
 };

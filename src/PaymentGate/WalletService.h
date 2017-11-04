@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -20,6 +33,10 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 
+namespace CryptoNote {
+class IFusionManager;
+}
+
 namespace PaymentService {
 
 struct WalletConfiguration {
@@ -27,21 +44,25 @@ struct WalletConfiguration {
   std::string walletPassword;
 };
 
-void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfiguration &conf, Logging::ILogger &logger, System::Dispatcher& dispatcher);
+void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfiguration& conf, Logging::ILogger& logger, System::Dispatcher& dispatcher);
 
 struct TransactionsInBlockInfoFilter;
 
 class WalletService {
 public:
-  WalletService(const CryptoNote::Currency& currency, System::Dispatcher& sys, CryptoNote::INode& node, CryptoNote::IWallet& wallet, const WalletConfiguration& conf, Logging::ILogger& logger);
+  WalletService(const CryptoNote::Currency& currency, System::Dispatcher& sys, CryptoNote::INode& node, CryptoNote::IWallet& wallet,
+    CryptoNote::IFusionManager& fusionManager, const WalletConfiguration& conf, Logging::ILogger& logger);
   virtual ~WalletService();
 
   void init();
   void saveWallet();
 
+  std::error_code saveWalletNoThrow();
+  std::error_code exportWallet(const std::string& fileName);
   std::error_code resetWallet();
   std::error_code replaceWithNewWallet(const std::string& viewSecretKey);
   std::error_code createAddress(const std::string& spendSecretKeyText, std::string& address);
+  std::error_code createAddressList(const std::vector<std::string>& spendSecretKeysText, std::vector<std::string>& addresses);
   std::error_code createAddress(std::string& address);
   std::error_code createTrackingAddress(const std::string& spendPublicKeyText, std::string& address);
   std::error_code deleteAddress(const std::string& address);
@@ -67,6 +88,9 @@ public:
   std::error_code sendDelayedTransaction(const std::string& transactionHash);
   std::error_code getUnconfirmedTransactionHashes(const std::vector<std::string>& addresses, std::vector<std::string>& transactionHashes);
   std::error_code getStatus(uint32_t& blockCount, uint32_t& knownBlockCount, std::string& lastBlockHash, uint32_t& peerCount);
+  std::error_code sendFusionTransaction(uint64_t threshold, uint32_t anonymity, const std::vector<std::string>& addresses,
+    const std::string& destinationAddress, std::string& transactionHash);
+  std::error_code estimateFusion(uint64_t threshold, const std::vector<std::string>& addresses, uint32_t& fusionReadyCount, uint32_t& totalOutputCount);
 
 private:
   void refresh();
@@ -88,6 +112,7 @@ private:
 
   const CryptoNote::Currency& currency;
   CryptoNote::IWallet& wallet;
+  CryptoNote::IFusionManager& fusionManager;
   CryptoNote::INode& node;
   const WalletConfiguration& config;
   bool inited;

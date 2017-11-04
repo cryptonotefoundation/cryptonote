@@ -1,12 +1,26 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
 #include <vector>
 
 #include "Common/Util.h"
+#include "CryptoNoteConfig.h"
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
@@ -119,7 +133,7 @@ TEST(parse_and_validate_tx_extra, is_valid_tx_extra_parsed)
   CryptoNote::AccountBase acc;
   acc.generate();
   CryptoNote::BinaryArray b = Common::asBinaryArray("dsdsdfsdfsf");
-  ASSERT_TRUE(currency.constructMinerTx(0, 0, 10000000000000, 1000, currency.minimumFee(), acc.getAccountKeys().address, tx, b, 1));
+  ASSERT_TRUE(currency.constructMinerTx(CryptoNote::BLOCK_MAJOR_VERSION_1, 0, 0, 10000000000000, 1000, currency.minimumFee(), acc.getAccountKeys().address, tx, b, 1));
   Crypto::PublicKey tx_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(tx.extra);
   ASSERT_NE(tx_pub_key, CryptoNote::NULL_PUBLIC_KEY);
 }
@@ -131,7 +145,7 @@ TEST(parse_and_validate_tx_extra, fails_on_big_extra_nonce)
   CryptoNote::AccountBase acc;
   acc.generate();
   CryptoNote::BinaryArray b(TX_EXTRA_NONCE_MAX_COUNT + 1, 0);
-  ASSERT_FALSE(currency.constructMinerTx(0, 0, 10000000000000, 1000, currency.minimumFee(), acc.getAccountKeys().address, tx, b, 1));
+  ASSERT_FALSE(currency.constructMinerTx(CryptoNote::BLOCK_MAJOR_VERSION_1, 0, 0, 10000000000000, 1000, currency.minimumFee(), acc.getAccountKeys().address, tx, b, 1));
 }
 TEST(parse_and_validate_tx_extra, fails_on_wrong_size_in_extra_nonce)
 {

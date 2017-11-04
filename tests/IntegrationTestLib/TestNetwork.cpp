@@ -1,20 +1,32 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TestNetwork.h"
 
 #include <fstream>
 #include <boost/filesystem.hpp>
 
-#include "CryptoNoteConfig.h"
 #include "InProcTestNode.h"
 #include "RPCTestNode.h"
 
 #ifdef _WIN32
-const std::string daemonExec = std::string(CryptoNote::CRYPTONOTE_NAME) + "d.exe";
+const std::string bytecoinDaemon = "bytecoind.exe";
 #else
-const std::string daemonExec = std::string(CryptoNote::CRYPTONOTE_NAME) + "d";
+const std::string bytecoinDaemon = "bytecoind";
 #endif
 
 namespace {
@@ -123,9 +135,9 @@ TestNodeConfiguration TestNetworkBuilder::buildNodeConfiguration(size_t index) {
     cfg.blockchainLocation = blockchainLocation;
   }
 
-  cfg.daemonPath = daemonExec; // default
+  cfg.daemonPath = bytecoinDaemon; // default
   cfg.testnet = testnet;
-  cfg.logFile = std::string("test_") + CryptoNote::CRYPTONOTE_NAME + "d" + std::to_string(index) + ".log";
+  cfg.logFile = "test_bytecoind" + std::to_string(index) + ".log";
 
   uint16_t rpcPort = static_cast<uint16_t>(rpcBasePort + index);
   uint16_t p2pPort = static_cast<uint16_t>(p2pBasePort + index);
@@ -183,7 +195,7 @@ void TestNetwork::addNode(const TestNodeConfiguration& cfg) {
 
   switch (cfg.nodeType) {
   case NodeType::InProcess:
-    node.reset(new InProcTestNode(cfg, m_currency));
+    node.reset(new InProcTestNode(cfg, m_currency, m_dispatcher));
     break;
   case NodeType::RPC:
     node = startDaemon(cfg);

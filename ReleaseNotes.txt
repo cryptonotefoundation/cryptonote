@@ -1,44 +1,95 @@
-Release notes 1.1.1
+Release notes 2.0.1
 
-- New API for CryptoNote RPC Wallet
+- Bytecoin RPC Wallet API improvements
 
-Release notes 1.1.0
+Release notes 2.0.0
 
-- CryptoNote RPC Wallet
-- Aggregate multi-addresses for CryptoNote RPC Wallet
-- Fusion transactions
-- Transactions pool synchronization
-- Wallet synchronization speed increase
+- Completely revamped CryptoNote core
+- Blockchain storage changed to DB
+
+Release notes 1.0.11
+
+- New Bytecoin Wallet file format
+- Daemon loading optimization
+
+Release notes 1.0.10
+
+- Blocksize increase
+- Fusion transactions for Bytecoin RPC Wallet
+- Bytecoin RPC Wallet API improvements
+
+Release notes 1.0.9
+
+- New API for Bytecoin RPC Wallet
+- Various improvements
+
+Release notes 1.0.8
+
+- Fusion transactions for Bytecoin Wallet
+- IWallet high-level API update
+- JSON RPC improvements
+- Synchronization improvements for OS X
+
+Release notes 1.0.7
+
+- Fusion transactions support
+- Various simplewallet improvements
+
+Release notes 1.0.6
+
 - High-level API update
+- Aggregate multi-addresses for Bytecoin RPC Wallet
+- Wallet synchronization speed increase
 
+Release notes 1.0.5
+
+- High-level API for blockchain explorer
 - Full network layer refactoring
+- Transactions pool synchronization
+- list_transactions method for RPC Wallet
+- Various improvements
+
+Release notes 1.0.4
+
+- Bytecoin RPC Wallet
 - New multithreading library
 - Improved console logging
-- JSON RPC improvements
+- Further optimizations
+
+Release notes 1.0.3
+
+- Multisignature API
+- Low level API
+- High level API improvements
+- Instant transaction pool notifications
+- Fully refactored simplewallet
 
 Release notes 1.0.2
 
-- Multisignature with API
-- Low level API
-- High level API improvements
-- Updated block reward scheme
-- Dynamic maximum block size limit
-
-- Instant transaction pool notifications
-- Transaction priority based on tx fee
-- Transactions are returned from tx pools after 24 hours
-
-- Fully refactored simplewallet
 - Transaction history for simplewallet
 - Reset command for simplewallet
-- Faster wallet refresh
-
-- Further optimization in daemon RAM consumption
-- Various network health updates
-- Config and CryptoNote forking how-to update
+- Various simplewallet improvements
 
 Release notes 1.0.1
 
+- Fix transfers in simplewallet
+
+Release notes 1.0.0
+
+- Multi-signatures
+- Updated block reward scheme
+- Further optimization in daemon RAM consumption
+- Faster wallet refresh
+- Transaction priority based on tx fee
+- Transactions are returned from tx pools after 24 hours
+- Dynamic maximum block size limit
+- Reduced default transaction fee 
+- Various network health updates
+
+Release notes 0.8.11
+
+- Increased minimum transaction fee
+- Transaction pool optimizations
 - High level API implementation
 - CryptoNight hash function optimization
 - Improvements for wallet JSON RPC API

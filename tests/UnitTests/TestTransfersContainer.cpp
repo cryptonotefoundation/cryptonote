@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -31,7 +44,7 @@ namespace {
 
     TransfersContainerTest() : 
       currency(CurrencyBuilder(logger).currency()), 
-      container(currency, TEST_TRANSACTION_SPENDABLE_AGE), 
+      container(currency, logger, TEST_TRANSACTION_SPENDABLE_AGE), 
       account(generateAccountKeys()) {   
     }
 
@@ -58,7 +71,7 @@ namespace {
       return tx;
     }
 
-    std::unique_ptr<ITransactionReader> addSpendingTransaction(const Hash& sourceTx, uint64_t height, uint32_t outputIndex, uint64_t amount = TEST_OUTPUT_AMOUNT) {
+    std::unique_ptr<ITransactionReader> addSpendingTransaction(const Hash& sourceTx, uint32_t height, uint32_t outputIndex, uint64_t amount = TEST_OUTPUT_AMOUNT) {
       auto outputs = container.getTransactionOutputs(sourceTx, ITransfersContainer::IncludeTypeAll |
         ITransfersContainer::IncludeStateUnlocked | ITransfersContainer::IncludeStateSoftLocked);
 
@@ -576,7 +589,7 @@ TEST_F(TransfersContainer_deleteUnconfirmedTransaction, deleteTx) {
 //--------------------------------------------------------------------------- 
 class TransfersContainer_markTransactionConfirmed : public TransfersContainerTest {
 public:
-  bool markConfirmed(const Hash& txHash, uint64_t height = TEST_BLOCK_HEIGHT, 
+  bool markConfirmed(const Hash& txHash, uint32_t height = TEST_BLOCK_HEIGHT, 
     const std::vector<uint32_t>& globalIndices = { TEST_TRANSACTION_OUTPUT_GLOBAL_INDEX }) {
     return container.markTransactionConfirmed(blockInfo(height), txHash, globalIndices);
   }

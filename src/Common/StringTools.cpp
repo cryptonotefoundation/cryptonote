@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StringTools.h"
 #include <fstream>
+#include <iomanip>
 
 namespace Common {
 
@@ -329,12 +343,14 @@ std::string timeIntervalToString(uint64_t intervalInSeconds) {
   tail = tail % (60);
   auto seconds = tail;
 
-  return 
-    "d" + std::to_string(days) + 
-    ".h" + std::to_string(hours) + 
-    ".m" + std::to_string(minutes) +
-    ".s" + std::to_string(seconds);
-}
+  std::stringstream ss;
+  ss << "d" << days <<
+    std::setfill('0') <<
+    ".h" << std::setw(2) << hours <<
+    ".m" << std::setw(2) << minutes <<
+    ".s" << std::setw(2) << seconds;
 
+  return ss.str();
+}
 
 }

@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "BaseFunctionalTests.h"
 
@@ -19,7 +32,6 @@
 #include <System/InterruptedException.h>
 
 #include "P2p/NetNodeConfig.h"
-#include "CryptoNoteCore/CoreConfig.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "WalletLegacy/WalletLegacy.h"
 
@@ -35,9 +47,9 @@
 #endif
 
 #ifdef _WIN32
-const std::string DAEMON_FILENAME = std::string(CRYPTONOTE_NAME) + "d.exe";
+const std::string DAEMON_FILENAME = "bytecoind.exe";
 #else
-const std::string DAEMON_FILENAME = std::string(CRYPTONOTE_NAME) + "d";
+const std::string DAEMON_FILENAME = "bytecoind";
 #endif
 
 using namespace Tests::Common;
@@ -69,7 +81,7 @@ void BaseFunctionalTests::launchInprocTestnet(size_t count, Topology t) {
 
   for (size_t i = 0; i < m_testnetSize; ++i) {
     auto cfg = createNodeConfiguration(i);
-    nodeDaemons.emplace_back(new InProcTestNode(cfg, m_currency));
+    nodeDaemons.emplace_back(new InProcTestNode(cfg, m_currency, m_dispatcher));
   }
 
   waitDaemonsReady();
@@ -93,7 +105,7 @@ void BaseFunctionalTests::launchTestnetWithInprocNode(size_t count, Topology t) 
   }
 
   auto cfg = createNodeConfiguration(m_testnetSize - 1);
-  nodeDaemons[m_testnetSize - 1].reset(new InProcTestNode(cfg, m_currency));
+  nodeDaemons[m_testnetSize - 1].reset(new InProcTestNode(cfg, m_currency, m_dispatcher));
 
   waitDaemonsReady();
 
@@ -154,7 +166,7 @@ void BaseFunctionalTests::startNode(size_t index) {
     << "rpc-bind-port=" << rpcPort << std::endl
     << "p2p-bind-port=" << p2pPort << std::endl
     << "log-level=4" << std::endl
-    << "log-file=test_" << CRYPTONOTE_NAME << "d_" << index << ".log" << std::endl;
+    << "log-file=test_bytecoind_" << index << ".log" << std::endl;
 
   switch (m_topology) {
   case Line:
@@ -189,7 +201,7 @@ void BaseFunctionalTests::startNode(size_t index) {
   }
 
 #if defined WIN32
-  std::string commandLine = "start /MIN \"" + std::string(CRYPTONOTE_NAME) + "d" + std::to_string(index) + "\" \"" + daemonPath.string() +
+  std::string commandLine = "start /MIN \"bytecoind" + std::to_string(index) + "\" \"" + daemonPath.string() +
     "\" --testnet --data-dir=\"" + dataDirPath + "\" --config-file=daemon.conf";
   LOG_DEBUG(commandLine);
   system(commandLine.c_str());
@@ -201,7 +213,7 @@ void BaseFunctionalTests::startNode(size_t index) {
     close(2);
     std::string dataDir = "--data-dir=" + dataDirPath + "";
     LOG_TRACE(pathToDaemon);
-    if (execl(pathToDaemon.c_str(), (std::string(CRYPTONOTE_NAME) + "d").c_str(), "--testnet", dataDir.c_str(), "--config-file=daemon.conf", NULL) == -1) {
+    if (execl(pathToDaemon.c_str(), "bytecoind", "--testnet", dataDir.c_str(), "--config-file=daemon.conf", NULL) == -1) {
       LOG_ERROR(TO_STRING(errno));
     }
     abort();
@@ -296,7 +308,7 @@ namespace {
 
 bool BaseFunctionalTests::mineBlocks(TestNode& node, const CryptoNote::AccountPublicAddress& address, size_t blockCount) {
   for (size_t i = 0; i < blockCount; ++i) {
-    Block blockTemplate;
+    BlockTemplate blockTemplate;
     uint64_t difficulty;
 
     if (!node.getBlockTemplate(m_currency.accountAddressAsString(address), blockTemplate, difficulty)) {
@@ -315,9 +327,28 @@ bool BaseFunctionalTests::mineBlocks(TestNode& node, const CryptoNote::AccountPu
   return true;
 }
 
-bool BaseFunctionalTests::prepareAndSubmitBlock(TestNode& node, CryptoNote::Block&& blockTemplate) {
+bool BaseFunctionalTests::prepareAndSubmitBlock(TestNode& node, CryptoNote::BlockTemplate&& blockTemplate) {
   blockTemplate.timestamp = m_nextTimestamp;
   m_nextTimestamp += 2 * m_currency.difficultyTarget();
+
+  if (blockTemplate.majorVersion >= BLOCK_MAJOR_VERSION_2) {
+    blockTemplate.parentBlock.majorVersion = BLOCK_MAJOR_VERSION_1;
+    blockTemplate.parentBlock.minorVersion = BLOCK_MINOR_VERSION_0;
+    blockTemplate.parentBlock.transactionCount = 1;
+
+    
+    CryptoNote::TransactionExtraMergeMiningTag mmTag;
+    mmTag.depth = 0;
+    //FIXME
+    /* if (!CryptoNote::get_aux_block_header_hash(blockTemplate, mmTag.merkleRoot)) { */
+    /*   return false; */
+    /* } */
+
+    blockTemplate.parentBlock.baseTransaction.extra.clear();
+    if (!CryptoNote::appendMergeMiningTagToExtra(blockTemplate.parentBlock.baseTransaction.extra, mmTag)) {
+      return false;
+    }
+  }
 
   BinaryArray blockBlob = CryptoNote::toBinaryArray(blockTemplate);
   return node.submitBlock(::Common::toHex(blockBlob.data(), blockBlob.size()));

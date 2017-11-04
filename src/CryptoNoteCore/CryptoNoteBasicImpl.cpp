@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CryptoNoteBasicImpl.h"
 #include "CryptoNoteFormatUtils.h"
@@ -77,14 +90,15 @@ namespace CryptoNote {
       check_key(adr.spendPublicKey) &&
       check_key(adr.viewPublicKey);
   }
-  //-----------------------------------------------------------------------
-  bool operator ==(const CryptoNote::Transaction& a, const CryptoNote::Transaction& b) {
-    return getObjectHash(a) == getObjectHash(b);
-  }
-  //-----------------------------------------------------------------------
-  bool operator ==(const CryptoNote::Block& a, const CryptoNote::Block& b) {
-    return CryptoNote::get_block_hash(a) == CryptoNote::get_block_hash(b);
-  }
+  ////-----------------------------------------------------------------------
+  //bool operator ==(const CryptoNote::Transaction& a, const CryptoNote::Transaction& b) {
+  //  return getObjectHash(a) == getObjectHash(b);
+  //}
+  ////-----------------------------------------------------------------------
+  //bool operator ==(const CryptoNote::BlockTemplate& a, const CryptoNote::BlockTemplate& b) {
+
+  //  return CryptoNote::get_block_hash(a) == CryptoNote::get_block_hash(b);
+  //}
 }
 
 //--------------------------------------------------------------------------------

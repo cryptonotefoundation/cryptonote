@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ConfigurationManager.h"
 
@@ -9,6 +22,7 @@
 
 #include "Common/CommandLine.h"
 #include "Common/Util.h"
+#include "version.h"
 
 namespace PaymentService {
 
@@ -32,7 +46,8 @@ bool ConfigurationManager::init(int argc, char** argv) {
   cmdGeneralOptions.add_options()
       ("help,h", "produce this help message and exit")
       ("local", po::bool_switch(), "start with local node (remote is default)")
-      ("testnet", po::bool_switch(), "testnet mode");
+      ("testnet", po::bool_switch(), "testnet mode")
+      ("version", "Output version information");
 
   command_line::add_arg(cmdGeneralOptions, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
   command_line::add_arg(confGeneralOptions, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
@@ -42,8 +57,7 @@ bool ConfigurationManager::init(int argc, char** argv) {
 
   po::options_description netNodeOptions("Local Node Options");
   CryptoNote::NetNodeConfig::initOptions(netNodeOptions);
-  CryptoNote::CoreConfig::initOptions(netNodeOptions);
-
+  
   po::options_description remoteNodeOptions("Remote Node Options");
   RpcNodeConfiguration::initOptions(remoteNodeOptions);
 
@@ -62,6 +76,11 @@ bool ConfigurationManager::init(int argc, char** argv) {
     return false;
   }
 
+  if (cmdOptions.count("version") > 0) {
+    std::cout << "walletd v" << PROJECT_VERSION_LONG;
+    return false;
+  }
+
   if (cmdOptions.count("config")) {
     std::ifstream confStream(cmdOptions["config"].as<std::string>(), std::ifstream::in);
     if (!confStream.good()) {
@@ -74,7 +93,6 @@ bool ConfigurationManager::init(int argc, char** argv) {
 
     gateConfiguration.init(confOptions);
     netNodeConfig.init(confOptions);
-    coreConfig.init(confOptions);
     remoteNodeConfig.init(confOptions);
 
     netNodeConfig.setTestnet(confOptions["testnet"].as<bool>());
@@ -84,8 +102,8 @@ bool ConfigurationManager::init(int argc, char** argv) {
   //command line options should override options from config file
   gateConfiguration.init(cmdOptions);
   netNodeConfig.init(cmdOptions);
-  coreConfig.init(cmdOptions);
   remoteNodeConfig.init(cmdOptions);
+  dataDir = command_line::get_arg(cmdOptions, command_line::arg_data_dir);
 
   if (cmdOptions["testnet"].as<bool>()) {
     netNodeConfig.setTestnet(true);

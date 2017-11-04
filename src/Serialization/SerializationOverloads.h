@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -68,7 +81,10 @@ template <typename Cont>
 bool serializeContainer(Cont& value, Common::StringView name, CryptoNote::ISerializer& serializer) {
   size_t size = value.size();
   if (!serializer.beginArray(size, name)) {
-    value.clear();
+    if (serializer.type() == ISerializer::INPUT) {
+      value.clear();
+    }
+
     return false;
   }
 
@@ -115,7 +131,10 @@ bool serializeMap(MapT& value, Common::StringView name, CryptoNote::ISerializer&
   size_t size = value.size();
 
   if (!serializer.beginArray(size, name)) {
-    value.clear();
+    if (serializer.type() == ISerializer::INPUT) {
+      value.clear();
+    }
+
     return false;
   }
 
@@ -151,7 +170,10 @@ bool serializeSet(SetT& value, Common::StringView name, CryptoNote::ISerializer&
   size_t size = value.size();
 
   if (!serializer.beginArray(size, name)) {
-    value.clear();
+    if (serializer.type() == ISerializer::INPUT) {
+      value.clear();
+    }
+
     return false;
   }
 
@@ -225,7 +247,10 @@ void writeSequence(Iterator begin, Iterator end, Common::StringView name, ISeria
 template <typename Element, typename Iterator>
 void readSequence(Iterator outputIterator, Common::StringView name, ISerializer& s) {
   size_t size = 0;
-  s.beginArray(size, name);
+  // array of zero size is not written in KVBinaryOutputStreamSerializer
+  if (!s.beginArray(size, name)) {
+    return;
+  }
 
   while (size--) {
     Element e;
