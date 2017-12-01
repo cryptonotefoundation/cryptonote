@@ -1,0 +1,2 @@
+gcc-ar qc libNodeRpcProxy.a  CMakeFiles/NodeRpcProxy.dir/NodeRpcProxy/NodeRpcProxy.cpp.o CMakeFiles/NodeRpcProxy.dir/NodeRpcProxy/NodeErrors.cpp.o
+gcc-ranlib libNodeRpcProxy.a
