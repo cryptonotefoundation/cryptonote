@@ -1,0 +1,43 @@
+2017-Dec-02 02:06:10.966066 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:06:10.966295 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:06:10.966599 ERROR [run] Failed to init walletService reason: Couldn't open wallet file
+2017-Dec-02 02:13:29.707379 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:13:29.707686 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:13:29.707985 INFO [WalletService] Loading wallet
+2017-Dec-02 02:13:29.708278 ERROR [run] Failed to init walletService reason: Wrong version
+2017-Dec-02 02:14:06.407821 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:14:06.408078 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:14:06.408441 INFO [WalletService] Loading wallet
+2017-Dec-02 02:14:06.439123 ERROR [run] Failed to init walletService reason: The password is wrong
+2017-Dec-02 02:14:56.436996 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:14:56.437407 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:14:56.437905 ERROR [run] Failed to init walletService reason: Couldn't open wallet file
+2017-Dec-02 02:15:04.134422 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:15:04.134702 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:15:04.135021 INFO [WalletService] Loading wallet
+2017-Dec-02 02:15:04.164585 ERROR [run] Failed to init walletService reason: The password is wrong
+2017-Dec-02 02:15:05.386735 INFO [stop] Stop signal caught
+2017-Dec-02 02:15:24.728310 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:15:24.728618 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:15:24.729033 INFO [WalletService] Loading wallet
+2017-Dec-02 02:15:24.775996 ERROR [run] Failed to init walletService reason: The password is wrong
+2017-Dec-02 02:15:25.720879 INFO [stop] Stop signal caught
+2017-Dec-02 02:15:33.174422 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:15:33.174812 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:15:33.175194 INFO [WalletService] Loading wallet
+2017-Dec-02 02:15:33.219033 ERROR [run] Failed to init walletService reason: The password is wrong
+2017-Dec-02 02:15:34.060565 INFO [stop] Stop signal caught
+2017-Dec-02 02:15:49.012321 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:15:49.012783 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:15:49.013225 INFO [WalletService] Loading wallet
+2017-Dec-02 02:15:49.049088 ERROR [run] Failed to init walletService reason: The password is wrong
+2017-Dec-02 02:15:53.629030 INFO [stop] Stop signal caught
+2017-Dec-02 02:32:04.843633 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:32:04.843977 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:32:04.844342 ERROR [run] Failed to init walletService reason: Couldn't open wallet file
+2017-Dec-02 02:32:12.113464 INFO [main] PaymentService  v1.1.1.1()
+2017-Dec-02 02:32:12.113865 INFO [run] Starting Payment Gate with remote node
+2017-Dec-02 02:32:12.114175 INFO [WalletService] Loading wallet
+2017-Dec-02 02:32:12.146080 INFO [WalletService] Wallet loading is finished.
+2017-Dec-02 02:32:56.440671 INFO [stop] Stop signal caught
+2017-Dec-02 02:32:56.489757 INFO [WalletService] Wallet is saved

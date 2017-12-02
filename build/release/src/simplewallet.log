@@ -1,0 +1,88 @@
+2017-Dec-01 10:12:01.281504 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-01 10:12:01.281989 ERROR [currency] failed to parse coinbase tx from hard coded blob
+2017-Dec-01 10:12:01.282134 ERROR [currency] Failed to generate genesis block
+2017-Dec-02 01:59:46.787186 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:00:14.705277 INFO [simplewallet] Generated new wallet: BKCh2oAu7mKZaJ8j3W34oRYKH1vu2kpXv547Mv53VqV1XhvcE6xpdma1qibPqQRCbo8b5ibMGPctEMDkArC3N2XdKpvxfZD
+2017-Dec-02 02:00:14.705277 INFO [simplewallet] view key: 90b0ee3baeab53eed01ac6d4226b1017ae75c9546e19904e611f64ac69c52202
+2017-Dec-02 02:00:14.705494 INFO [simplewallet] **********************************************************************
+Your wallet has been generated.
+Use "help" command to see the list of available commands.
+Always use "exit" command when closing simplewallet to save
+current session's state. Otherwise, you will possibly need to synchronize 
+your wallet again. Your wallet key is NOT under risk anyway.
+**********************************************************************
+2017-Dec-02 02:01:07.011977 INFO [simplewallet] Commands: 
+  address              Show current wallet public address
+  balance              Show current wallet balance
+  bc_height            Show blockchain height
+  exit                 Close wallet
+  help                 Show this help
+  incoming_transfers   Show incoming transfers
+  list_transfers       Show all known transfers
+  payments             payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>
+  reset                Discard cache data and start synchronizing from the start
+  save                 Save wallet synchronized data
+  set_log              set_log <level> - Change current log level, <level> is a number 0-4
+  start_mining         start_mining [<number_of_threads>] - Start mining in daemon
+  stop_mining          Stop mining in daemon
+  transfer             transfer <mixin_count> <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id] [-f fee] - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively. <mixin_count> is the number of transactions yours is indistinguishable from (from 0 to maximum available)
+  
+
+2017-Dec-02 02:01:09.599188 INFO [simplewallet] BKCh2oAu7mKZaJ8j3W34oRYKH1vu2kpXv547Mv53VqV1XhvcE6xpdma1qibPqQRCbo8b5ibMGPctEMDkArC3N2XdKpvxfZD
+2017-Dec-02 02:01:38.181428 INFO [simplewallet] available balance: 0.00000000, locked amount: 0.00000000
+2017-Dec-02 02:01:42.692292 INFO [simplewallet] Wallet data saved
+2017-Dec-02 02:04:52.134867 INFO [simplewallet] BKCh2oAu7mKZaJ8j3W34oRYKH1vu2kpXv547Mv53VqV1XhvcE6xpdma1qibPqQRCbo8b5ibMGPctEMDkArC3N2XdKpvxfZD
+2017-Dec-02 02:04:56.175724 INFO [simplewallet] Wallet closed
+2017-Dec-02 02:07:33.478828 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:07:46.161094 ERROR [simplewallet] Error: failed to load wallet: wallet file 'mark103019901337.bin.wallet' is not found
+2017-Dec-02 02:07:46.161280 ERROR [simplewallet] Failed to initialize wallet
+2017-Dec-02 02:07:46.162956 ERROR [simplewallet] Error: wallet failed to connect to daemon (http://localhost:21007).
+2017-Dec-02 02:07:54.054459 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:08:12.341845 ERROR [simplewallet] Error: failed to load wallet: wallet file 'mark103019901337.wallet' is not found
+2017-Dec-02 02:08:12.342048 ERROR [simplewallet] Failed to initialize wallet
+2017-Dec-02 02:08:12.343642 ERROR [simplewallet] Error: wallet failed to connect to daemon (http://localhost:21007).
+2017-Dec-02 02:08:28.306236 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:08:39.555177 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:08:51.201679 INFO [simplewallet] Generated new wallet: BM62uWBtZ1C6aUzHhNQM63Yo2TgJohE37jgy6JExcpwE36dNLihZVrARufdZjMCjxN54i5Mob38LmD1wKkToEe2iLWxw92z
+2017-Dec-02 02:08:51.201679 INFO [simplewallet] view key: 19026774c0dd4930d7e6c81184e3ee2a4e1bb374ff36dac62f2728fdb1d16802
+2017-Dec-02 02:08:51.201892 INFO [simplewallet] **********************************************************************
+Your wallet has been generated.
+Use "help" command to see the list of available commands.
+Always use "exit" command when closing simplewallet to save
+current session's state. Otherwise, you will possibly need to synchronize 
+your wallet again. Your wallet key is NOT under risk anyway.
+**********************************************************************
+2017-Dec-02 02:11:49.015087 INFO [simplewallet] BM62uWBtZ1C6aUzHhNQM63Yo2TgJohE37jgy6JExcpwE36dNLihZVrARufdZjMCjxN54i5Mob38LmD1wKkToEe2iLWxw92z
+2017-Dec-02 02:11:50.941369 INFO [simplewallet] available balance: 0.00000000, locked amount: 0.00000000
+2017-Dec-02 02:11:53.283066 INFO [simplewallet] Wallet closed
+2017-Dec-02 02:14:21.866463 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:14:32.190536 INFO [simplewallet] Loading wallet...
+2017-Dec-02 02:14:32.221361 ERROR [simplewallet] Error: failed to load wallet: can't load wallet file 'marktiffany.bin.wallet', check password
+2017-Dec-02 02:14:32.221657 ERROR [simplewallet] Failed to initialize wallet
+2017-Dec-02 02:14:34.193680 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:14:43.960825 INFO [simplewallet] Loading wallet...
+2017-Dec-02 02:14:43.996945 INFO [simplewallet] Opened wallet: BM62uWBtZ1C6aUzHhNQM63Yo2TgJohE37jgy6JExcpwE36dNLihZVrARufdZjMCjxN54i5Mob38LmD1wKkToEe2iLWxw92z
+2017-Dec-02 02:14:43.997155 INFO [simplewallet] **********************************************************************
+Use "help" command to see the list of available commands.
+**********************************************************************
+2017-Dec-02 02:14:45.332012 INFO [simplewallet] Wallet closed
+2017-Dec-02 02:29:58.935357 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:30:07.517864 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:30:13.711526 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:30:22.579361 ERROR [simplewallet] Error: failed to load wallet: wallet file 'premines.bin.wallet' is not found
+2017-Dec-02 02:30:22.579513 ERROR [simplewallet] Failed to initialize wallet
+2017-Dec-02 02:30:22.580767 ERROR [simplewallet] Error: wallet failed to connect to daemon (http://localhost:21007).
+2017-Dec-02 02:30:40.955341 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:30:45.224184 INFO [simplewallet] volley wallet v1.1.1.1()
+2017-Dec-02 02:30:49.980522 INFO [simplewallet] Generated new wallet: BKTfiioNwQ4caMssuLPXLyiUwwCuqy8aGFFrGkQ9VrH1eGz5LuKbrAabKbd8BVvv74ezTg5sHL8CqaTmxy6LB71sGbnR2cK
+2017-Dec-02 02:30:49.980522 INFO [simplewallet] view key: 820e446ffcff27b928442bf2c4c762655d985c9e852f7c2ff0c5d04cbd774d03
+2017-Dec-02 02:30:49.980679 INFO [simplewallet] **********************************************************************
+Your wallet has been generated.
+Use "help" command to see the list of available commands.
+Always use "exit" command when closing simplewallet to save
+current session's state. Otherwise, you will possibly need to synchronize 
+your wallet again. Your wallet key is NOT under risk anyway.
+**********************************************************************
+2017-Dec-02 02:31:00.568453 INFO [simplewallet] BKTfiioNwQ4caMssuLPXLyiUwwCuqy8aGFFrGkQ9VrH1eGz5LuKbrAabKbd8BVvv74ezTg5sHL8CqaTmxy6LB71sGbnR2cK
+2017-Dec-02 02:31:07.375122 INFO [simplewallet] Wallet data saved
+2017-Dec-02 02:31:27.419863 INFO [simplewallet] Wallet closed
