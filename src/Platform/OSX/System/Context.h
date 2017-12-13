@@ -16,7 +16,7 @@ typedef struct mcontext mctx;
 typedef struct ucontext uctx;
 
 extern	int		swapcontext(uctx*, const uctx*);
-extern	void		makecontext(uctx*, void(*)(), intptr_t);
+extern	void		makecontext(uctx*, void(*)(void), intptr_t);
 extern	int		getmcontext(mctx*);
 extern	void		setmcontext(const mctx*);
 
