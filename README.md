@@ -3,14 +3,16 @@ MinerCoin - Anonymity Miner Asset base on Proof of Work CPU Mining (Backed by Mi
 # Preparation
 
 1. Create an account on [GitHub.com](github.com)
-2. Fork [CryptoNote repository](https://github.com/nidscom/minercoin)
+2. Fork [Minercoin repository](https://github.com/nidscom/minercoin)
 3. Buy one or two Ubuntu-based dedicated servers (at least 2Gb of RAM) for seed nodes.
    ==> You can use VPS from [Vultr](https://www.vultr.com/?ref=7283997) with $5 or $10 VPS to seed nodes and support MinerCoin development.
 
 
-## First step. FORK the Repo on [GitHub.com](https://github.com/nidscom/minercoin)
+## First step. FORK MinerCoin Repo
+on [GitHub.com](https://github.com/nidscom/minercoin)
 
-## Secondly, Build Development Environment 
+## Secondly, Build Environment 
+Currently tested on UBUNTU 14.04, LINUX & WINDOWS
 
 ### On Ubuntu, Linux and nix
 
