@@ -24,7 +24,7 @@ Need Attention
 ## Description
 MinerCoin is to be use as electronic payment system and not limited to it. With feauture such as anonymity, secure, borderless, decentralize, very low fees and fast transfer capabilities, giving Users their financial flexibility and experience MinerCoin Use and Value. MinerCoin code is Open Source and always avalaible to be maintain by Community ♥️ Consensus. You can contribute by seeding MinerCoin nodes on your PC while at the same time taking advantage of CPU Mining just within wallet. 
 
-## Preparation
+## Preparation for Developers Environment
 
 1. Create an account on [GitHub.com](github.com)
 2. Fork [Minercoin repository](https://github.com/nidscom/minercoin)
