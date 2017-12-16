@@ -8,13 +8,13 @@ Working:
 3. CPU Mining on MinerCoin pool - tested on Windows 10
 4. Solo mining using Simplewallet via terminal - tested on ubuntu 14.04
 
-Not tested
+Not tested:
 1. Compile on Windows
 2. Compile on other Ubuntu version except 14.04
 3. GUI wallet
 4. Integration with Pool API
 
-Need Attention
+Need Attention:
 1. Extend MinerCoin code. to be working in manners. Low fees, fast transaction, a secure anonymous payment system.
 2. Blockchain website and domain hosting - unmodified public ledger of all MinerCoin tx.
 3. Cloud wallet service
@@ -73,8 +73,15 @@ cmake -G "Visual Studio 12 Win64" ..
 ```
 
 And then do Build.
-Good luck!
+Happy Mining⛏️
 
-==> MinerCoin
-[Facebook](https://www.fb.com/nidscom.io)
-[Maintainers](https://www.nidscom.io)
+©MinerCoin - Copyright under GNU Public license
+DISCLAIMER - MinerCoin is Community driven Cryptocurrency. Please be aware, MinerCoin do not have ICO held. No funding, no whale monopolization. MinerCoin is purely created for Public Mining with the value of Transparency within Financial Technology.
+We're on [Facebook](https://www.fb.com/nidscom.io)
+Core Dev [Maintainers](https://www.nidscom.io)
+Reddit [Post](https://www.reddit.com/r/CryptoNote/comments/7k7i16/minercoin_open_source_no_premine_cryptonote_forked/)
+###MinerCoin Development Donation
+BTC ~ 1Q3BCbNRyVuD8RWtgS2fFK2tKhiYQtVk18
+XMR - 43c2ykU9i2KZHjV8dWff9HKurYYRkckLueYK96Qh4p1EDoEvdo8mpgNJJpPuods53PM6wNzmj4K2D1V11wvXsy9LMiaYc86
+ETH - 0xbfa545a4f0bd20e41f615e5f954c73bd528d989b
+LTC - LhqcJiUp6XrHNpZYjEUvMfzZyKp8ZFh4HM
