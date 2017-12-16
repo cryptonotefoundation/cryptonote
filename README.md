@@ -12,11 +12,17 @@ Not tested
 1. Compile on Windows
 2. Compile on other Ubuntu version except 14.04
 3. GUI wallet
-4. Web wallet
-5. Pool analytics via API
+4. Integration with Pool API
+
+Need Attention
+1. Extend MinerCoin code. to be working in manners. Low fees, fast transaction, a secure anonymous payment system.
+2. Blockchain website and domain hosting - unmodified public ledger of all MinerCoin tx.
+3. Cloud wallet service
+4. Listed on centralized exchange to be pair with fiat.
+5. More seed nodes hosting.
 
 ## Description
-MinerCoin is to be use as electronic payment system and not limited to it. With feauture such as anonymity, secure, borderless, decentralize, very low fees and fast transfer capabilities, giving Users total freedom of Use and Value. MinerCoin code is Open Source and avalaible to be maintain by Community. ♥️ Peace. Feel Free to contribute. 
+MinerCoin is to be use as electronic payment system and not limited to it. With feauture such as anonymity, secure, borderless, decentralize, very low fees and fast transfer capabilities, giving Users their financial flexibility and experience MinerCoin Use and Value. MinerCoin code is Open Source and always avalaible to be maintain by Community ♥️ Consensus. You can contribute by seeding MinerCoin nodes on your PC while at the same time taking advantage of CPU Mining just within wallet. 
 
 ## Preparation
 
@@ -70,4 +76,5 @@ And then do Build.
 Good luck!
 
 ==> MinerCoin
-https://www.fb.com/nidscom.io
+[Facebook](https://www.fb.com/nidscom.io)
+[Maintainers](https://www.nidscom.io)
