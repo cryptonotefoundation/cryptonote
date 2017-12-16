@@ -1,6 +1,24 @@
-MinerCoin - Anonymity Miner Asset base on Proof of Work CPU Mining (Backed by Miners)
+# MinerCoin - An Open Source CryptoCurrency
+## base on Proof-of-Work CPU Mining
 
-# Preparation
+### MinerCoin Current Status
+Working:
+1. Daemon to seed node - tested on ubuntu 14.04
+2. RPC connection to daemon, pool & wallets - tested on ubuntu 14.04
+3. CPU Mining on MinerCoin pool - tested on Windows 10
+4. Solo mining using Simplewallet via terminal - tested on ubuntu 14.04
+
+Not tested
+1. Compile on Windows
+2. Compile on other Ubuntu version except 14.04
+3. GUI wallet
+4. Web wallet
+5. Pool analytics via API
+
+## Description
+MinerCoin is to be use as electronic payment system and not limited to it. With feauture such as anonymity, secure, borderless, decentralize, very low fees and fast transfer capabilities, giving Users total freedom of Use and Value. MinerCoin code is Open Source and avalaible to be maintain by Community. ♥️ Peace. Feel Free to contribute. 
+
+## Preparation
 
 1. Create an account on [GitHub.com](github.com)
 2. Fork [Minercoin repository](https://github.com/nidscom/minercoin)
@@ -8,13 +26,13 @@ MinerCoin - Anonymity Miner Asset base on Proof of Work CPU Mining (Backed by Mi
    ==> You can use VPS from [Vultr](https://www.vultr.com/?ref=7283997) with $5 or $10 VPS to seed nodes and support MinerCoin development.
 
 
-## First step. FORK MinerCoin Repo
+### First step. FORK MinerCoin Repo
 on [GitHub.com](https://github.com/nidscom/minercoin)
 
-## Secondly, Build Environment 
+### Secondly, Build Environment 
 Currently tested on UBUNTU 14.04, LINUX & WINDOWS
 
-### On Ubuntu, Linux and nix
+#### On Ubuntu, Linux and nix
 
 Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.55.
 
@@ -34,7 +52,7 @@ To build, change to a directory where this file is located, and run `make`. The 
 * Test suite: run `make test-release` to run tests in addition to building. Running `make test-debug` will do the same to the debug version.
 * Building with Clang: it may be possible to use Clang instead of GCC, but this may not work everywhere. To build, run `export CC=clang CXX=clang++` before running `make`.
 
-### On Windows
+#### On Windows
 Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may download them from:
 
 * http://www.microsoft.com/
