@@ -1,3 +1,7 @@
+Release notes 1.1.2
+
+- FORKED! New coin created for Anonymous Miner Asset base on Cryptonote Technologies. Open Source and will always be.
+
 Release notes 1.1.1
 
 - New API for CryptoNote RPC Wallet
