@@ -13,17 +13,40 @@ namespace parameters {
 const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
+<<<<<<< HEAD
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0x2886;
+=======
+//TODO Currency-specific address prefix
+const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0x2886;
+//TODO Choose maturity period for your currency
+>>>>>>> 09409414aba92a23225073e1d917522428d035f1
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 60;
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2;
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60;
+<<<<<<< HEAD
 const uint64_t MONEY_SUPPLY                                  = ((uint64_t)(-1));
 const unsigned EMISSION_SPEED_FACTOR                         = 19;
+=======
+
+//TODO Specify total number of available coins
+//TODO ((uint64_t)(-1)) equals to 18446744073709551616 coins
+//TODO or you can define number explicitly UINT64_C(858986905600000000)
+const uint64_t MONEY_SUPPLY                                  = ((uint64_t)(-1));
+const unsigned EMISSION_SPEED_FACTOR                         = 20;
+>>>>>>> 09409414aba92a23225073e1d917522428d035f1
 static_assert(EMISSION_SPEED_FACTOR <= 8 * sizeof(uint64_t), "Bad EMISSION_SPEED_FACTOR");
 const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
+<<<<<<< HEAD
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 20000;
+=======
+const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 20000; //size of block (bytes) after which reward for block calculated using block size
+>>>>>>> 09409414aba92a23225073e1d917522428d035f1
 const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 8;
+<<<<<<< HEAD
+=======
+//TODO Define minimum fee for transactions
+>>>>>>> 09409414aba92a23225073e1d917522428d035f1
 const uint64_t MINIMUM_FEE                                   = 100000;
 const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE;
 const uint64_t DIFFICULTY_TARGET                             = 320;
@@ -50,17 +73,35 @@ const char     CRYPTONOTE_POOLDATA_FILENAME[]                = "poolstate.bin";
 const char     P2P_NET_DATA_FILENAME[]                       = "p2pstate.bin";
 const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      = "blockchainindices.dat";
 const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json";
+<<<<<<< HEAD
 }
 const char     CRYPTONOTE_NAME[]                             = "puul";
 const char     GENESIS_COINBASE_TX_HEX[]                     = "013c01ff0001ffffffffffff07029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101ed001818e8429250f546b0f2cc5371632e5ffb9c835effce6b5f5d2bc1f43230";
+=======
+} // parameters
+
+//TODO Put here the name of your currency
+const char     CRYPTONOTE_NAME[]                             = "puul";
+const char     GENESIS_COINBASE_TX_HEX[]                     = "";
+
+>>>>>>> 09409414aba92a23225073e1d917522428d035f1
 const uint8_t  CURRENT_TRANSACTION_VERSION                   =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        =  10000;
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  200;
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;
+<<<<<<< HEAD
 const int      P2P_DEFAULT_PORT                              = 12788;
 const int      RPC_DEFAULT_PORT                              = 13788;
+=======
+
+//TODO This port will be used by the daemon to establish connections with p2p network
+const int      P2P_DEFAULT_PORT                              = 12788;
+//TODO This port will be used by the daemon to interact with simlewallet
+const int      RPC_DEFAULT_PORT                              = 13788;
+
+>>>>>>> 09409414aba92a23225073e1d917522428d035f1
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 =  5000;
 
