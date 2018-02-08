@@ -5,7 +5,7 @@
 #include "BlockIndex.h"
 
 #include <boost/utility/value_init.hpp>
-
+#include <iostream>
 #include "CryptoNoteSerialization.h"
 #include "Serialization/SerializationOverloads.h"
 
