@@ -13,7 +13,7 @@ Copyright (c) 2018, HND, The Cryptonote Project
 * Github: https://github.com/hndcoin/cryptomoeda
 * IRC: #hnd:
 
-## Building CryptoNote
+## Building HNDCoin
 
 ### On *nix
 
