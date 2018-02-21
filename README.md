@@ -10,7 +10,7 @@ Copyright (c) 2018, HND, The Cryptonote Project
 
 * Website: http://www.hndcoin.org
 * Reddit: https://reddit.com/r/hnd
-* Github: https://github.com/hndcoin/cryptomoeda
+* Github: https://github.com/HNDCoin/cryptomoeda
 * IRC: #hnd:
 
 ## Introduction
