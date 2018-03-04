@@ -1,3 +1,3 @@
 Hello 
-this is the github for SwiftCoin.
+This is reddit for Quickcoin
 an fast cryptonote coin
