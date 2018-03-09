@@ -32,7 +32,7 @@ Step 4:
 
 make and cmake
 
-In folder darktaelon, simply type:
+In root access, simply type:
 
 $ cmake /root/darktaelon
 
@@ -41,4 +41,4 @@ Afterwards run:
 $ make
 
 
-to permamently start a node : screen -S demon ./darktaelond
+to permamently start a node : screen -S demon ./darktaelond (from src dir)
