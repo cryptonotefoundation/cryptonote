@@ -34,7 +34,7 @@ make and cmake
 
 In root access, simply type:
 
-$ cmake /root/darktaelon
+$ cmake /root/darktaelon (path to darktaelon dir)
 
 Afterwards run:
 
