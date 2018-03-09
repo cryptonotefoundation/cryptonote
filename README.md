@@ -20,9 +20,12 @@ Step 3:
 
 Get the environment setup properly, simply type:
 
-$ apt-get install libpthread-stubs0-dev 
+$ apt-get install libpthread-stubs0-dev
+
 $ apt-get install doxygen
+
 $ apt-get install libboost-all-dev
+
 $ apt-get install g++
 
 (If you have any issues here try typing: apt-get update after each install)
