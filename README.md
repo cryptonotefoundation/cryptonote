@@ -4,7 +4,7 @@ To install on windowsx64
 
 Step 1:
 
-Download : taelon.io/darktaelonx64.zip
+Download : https://taelon.io/darktaelonx64.zip
 
 Step 2:
 
