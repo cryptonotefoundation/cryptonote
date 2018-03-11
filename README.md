@@ -1,11 +1,28 @@
 This is the reference code for [DarkTaelon](https://taelon.io) cryptocurrency.
 
+To install on windowsx64
+
+Step 1:
+
+Download : taelon.io/darktaelonx64.zip
+
+Step 2:
+
+Unzip the folder and start : darktaelond.exe 
+
+Then start simplewallet.exe
+
+Press 'g' to generate a wallet, then name it and enter a password.
+
+Tip: On first open the wallet will show your private key, this is founf under the wallett address. Save it somewhere safe to secure the wallet.
+
 To install on Ubuntu 16.04
 
 Step 1:
 
 Copy the source code onto your server, simply type :
 
+'''
 $ git clone https://github.com/darktaelon/darktaelon
 
 Step 2:
