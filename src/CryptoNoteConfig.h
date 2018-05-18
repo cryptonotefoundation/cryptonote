@@ -109,7 +109,7 @@ const std::initializer_list<const char*> SEED_NODES = {
   "18.222.9.220:1019",
   "104.42.51.200",
   "18.191.67.15",
-  "35.224.179.251",
+  "104.196.215.7",
 };
 
 struct CheckpointData {
