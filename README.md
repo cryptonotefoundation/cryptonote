@@ -1,3 +1,26 @@
+The same text below in English...
+
+Levcoin е проект за създаване на първата българска крипто валута. Основана е на технологията на CryptoNote, която се счита че е по-добра от оригиналната технология на "биткойна". Направени са и някои малки нетехнологични, а чисто икономически модификации. В началото на "копаенето" тази валута се добива съвсем леко по-бързо от "биткойна". Но с времето добивът става значително по-бавен. Това е необходимо, за да се гарантира фактически безсрочен добив, което ще осигури винаги да съществуват "копачки", което пък крепи самото съществуване на валутата. 
+"Биткойнът" носи в себе си сериозния риск в един момент почти нищо вече да не може да се добива, копачките да спрат, и цялата система да рухне. Засега няма отговор какво ще се прави по този въпрос, но е възможно на някакъв етап да се намери решение.
+При "левкойна" такъв проблем няма. Кривата на добив пресича тази на "биткойна" и в дори след 30 години, отново ще има какво да се добива. По този показател е твърде вероятно тази българска валута да е сред най-добре проектираните в света.
+Общото колическо планирани "левкойни" ще е 9 милиона. Цифрата е избрана по броя на населението на нашата страна, когато е била най-многолюдна. Тази емисия е доста по-малка от на "биткойна" и на другите валути, базирани на CryptoNote. Но от друга страна, основната идея е да бъде национална валута, т.е. не е нужна чак толкова голяма емисия.
+Разбира се, нищо не пречи тази валута да се добива и в чужбина. Единственото, което може да я запази предимно българска, е активността на българите като "копачи". Бъдете активни.
+Технологията CryptoNote има и допълнителното предимство спрямо "биткойна", на по-голяма анонимност и непроследимост.
+Друго важно предимство е, че може да се "копае" на по-обикновени компютри - домашни такива, и не са нужни сървърни ферми за милиони, за да добиеш нещо.
+Надяваме се проектът да ви бъде полезен...
+---
+Levcoin is a project for creation of the first Bulgarian crypto-currency. It is based on CryptoNote source code, considered better than the code of "bitcoin". Some changes in Econimic model are done. At the start of mining it is a bit faster that with Bitcoin. But after that it becomes considerably slower. This is needed so "endless" mining is possible, that will ensure the presence of miners forever. And this will guarantee the survival of the currency.
+Bitcoin brings the risk of emission-end that will shut-down the digging computers. And this may result in an entire currency crash.
+May be this problem will be solved in future, but now the risk is not addressed.
+With LevCoin no such problems. Even in 30 years there still be what to mine. Based on this characteristic the Bulgarian cryptocurrency is among the best in the world.
+Total money supply is 9 million. It is based on the population of Bulgaria in its best times when it was 9 million. This is less that 21 million of Bitcoin and about 18 million of other CryptoNote coins.
+CryptoNote technology is better than Bitcoin in anonymity and tracking protection.
+Another advantage is it can be mined on home computers and no server farms needed.
+We hope the project will be useful for you...
+
+
+
+==============
 This is the reference code for [CryptoNote](https://cryptonote.org) cryptocurrency protocol.
 
 * Launch your own CryptoNote currency: [CryptoNote Starter](https://cryptonotestarter.org/)
