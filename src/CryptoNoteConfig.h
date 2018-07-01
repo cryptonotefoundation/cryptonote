@@ -106,8 +106,8 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "8f80f9a5a434a9f1
 
 //TODO Add Test node public IP and port numbers.
 const std::initializer_list<const char*> SEED_NODES = {
-  //"ipaddress:port",
-  //"ipaddress:port",
+  //"104.172.209.238:17236",
+  //"104.172.209.238:18236",
 };
 
 struct CheckpointData {
