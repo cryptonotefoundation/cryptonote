@@ -1,241 +1,175 @@
-This is the reference code for [CryptoNote](https://cryptonote.org) cryptocurrency protocol.
+Este es el código de referencia para el protocolo de criptomoneda CryptoNote .
 
-* Launch your own CryptoNote currency: [CryptoNote Starter](https://cryptonotestarter.org/)
-* CryptoNote reference implementation: [CryptoNoteCoin](https://cryptonote-coin.org)
-* Discussion board and support: [CryptoNote Forum](https://forum.cryptonote.org)
+Inicie su propia moneda de CryptoNote : CryptoNote Starter
+Implementación de referencia CryptoNote : CryptoNoteCoin
+Panel de discusión y soporte: Foro CryptoNote
+CryptoNote forking cómo hacerlo
+Preparación
+Crear una cuenta en GitHub.com
+Repositorio de CryptoNote de horquilla
+Compre uno o dos servidores dedicados basados ​​en Ubuntu (al menos 2 Gb de RAM) para nodos semilla.
+Primer paso. Dale un nombre a tu moneda
+El buen nombre debe ser único. Verifique la singularidad con google y Map of Coins o cualquier otro servicio similar.
 
-## CryptoNote forking how-to
+El nombre debe especificarse dos veces:
 
-### Preparation
+1. en el archivo src / CryptoNoteConfig.h - CRYPTONOTE_NAMEconstante
 
-1. Create an account on [GitHub.com](github.com)
-2. Fork [CryptoNote repository](https://github.com/cryptonotefoundation/cryptonote)
-3. Buy one or two Ubuntu-based dedicated servers (at least 2Gb of RAM) for seed nodes.
+Ejemplo:
 
-
-
-### First step. Give a name to your coin
-
-**Good name must be unique.** Check uniqueness with [google](http://google.com) and [Map of Coins](mapofcoins.com) or any other similar service.
-
-Name must be specified twice:
-
-**1. in file src/CryptoNoteConfig.h** - `CRYPTONOTE_NAME` constant
-
-Example: 
-```
 const char CRYPTONOTE_NAME[] = "furiouscoin";
-```
+2. en el archivo src / CMakeList.txt - set_property (daemon TARGET PROPERTY OUTPUT_NAME "YOURCOINNAME d ")
 
-**2. in src/CMakeList.txt file** - set_property(TARGET daemon PROPERTY OUTPUT_NAME "YOURCOINNAME**d**")
+Ejemplo:
 
-Example: 
-```
 set_property(TARGET daemon PROPERTY OUTPUT_NAME "furiouscoind")
-```
+Nota: También debe cambiar el nombre de un repositorio.
 
-**Note:** You should also change a repository name.
+Segundo paso. Lógica de emisión
+1. Suministro total de dinero (src / CryptoNoteConfig.h)
 
+Cantidad total de monedas a emitir. La mayoría de las monedas basadas en CryptoNote utilizan (uint64_t)(-1)(es igual a 18446744073709551616). Puede definir el número explícitamente (por ejemplo UINT64_C(858986905600000000)).
 
-### Second step. Emission logic 
+Ejemplo:
 
-**1. Total money supply** (src/CryptoNoteConfig.h)
-
-Total amount of coins to be emitted. Most of CryptoNote based coins use `(uint64_t)(-1)` (equals to 18446744073709551616). You can define number explicitly (for example `UINT64_C(858986905600000000)`).
-
-Example:
-```
 const uint64_t MONEY_SUPPLY = (uint64_t)(-1);
-```
+2. Curva de emisión (src / CryptoNoteConfig.h)
 
-**2. Emission curve** (src/CryptoNoteConfig.h)
+Ser predeterminado CryptoNote proporciona una fórmula de emisión con una ligera disminución de la recompensa de bloque con cada bloque. Esto es diferente de Bitcoin, donde las recompensas de bloque se dividen cada cuatro años.
 
-Be default CryptoNote provides emission formula with slight decrease of block reward with each block. This is different from Bitcoin where block reward halves every 4 years.
+EMISSION_SPEED_FACTORconstante define la pendiente de la curva de emisión. Este parámetro es requerido para calcular la recompensa del bloque.
 
-`EMISSION_SPEED_FACTOR` constant defines emission curve slope. This parameter is required to calulate block reward. 
+Ejemplo:
 
-Example:
-```
 const unsigned EMISSION_SPEED_FACTOR = 18;
-```
+3. Objetivo de dificultad (src / CryptoNoteConfig.h)
 
-**3. Difficulty target** (src/CryptoNoteConfig.h)
+El objetivo de dificultad es un período de tiempo ideal entre bloques. En caso de que el tiempo promedio entre bloques sea menor que el objetivo de dificultad, la dificultad aumenta. El objetivo de dificultad se mide en segundos.
 
-Difficulty target is an ideal time period between blocks. In case an average time between blocks becomes less than difficulty target, the difficulty increases. Difficulty target is measured in seconds.
+El objetivo de dificultad influye directamente en varios aspectos del comportamiento de la moneda:
 
-Difficulty target directly influences several aspects of coin's behavior:
+velocidad de confirmación de transacción: cuanto mayor es el tiempo entre los bloques, más lenta es la confirmación de transacción
+Velocidad de emisión: cuanto más largo es el tiempo entre los bloques, más lento es el proceso de emisión.
+tasa de huérfanos: las cadenas con bloques muy rápidos tienen una mayor tasa de huérfanos
+Para la mayoría de las monedas, el objetivo es 60 o 120 segundos.
 
-- transaction confirmation speed: the longer the time between the blocks is, the slower transaction confirmation is
-- emission speed: the longer the time between the blocks is the slower the emission process is
-- orphan rate: chains with very fast blocks have greater orphan rate
+Ejemplo:
 
-For most coins difficulty target is 60 or 120 seconds.
-
-Example:
-```
 const uint64_t DIFFICULTY_TARGET = 120;
-```
+4. Fórmula de recompensa de bloque
 
-**4. Block reward formula**
+En caso de que no esté satisfecho con la implementación predeterminada de la lógica de recompensa en bloque de CryptoNote, también puede cambiarla. La implementación está en src/CryptoNoteCore/Currency.cpp:
 
-In case you are not satisfied with CryptoNote default implementation of block reward logic you can also change it. The implementation is in `src/CryptoNoteCore/Currency.cpp`:
-```
 bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const
-```
+Esta función tiene dos partes:
 
-This function has two parts:
+cálculo de la recompensa del bloque básico: uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
+cálculo de penalización de bloque grande: esta es la manera en que CryptoNote protege la cadena de bloques de los ataques de inundación de transacciones y preserva las oportunidades para el crecimiento orgánico de la red al mismo tiempo.
+Solo la primera parte de esta función está directamente relacionada con la lógica de emisión. Puedes cambiarlo como quieras. Ver MonetaVerde y DuckNote como los ejemplos donde se modifica esta función.
 
-- basic block reward calculation: `uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;`
-- big block penalty calculation: this is the way CryptoNote protects the block chain from transaction flooding attacks and preserves opportunities for organic network growth at the same time.
+Tercer paso. Redes
+1. Puertos predeterminados para redes P2P y RPC (src / CryptoNoteConfig.h)
 
-Only the first part of this function is directly related to the emission logic. You can change it the way you want. See MonetaVerde and DuckNote as the examples where this function is modified.
+El puerto P2P es utilizado por los demonios para comunicarse entre ellos a través del protocolo P2P. El monedero RPC usa el puerto RPC para hablar con el demonio.
 
+Es mejor elegir puertos que no sean utilizados por otro software o monedas. Ver las listas de puertos TCP conocidos:
 
-### Third step. Networking
+http://www.speedguide.net/ports.php
+http://www.networksorcery.com/enp/protocol/ip/ports00000.htm
+http://keir.net/portlist.html
+Ejemplo:
 
-**1. Default ports for P2P and RPC networking** (src/CryptoNoteConfig.h)
-
-P2P port is used by daemons to talk to each other through P2P protocol.
-RPC port is used by wallet and other programs to talk to daemon.
-
-It's better to choose ports that aren't used by other software or coins. See known TCP ports lists:
-
-* http://www.speedguide.net/ports.php
-* http://www.networksorcery.com/enp/protocol/ip/ports00000.htm
-* http://keir.net/portlist.html
-
-Example:
-```
 const int P2P_DEFAULT_PORT = 17236;
 const int RPC_DEFAULT_PORT = 18236;
-```
+2. Identificador de red (src / P2p / P2pNetworks.h)
 
+Este identificador se utiliza en paquetes de red para no mezclar dos redes de criptomonedas diferentes. Cambie todos los bytes a valores aleatorios para su red:
 
-**2. Network identifier** (src/P2p/P2pNetworks.h)
-
-This identifier is used in network packages in order not to mix two different cryptocoin networks. Change all the bytes to random values for your network:
-```
 const static boost::uuids::uuid CRYPTONOTE_NETWORK = { { 0xA1, 0x1A, 0xA1, 0x1A, 0xA1, 0x0A, 0xA1, 0x0A, 0xA0, 0x1A, 0xA0, 0x1A, 0xA0, 0x1A, 0xA1, 0x1A } };
-```
+3. Nodos de semillas (src / CryptoNoteConfig.h)
 
+Agregue las direcciones IP de sus nodos semilla.
 
-**3. Seed nodes** (src/CryptoNoteConfig.h)
+Ejemplo:
 
-Add IP addresses of your seed nodes.
-
-Example:
-```
 const std::initializer_list<const char*> SEED_NODES = {
   "111.11.11.11:17236",
   "222.22.22.22:17236",
 };
-```
+Cuarto paso. Tarifa de transacción y parámetros relacionados
+1. Tarifa de transacción mínima (src / CryptoNoteConfig.h)
 
+La tarifa mínima cero puede llevar a la inundación de transacciones. Las transacciones más baratas que la tarifa de transacción mínima no serían aceptadas por demonios. Valor de 100000 MINIMUM_FEEes generalmente suficiente.
 
-### Fourth step. Transaction fee and related parameters
+Ejemplo:
 
-**1. Minimum transaction fee** (src/CryptoNoteConfig.h)
-
-Zero minimum fee can lead to transaction flooding. Transactions cheaper than the minimum transaction fee wouldn't be accepted by daemons. 100000 value for `MINIMUM_FEE` is usually enough.
-
-Example:
-```
 const uint64_t MINIMUM_FEE = 100000;
-```
+2. Tamaño de bloque libre de penalización (src / CryptoNoteConfig.h)
 
+CryptoNote protege la cadena contra la inundación de tx reduciendo la recompensa de bloque para bloques más grandes que el tamaño de bloque mediano. Sin embargo, esta regla se aplica a los bloques más grandes que los CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONEbytes.
 
-**2. Penalty free block size** (src/CryptoNoteConfig.h)
+Ejemplo:
 
-CryptoNote protects chain from tx flooding by reducing block reward for blocks larger than the median block size. However, this rule applies for blocks larger than `CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE` bytes.
-
-Example:
-```
 const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE = 20000;
-```
+Quinto paso Prefijo de dirección
+Puede elegir una letra (en algunos casos, varias letras) con la que comenzarán todas las direcciones públicas de la moneda. Se define por la CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIXconstante. Dado que las reglas para los prefijos de direcciones no son triviales, puede utilizar la herramienta de generador de prefijos .
 
+Ejemplo:
 
-### Fifth step. Address prefix
-
-You may choose a letter (in some cases several letters) all the coin's public addresses will start with. It is defined by `CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX` constant. Since the rules for address prefixes are nontrivial you may use the [prefix generator tool](https://cryptonotestarter.org/tools.html).
-
-Example:
-```
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 0xe9; // addresses start with "f"
-```
+Sexto paso Bloque de génesis
+1. Construye los binarios con genes en blanco tx hex (src / CryptoNoteConfig.h)
 
+Debes dejar en const char GENESIS_COINBASE_TX_HEX[]blanco y compilar los binarios sin él.
 
-### Sixth step. Genesis block
+Ejemplo:
 
-**1. Build the binaries with blank genesis tx hex** (src/CryptoNoteConfig.h)
-
-You should leave `const char GENESIS_COINBASE_TX_HEX[]` blank and compile the binaries without it.
-
-Example:
-```
 const char GENESIS_COINBASE_TX_HEX[] = "";
-```
+2. Inicia el demonio para imprimir el bloque de génesis.
 
+Ejecuta tu demonio con --print-genesis-txargumento. Se imprimirá el hash de transacción de la base de bloques de genesis.
 
-**2. Start the daemon to print out the genesis block**
+Ejemplo:
 
-Run your daemon with `--print-genesis-tx` argument. It will print out the genesis block coinbase transaction hash.
-
-Example:
-```
 furiouscoind --print-genesis-tx
-```
+3. Copie el hash de la transacción impresa (src / CryptoNoteConfig.h)
 
+Copie el hash tx que ha sido impreso por el demonio GENESIS_COINBASE_TX_HEXensrc/CryptoNoteConfig.h
 
-**3. Copy the printed transaction hash** (src/CryptoNoteConfig.h)
+Ejemplo:
 
-Copy the tx hash that has been printed by the daemon to `GENESIS_COINBASE_TX_HEX` in `src/CryptoNoteConfig.h`
-
-Example:
-```
 const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001ffff...785a33d9ebdba68b0";
-```
+4. Recompila los binarios.
 
+Recompila todo de nuevo. Su código de moneda está listo ahora. ¡Haz un anuncio para los usuarios potenciales y disfruta!
 
-**4. Recompile the binaries**
+Edificio CryptoNote
+En * nix
+Dependencias: GCC 4.7.3 o posterior, CMake 2.8.6 o posterior y Boost 1.55.
 
-Recompile everything again. Your coin code is ready now. Make an announcement for the potential users and enjoy!
+Puede descargarlos de:
 
+http://gcc.gnu.org/
+http://www.cmake.org/
+http://www.boost.org/
+Alternativamente, puede ser posible instalarlos usando un administrador de paquetes.
+Para compilar, cambie a un directorio donde se encuentra este archivo y ejecútelo make. Los ejecutables resultantes se pueden encontrar en build/release/src.
 
-## Building CryptoNote 
+Opciones avanzadas:
 
-### On *nix
+Construcción paralela: ejecutar en make -j<number of threads>lugar de make.
+Construcción de depuración: ejecutar make build-debug.
+Conjunto de pruebas: ejecutar make test-releasepara ejecutar pruebas además de la construcción. Ejecutando make test-debughará lo mismo con la versión de depuración.
+Construyendo con Clang: puede ser posible usar Clang en lugar de GCC, pero esto puede no funcionar en todas partes. Para construir, ejecute export CC=clang CXX=clang++antes de ejecutar make.
+En Windows
+Dependencias: MSVC 2013 o posterior, CMake 2.8.6 o posterior y Boost 1.55. Puede descargarlos de:
 
-Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.55.
+http://www.microsoft.com/
+http://www.cmake.org/
+http://www.boost.org/
+Para compilar, cambie a un directorio donde se encuentra este archivo y ejecute estos comandos:
 
-You may download them from:
-
-* http://gcc.gnu.org/
-* http://www.cmake.org/
-* http://www.boost.org/
-* Alternatively, it may be possible to install them using a package manager.
-
-To build, change to a directory where this file is located, and run `make`. The resulting executables can be found in `build/release/src`.
-
-**Advanced options:**
-
-* Parallel build: run `make -j<number of threads>` instead of `make`.
-* Debug build: run `make build-debug`.
-* Test suite: run `make test-release` to run tests in addition to building. Running `make test-debug` will do the same to the debug version.
-* Building with Clang: it may be possible to use Clang instead of GCC, but this may not work everywhere. To build, run `export CC=clang CXX=clang++` before running `make`.
-
-### On Windows
-Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may download them from:
-
-* http://www.microsoft.com/
-* http://www.cmake.org/
-* http://www.boost.org/
-
-To build, change to a directory where this file is located, and run theas commands: 
-```
 mkdir build
 cd build
 cmake -G "Visual Studio 12 Win64" ..
-```
-
-And then do Build.
-Good luck!
+Y luego construir. ¡Buena suerte!
