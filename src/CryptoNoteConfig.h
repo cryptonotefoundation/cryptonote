@@ -16,8 +16,6 @@ const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000; // Spa
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000; 
 //TODO Currency-specific address prefix
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0xd1; // Address departure per b
-//TODO Currency-specific address posfix
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_POSTFIX      = 0xd1; // Address departure per b
 //TODO Choose maturity period for your currency
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 15; // Get the rewards
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 225 / 15; 
@@ -39,7 +37,7 @@ const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 //TODO Define number of digits
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 12;
 //TODO Define minimum fee for transactions
-const uint64_t MINIMUM_FEE                                   = UINT64_C(10000000000);
+const uint64_t MINIMUM_FEE                                   = UINT64_C(100000);
 const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE;
 
 //TODO Define preferred block's target time
@@ -53,7 +51,7 @@ const size_t   DIFFICULTY_LAG                                = 15; // !!!
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
 const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024;
-const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 16384 * 1024;
+const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 4096 * 1024;
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET;
 
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1;
@@ -94,11 +92,9 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        =  10000;  //by def
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  100;    //by default, blocks count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;
 //TODO This port will be used by the daemon to establish connections with p2p network
-const int      P2P_DEFAULT_PORT                              = 4662;
+const int      P2P_DEFAULT_PORT                              = 3984;
 //TODO This port will be used by the daemon to interact with simlewallet
 const int      RPC_DEFAULT_PORT                              = 445;
-//TODO This port will be used by bitcuty to calculation and fixation nodes
-const int      BQTMINEME_DEFAULT_PORT                       = 3984;
   
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 =  5000;
@@ -119,40 +115,28 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "8f80f9a5a434a9f1
 //TODO Add here your network seed nodes (tag BQT or BQT tag)
 const std::initializer_list<const char*> SEED_NODES = {
 // Local host Bitcuty
-"127.0.0.1:4662",
 "127.0.0.1:3984"
 // Local host Bitcuty
-"0.0.0.0:4662",
 "0.0.0.0:3984",
 // User Bitcuty
-"192.168.*.*:4662",
 "192.168.*.*:3984",
 // Bitcuty Chicago
-"149.28.116.20:4662",
 "149.28.116.20:3984",
 // Bitcuty Canada 
-"155.138.143.216:4662",
 "155.138.143.216:3984",
 // Bitcuty Amsterdam
-"78.141.214.179:4662",
-"78.141.214.179:4662",
+"78.141.214.179:3984",
 // BitcutyFrankfurt
-"95.179.251.125:4662",
 "95.179.251.125:3984"
 // Bitcuty London
-"108.61.173.182:4662",
 "108.61.173.182:3984",
 // BitcutyParis
-"45.77.62.57:4662",
 "45.77.62.57:3984",
 // Bitcuty Sigapore
-"207.148.122.199:4662",
 "207.148.122.199:3984",
 // Bitcuty Sydney
-"139.180.160.231:4662",
 "139.180.160.231:3984",
 // Bitcuty Tokyo
-"45.32.50.38:4662",
 "45.32.50.38:3984",
 };
 
