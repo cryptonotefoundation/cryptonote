@@ -27,10 +27,9 @@
         "CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE": 783333,
         "CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1": 391667,
         "CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX": 0xd1,
-        "CRYPTONOTE_PUBLIC_ADDRESS_BASE58_POSTFIX": 0xd1,
-        "P2P_DEFAULT_PORT": 4662,
+        "P2P_DEFAULT_PORT": 3984,
         "RPC_DEFAULT_PORT": 445,
-        "MINE_DEFAULT_PORT": 3984,
+        "DEFAULT_PORT_DEFAULT_PORT": "*",
         "UPGRADE_HEIGHT_V2": 1,
         "UPGRADE_HEIGHT_V3": 2,
         "DIFFICULTY_CUT": 2879,
@@ -38,81 +37,27 @@
         "EXPECTED_NUMBER_OF_BLOCKS_PER_DAY": 5760000,
         "MAX_BLOCK_SIZE_INITIAL": 1048576,
         "UPGRADE_HEIGHT": 1
-        "BYTECOIN_NETWORK" = "",
+        "BITCUTY_NETWORK" = "",
         "CRYPTONOTE_NAME": "bitcuty",
         "CHECKPOINTS" = "",
         "GENESIS_COINBASE_TX_HEX":""
     },
     "extensions": [
         "https://github.com/BLockChainsB/Bitcuty/blob/master/Bitcuty.JSON",
-        "print-genesis-tx.json"
+        
     ]
-}
 
-
-        },
-        "extensions": [
-            "core/bitcuty.json",
-            "print-genesis-tx.json",
-            "simplewallet-default-fee.json",
-            "max-transaction-size-limit.json",
-            "genesis-block-reward.json"
-        ],
-        "status": "pending", next
     }
- }
-
 
 {
-    "algo": "cryptonight",
-    "api": {
-        "port": 3984,
-        "access-token": "BQT",
-        "worker-id": "Bitcuty",
-        "ipv6": faux,
-        "restreint": faux
-    },
-    "av": 7,
-    "background": vrai,
-    "couleurs": vrai,
-    "cpu-affinity("best_performances")": ' '",
-    "cpu-priority": 5,
-    "niveau don": "",
-    "pages énormes": vrai,
-    "hw-aes": null,
-    "fichier journal": "Bitcuty Mine-me",
-    "max-cpu-usage": "sentive",
-    "pools": [
-        {
-            "url": "127.0.0.1",
-            "utilisateur": "rpcuser("*")",
-            "passer": "rpcpass("*")",
-            "keepalive": "",
-            "nicehash": "",
-            "variante": -1,
-            "tls": faux,
-            "tls-fingerprint": "",
-        }
-    ],
-    "temps d'impression": 1,
-    "relances": 7,
-    "retry-pause": 5,
-    "sûr": vrai,
-    "syslog": vrai,
-    "threads": ""
-}
-
-{
-	"_comment1" : "audits linkings address https://www.miningrigrentals.com/rigs/152389",
-	"_comment2" : "may be used in this JSON configuration file and same data with bitcuty[BQT]",
-
-	"daemon url for mining" : "http://127.0.0.1:3984/",
-	"user" : "rpcuser("*")",
-	"pass" : "rpcpass("*")",
-
+    "algo": "cryptonight", {
+        "port": 3984
+	"address" : "http://127.0.0.1/",
+	"user" : "rpcuser("top_secret")",
+	"pass" : "rpcpass("top_secret")",
 	
 	"threads("'NumberProcessorCore'*'2'") : "' '",
-        if 
+        and or 
         "gpu mining";
         "throttles("Best selfajustment, ' ': "-1: -55") : "' '"
 
@@ -120,8 +65,16 @@
 
 {  
 
-// Creator Bitcuty[BQT] the Cryptonote Blockchain is Marc-Andre Robert ("Date deployment": "6Mars2020"))  //
+// Creator Bitcuty[BQT] the Cryptonote Blockchain is Marc-Andre Robert ("Date deployment": "Mars2020"))  //
 
 }
+{
+.end
+Bitcuty\nBitcuty?
 .end
 }}}
+}}
+}
+
+
+
