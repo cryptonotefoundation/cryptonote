@@ -41,26 +41,10 @@
         "CRYPTONOTE_NAME": "bitcuty",
         "CHECKPOINTS: "",
         "GENESIS_COINBASE_TX_HEX":""
-    },
+    }
+      
     "extensions": [
         "https://github.com/BLockChainsB/Bitcuty/blob/master/Bitcuty.JSON",
         
-    ]
-
-    }
-
-{  
-
-// Creator Bitcuty[BQT] the Cryptonote Blockchain is Marc-Andre Robert ("date-deployment": "Mars2020"))  //
-
-}
-{
-.end
-Bitcuty\nBitcuty?
-.end
-}}}
-}}
-}
-
 
 
