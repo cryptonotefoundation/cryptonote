@@ -40,11 +40,7 @@
         "BITCUTY_NETWORK: "",
 
     }
-      
-    "extensions" {
-        "https://github.com/BLockChainsB/Bitcuty/blob/master/Bitcuty.JSON"
-                 }
     }
 }
-
-
+}
+}
