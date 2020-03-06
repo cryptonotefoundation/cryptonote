@@ -38,9 +38,7 @@
         "MAX_BLOCK_SIZE_INITIAL": 1048576,
         "UPGRADE_HEIGHT": 1
         "BITCUTY_NETWORK: "",
-        "CRYPTONOTE_NAME": bitcuty,
-        "CHECKPOINTS: "",
-        "GENESIS_COINBASE_TX_HEX":""
+
     }
       
     "extensions" {
