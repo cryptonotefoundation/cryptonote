@@ -37,9 +37,9 @@
         "EXPECTED_NUMBER_OF_BLOCKS_PER_DAY": 5760000,
         "MAX_BLOCK_SIZE_INITIAL": 1048576,
         "UPGRADE_HEIGHT": 1
-        "BITCUTY_NETWORK": "",
+        "BITCUTY_NETWORK: "",
         "CRYPTONOTE_NAME": "bitcuty",
-        "CHECKPOINTS": "",
+        "CHECKPOINTS: "",
         "GENESIS_COINBASE_TX_HEX":""
     },
     "extensions": [
@@ -49,23 +49,9 @@
 
     }
 
-{
-    "algo": "cryptonight", {
-        "port": 3984
-	"address" : "http://127.0.0.1/",
-	"user" : "rpcuser("top_secret")",
-	"pass" : "rpcpass("top_secret")",
-	
-	"threads("'NumberProcessorCore'*'2'") : "' '",
-        and or 
-        "gpu mining";
-        "throttles("Best selfajustment, ' ': "-1: -55") : "' '"
-
-}
-
 {  
 
-// Creator Bitcuty[BQT] the Cryptonote Blockchain is Marc-Andre Robert ("Date deployment": "Mars2020"))  //
+// Creator Bitcuty[BQT] the Cryptonote Blockchain is Marc-Andre Robert ("date-deployment": "Mars2020"))  //
 
 }
 {
