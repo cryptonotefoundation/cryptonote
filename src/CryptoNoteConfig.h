@@ -121,9 +121,9 @@ const std::initializer_list<const char*> SEED_NODES = {
 // User Bitcuty
 "192.168.*.*:3984",
 // Bitcuty Chicago
-"149.28.116.20:3984",
+"104.238.162.168:3984",
 // Bitcuty Canada 
-"155.138.143.216:3984",
+"155.138.136.237:3984",
 // Bitcuty Amsterdam
 "78.141.214.179:3984",
 // BitcutyFrankfurt
