@@ -37,9 +37,9 @@
         "EXPECTED_NUMBER_OF_BLOCKS_PER_DAY": 5760000,
         "MAX_BLOCK_SIZE_INITIAL": 1048576,
         "UPGRADE_HEIGHT": 1
-        "BITCUTY_NETWORK" = "",
+        "BITCUTY_NETWORK": "",
         "CRYPTONOTE_NAME": "bitcuty",
-        "CHECKPOINTS" = "",
+        "CHECKPOINTS": "",
         "GENESIS_COINBASE_TX_HEX":""
     },
     "extensions": [
