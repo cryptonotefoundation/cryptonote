@@ -97,33 +97,12 @@ bool Currency::generateGenesisBlock() {
   return true;
 }
 
-  bool Currency::getBlockReward() {
-    
-  size_t medianSize = 783333; 
-  size_t currentBlockSize = 1048576; 
-  uint64_t alreadyGeneratedCoins = UINT64_C(858986905600000000);
-  uint64_t fee = 10000000000; 
-  uint64_t& reward = 7.3386;
-  int64_t& emissionChange = 25;
-  }&
-  const {
+bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins,
+  uint64_t fee, uint64_t& reward, int64_t& emissionChange) const {
   assert(alreadyGeneratedCoins <= m_moneySupply);
-  assert(m_emissionSpeedFactor > 25 && m_emissionSpeedFactor <= 25 * sizeof(uint64_t));
+  assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 8 * sizeof(uint64_t));
+
   uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
-        
-         if (alreadyGeneratedCoins == 0) {
-            baseReward = 1;
-        }
-
-        if (alreadyGeneratedCoins == 1) {
-            baseReward =m_moneySupply*0.10;
-        }
-
-     if (alreadyGeneratedCoins + baseReward >= m_moneySupply) {
-                baseReward = 0;
-            }
-                                   }
-         
 
   medianSize = std::max(medianSize, m_blockGrantedFullRewardZone);
   if (currentBlockSize > UINT64_C(2) * medianSize) {
