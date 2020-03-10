@@ -23,7 +23,7 @@ const size_t   BITCUTY_MAX_TX_SIZE                           = 33648803;
 const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address departure per b
 //TODO Choose maturity period for your currency 
 const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 15; // Get the rewards
-const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; 
+const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best block every 15 sec * 15 equals 225 sec and or 3 min 45 sec / 1000 [millisecond]
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15;
   
@@ -50,11 +50,11 @@ const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE;
 
 //TODO Define preferred block's target time
 const uint64_t DIFFICULTY_TARGET                             = 15;
-const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1 / DIFFICULTY_TARGET;
+const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1000 * 1 / DIFFICULTY_TARGET;
 //TODO There are options to tune CryptoNote's difficulty retargeting function.
 //TODO We recommend not to change it.
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
-const size_t   DIFFICULTY_CUT                                = 2879;
+const size_t   DIFFICULTY_CUT                                = 5759996;
 const size_t   DIFFICULTY_LAG                                = 15; // !!!
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
