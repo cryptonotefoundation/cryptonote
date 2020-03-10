@@ -11,7 +11,7 @@
 namespace CryptoNote {
 namespace parameters {
 
-const var      BITCUTY                                       = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain
+const var      BITCUTY_COIN                                  = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain
 const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generation Block
 const size_t   BITCUTY_BLOB_NUMBER_HEIGHT                    = 0; // Auto switch for "1" to event creation first Block
 const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte per blob
