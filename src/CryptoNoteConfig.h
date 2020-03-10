@@ -33,8 +33,8 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15;
 // Bitcuty money supply in coin is 16417602.225601500000 BQT
 // Bitcuty genesis block reward in coin is 2029141.848108040000 BQT 
 // Bitcuty total value in coin is 18446744.073709540000 BQT
-const uint64_t MONEY_SUPPLY                                  = ((uint64_t)(2029141848108040000)); // UINT64_C(16417602225601500000)
-const uint64_t GENESIS_BLOCK_REWARD                          = ((uint64_t)(16417602225601500000)); // UINT64_C(2029141848108040000)
+const uint64_t MONEY_SUPPLY                                  = ((uint64_C)(2029141848108040000)); // UINT64_C(16417602225601500000)
+const uint64_t GENESIS_BLOCK_REWARD                          = ((uint64_C)(16417602225601500000)); // UINT64_C(2029141848108040000)
 const unsigned EMISSION_SPEED_FACTOR                         = 25;
 static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR");
 
