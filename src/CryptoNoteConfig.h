@@ -122,7 +122,7 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "8f80f9a5a434a9f1
 
 //TODO Add here your network seed nodes (tag BCUTY or BCUTY tag)
 const std::initializer_list<const char*> SEED_NODES = {
-// Local host Bitcuty
+// Localhost Bitcuty
 "127.0.0.1:3984"
 // Bitcuty Chicago
 "104.238.162.168:3984",
@@ -143,7 +143,6 @@ const std::initializer_list<const char*> SEED_NODES = {
 // Bitcuty Tokyo
 "45.32.50.38:3984",
 };
-
 
 // Bitcuty UUID daemon losthost "127.0.0.1", Briefly All`in
 constexpr UUID_BITCUTY_NETWORK = common :: pfh <UUID> ("21d0cb49-1b49-4756-861e-a4deab7a36ab"); // Everything is for the better
