@@ -11,21 +11,21 @@
 namespace CryptoNote {
 namespace parameters {
 
-const var      BITCUTY                                       = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain
-const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generation Block
-const size_t   BITCUTY_BLOB_NUMBER_HEIGHT                    = 0; // Auto switch for "1" to event creation first Block
-const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte per blob
-const uint64_t BITCUTY_MAX_BLOCK_NUMBER                      = 4587156; // Maximum generation the blocks per blob
-const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 36574330; // Space for one Block the 1MB to 32MB+ 0,09MB for transaction in each Block
+const var      BITCUTY                                       = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain !!!
+const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generation Block !!!
+const size_t   BITCUTY_BLOB_NUMBER_HEIGHT                    = 0; // Auto switch for "1" to event creation first Block !!!
+const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte per blob !!!
+const uint64_t BITCUTY_MAX_BLOCK_NUMBER                      = 4587156; // Maximum generation the blocks per blob !!!
+const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 36574330; // Space for one Block the 1MB to 32MB+ 0,09MB for transaction in each Block !!!
 
-const size_t   BITCUTY_MAX_TX_SIZE                           = 33648803; 
+const size_t   BITCUTY_MAX_TX_SIZE                           = 33648803; // Appreciate to the top block 32MB + space transaction !!!
 //TODO Currency-specific address prefix
-const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address departure per b
+const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address start with "b" is prefix the your address !!!
 //TODO Choose maturity period for your currency 
-const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 15; // Get the rewards
-const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best block every 15 sec * 15 equals 225 sec and or 3 min 45 sec / 1000 [millisecond]
+const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 15; // Get the rewards a big big reward !!!
+const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best block every 15 sec * 15 equals 225 sec and or 3 min 45 sec / 1000 [millisecond] !!!
 
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15;
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal mechanization !!!
   
 //TODO Specify total number of available coins
 //TODO ((uint64_t)(-1)) equals to 18446744073709551616
@@ -33,24 +33,24 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15;
 // Bitcuty money supply in coin is 16417602.225601500000 BQT
 // Bitcuty genesis block reward in coin is 2029141.848108040000 BQT 
 // Bitcuty total value in coin is 18446744.073709540000 BQT
-const uint64_t MONEY_SUPPLY                                  = UINT64_C(16417602225601500000) // 89% for generate uint64_t(2029141848108040000)
-const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000) // 11% for the creator uint64_t(16417602225601500000)
-const unsigned EMISSION_SPEED_FACTOR                         = 25;
-static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR");
+const uint64_t MONEY_SUPPLY                                  = UINT64_C(16417602225601500000) // 89% for generate uint64_t(2029141848108040000) !!!
+const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000) // 11% for the creator uint64_t(16417602225601500000) !!!
+const unsigned EMISSION_SPEED_FACTOR                         = 25; // There is Roadrunner and the master Bitsrunner bd, is cryptonoted !!!
+static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now !!!
 
 //TODO Define number of blocks for block size median calculation
-const size_t   BITCUTY_REWARD_BLOCKS_WINDOW                  = 15;
-const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 783333;
-const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371;
+const size_t   BITCUTY_REWARD_BLOCKS_WINDOW                  = 15; // !!!
+const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 783333; // Magic-bit le bit MB, swap abracadabra octet par bit en devise, est la blockchain cryptonote Bitcuty !!!
+const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371; // Equal nine percent of block space !!!
 //TODO Define number of digits
-const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12;
+const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12; // It's BB-BCUTY !!!
 //TODO Define minimum fee for transactions
-const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE;
+const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333); // It is 0,00083333% fee per transaction !!!
+const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE; // It is minimum fee !!!
 
 //TODO Define preferred block's target time
-const uint64_t DIFFICULTY_TARGET                             = 15;
-const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1000 * 1 / DIFFICULTY_TARGET;
+const uint64_t DIFFICULTY_TARGET                             = 15; // The data is all right !!!
+const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1000 * 1 / DIFFICULTY_TARGET; // "'%H:%M:%S:%MS / Difficulties Targeting', '15: 0\n0 in 15 sec'"
 //TODO There are options to tune CryptoNote's difficulty retargeting function.
 //TODO We recommend not to change it.
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
