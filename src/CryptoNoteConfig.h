@@ -11,33 +11,41 @@
 namespace CryptoNote {
 namespace parameters {
 
-const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000; // Generation of new blocks infinitely
-const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000; // Space for one Block the 1MB to 32MB
-const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000; 
+const var      BITCUTY                                       = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain
+const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generation Block
+const size_t   BITCUTY_BLOB_NUMBER_HEIGHT                    = 0; // Auto switch for "1" to event creation first Block
+const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte per blob
+const uint64_t BITCUTY_MAX_BLOCK_NUMBER                      = 4587156; // Maximum generation the blocks per blob
+const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 36574330; // Space for one Block the 1MB to 32MB+ 0,09MB for transaction in each Block
+
+const size_t   BITCUTY_MAX_TX_SIZE                           = 33648803; 
 //TODO Currency-specific address prefix
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0xd1; // Address departure per b
-//TODO Choose maturity period for your currency
-const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 15; // Get the rewards
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 225 / 15; 
+const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address departure per b
+//TODO Choose maturity period for your currency 
+const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 15; // Get the rewards
+const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; 
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15;
   
 //TODO Specify total number of available coins
-//TODO ((uint64_t)(-1)) equals to 18446744073709551616 coins
+//TODO ((uint64_t)(-1)) equals to 18446744073709551616
 //TODO or you can define number explicitly UINT64_C(858986905600000000)
-const uint64_t MONEY_SUPPLY                                  = UINT64_C(858986905600000000);
-const uint64_t GENESIS_BLOCK_REWARD                          = 2029141848000000000; // 11% for creator
+// Bitcuty money supply in coin is 16417602.225601500000 BQT
+// Bitcuty genesis block reward in coin is 2029141.848108040000 BQT 
+// Bitcuty total value in coin is 18446744.073709540000 BQT
+const uint64_t MONEY_SUPPLY                                  = ((uint64_t)(2029141848108040000)); // UINT64_C(16417602225601500000)
+const uint64_t GENESIS_BLOCK_REWARD                          = ((uint64_t)(16417602225601500000)); // UINT64_C(2029141848108040000)
 const unsigned EMISSION_SPEED_FACTOR                         = 25;
-static_assert(EMISSION_SPEED_FACTOR <= 8 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR");
+static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR");
 
 //TODO Define number of blocks for block size median calculation
-const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
-const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 783333;
-const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
+const size_t   BITCUTY_REWARD_BLOCKS_WINDOW                  = 15;
+const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 783333;
+const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371;
 //TODO Define number of digits
-const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 12;
+const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12;
 //TODO Define minimum fee for transactions
-const uint64_t MINIMUM_FEE                                   = UINT64_C(1000000000);
+const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333);
 const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE;
 
 //TODO Define preferred block's target time
@@ -76,7 +84,7 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 
 //TODO Put here the name of your currency
 const char     CRYPTONOTE_NAME[]                             = "Bitcuty";
-const char     CRYPTONOTE_SYMBOL[]                           = "BQT";
+const char     CRYPTONOTE_SYMBOL[]                           = "BCUTY";
 const char     GENESIS_COINBASE_TX_HEX[]                     = "";
 
 const uint8_t  TRANSACTION_VERSION_1                         =  1;
@@ -112,14 +120,10 @@ const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 5000;          //
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "8f80f9a5a434a9f1510d13336228debfee9c918ce505efe225d8c94d045fa115";
 
 
-//TODO Add here your network seed nodes (tag BQT or BQT tag)
+//TODO Add here your network seed nodes (tag BCUTY or BCUTY tag)
 const std::initializer_list<const char*> SEED_NODES = {
 // Local host Bitcuty
 "127.0.0.1:3984"
-// Local host Bitcuty
-"0.0.0.0:3984",
-// User Bitcuty
-"192.168.*.*:3984",
 // Bitcuty Chicago
 "104.238.162.168:3984",
 // Bitcuty Canada 
@@ -139,6 +143,10 @@ const std::initializer_list<const char*> SEED_NODES = {
 // Bitcuty Tokyo
 "45.32.50.38:3984",
 };
+
+
+// Bitcuty UUID daemon losthost "127.0.0.1", Briefly All`in
+constexpr UUID_BITCUTY_NETWORK = common :: pfh <UUID> ("21d0cb49-1b49-4756-861e-a4deab7a36ab"); // Everything is for the better
 
 struct CheckpointData {
   uint32_t height;
