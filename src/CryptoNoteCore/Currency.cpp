@@ -97,14 +97,14 @@ bool Currency::generateGenesisBlock() {
   return true;
 }
 
-  bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, UINT64_C alreadyGeneratedCoins,
+  bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins,
   uint64_t fee, uint64_t& reward, int64_t& emissionChange) const {
   assert(alreadyGeneratedCoins <= m_moneySupply);
   assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 25 * sizeof(uint64_t));
   
-  UINT64_C alreadyGeneratedCoins == 0;
-  uint64_t reward == "_";  
   #include "CryptoNoteConfig.h";
+  uint64_t alreadyGeneratedCoins == 0;
+  uint64_t reward == UINT64_C("_"); 
 
   medianSize = std::max(medianSize, m_blockGrantedFullRewardZone);
   if (currentBlockSize > UINT64_C(2) * medianSize) {
