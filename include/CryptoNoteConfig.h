@@ -13,13 +13,13 @@ namespace CryptoNote {
 namespace parameters {
 
 const var      BITCUTY                                       = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain !!! ¡¡¡
-const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generation Block !!! ¡¡¡
+const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generations Block !!! ¡¡¡
 const size_t   BITCUTY_BLOB_NUMBER_HEIGHT                    = 0; // Auto switch for "1" to event creation first Block !!! ¡¡¡
-const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte per blob !!! ¡¡¡
+const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per blob !!! ¡¡¡
 const uint64_t BITCUTY_MAX_BLOCK_NUMBER                      = 4550000; // Maximum generation the blocks per blob !!! ¡¡¡
-const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Space for one Block the 1MB to 32MB + 0,09MB for transaction in each Block !!! ¡¡¡
+const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Space for one Block the 1MB to 32MB + 0,09MB for transaction in each Block ('data in binary')!!! ¡¡¡
 
-const size_t   BITCUTY_MAX_TX_SIZE                           = 33554432; // Appreciate to the top block 32MB + space transaction !!! ¡¡¡
+const size_t   BITCUTY_MAX_TX_SIZE                           = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
 //TODO Currency-specific address prefix
 const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
 //TODO Choose maturity period for your currency 
@@ -42,7 +42,7 @@ static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FA
 //TODO Define number of blocks for block size median calculation
 const size_t   BITCUTY_REWARD_BLOCKS_WINDOW                  = 15; // !!!
 const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 783333; // Magic-bit the MB bit, abracadabra byte per bit swap to currency, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
-const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371; // Equal nine percent of block space !!! ¡¡¡
+const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371; // Equals nine percent of block space ('data-in-binary')!!! ¡¡¡
 //TODO Define number of digits
 const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12; // It's BB-BCUTY !!! ¡¡¡
 //TODO Define minimum fee for transactions
@@ -51,12 +51,12 @@ const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE; // I
 
 //TODO Define preferred block's target time
 const uint64_t DIFFICULTY_TARGET                             = 15; // The data is all right !!! ¡¡¡
-const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1000 * 1 / DIFFICULTY_TARGET; // "'%H:%M:%S:%MS / Difficulties Targeting', '15: 0\n0 in 15 sec'" !!! ¡¡¡
+const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1000 * 1 / DIFFICULTY_TARGET; // "'%H:%M:%S:%MS:*1 / Difficultie sure Targetings', '15: 0\n0 in 15 sec'" !!! ¡¡¡
 //TODO There are options to tune CryptoNote's difficulty retargeting function.
 //TODO We recommend not to change it.
-const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty !!! ¡¡¡
-const size_t   DIFFICULTY_CUT                                = 5759998; // (-)_(*) mining all`in !!! ¡¡¡
-const size_t   DIFFICULTY_LAG                                = 0; // selfajustment to best performances !!! ¡¡¡
+const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
+const size_t   DIFFICULTY_CUT                                = 5759998; // ^!%_(-)_(*) mining all`in overflow !!! ¡¡¡
+const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to best performances !!! ¡¡¡
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // equals 0.end !!! ¡¡¡
 
 const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // 1MB  (in binary) !!! ¡¡¡
