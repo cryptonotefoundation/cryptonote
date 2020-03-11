@@ -13,9 +13,9 @@ namespace parameters {
 
 const var      BITCUTY                                       = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain !!! ¡¡¡
 const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generations Block !!! ¡¡¡
-const size_t   BITCUTY_BLOB_NUMBER_HEIGHT                    = 0; // Auto switch for "1" to event creation first Block !!! ¡¡¡
+const size_t   BITCUTY_BLOB_HEIGHT                           = 0; // Auto switch for "1" to event creation first Block to the next blob switch a "2", ,,, "!!! ¡¡¡
 const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per blob !!! ¡¡¡
-const uint64_t BITCUTY_MAX_BLOCK_NUMBER                      = 4550000; // Maximum generation the blocks per blob !!! ¡¡¡
+const size_t BITCUTY_MAX_BLOCK_NUMBER                        = 549067; // Maximum generation the blocks per blob !!! ¡¡¡
 const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Space for one Block the 1MB to 32MB + 0,09MB for transaction in each Block ('data in binary')!!! ¡¡¡
 
 const size_t   BITCUTY_MAX_TX_SIZE                           = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
@@ -28,13 +28,22 @@ const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal mechanization !!! ¡¡¡
   
 //TODO Specify total number of available coins
-//TODO ((uint64_t)(-1)) equals to 18446744073709551616
+//TODO ((uint64_t)(11615)) equals to 18446744073709540000
 //TODO or you can define number explicitly UINT64_C(858986905600000000)
 // Bitcuty money supply in coin is 16417602.225601500000 BCUTY
 // Bitcuty genesis block reward in coin is 2029141.848108040000 BCUTY 
 // Bitcuty total value in coin is 18446744.073709540000 BCUTY
-const uint64_t MONEY_SUPPLY                                  = UINT64_C(16417602225601500000) // 89% for generate uint64_t(2029141848108040000) !!! ¡¡¡
-const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000) // 11% for the creator uint64_t(16417602225601500000) !!! ¡¡¡
+const values blob & TOTAL_EMISSION_BLOCK(MONEY_SUPPLY, GENESIS_BLOCK_REWARD("PREMINED_COINS")) {
+ 
+const uint64_t MONEY_SUPPLY                                  = uint64_t(11615);
+ or
+const UINT64_C MONEY_SUPPLY                                  = UINT64_C(18446744073709540000);
+ and 
+const uint64_t GENESIS_BLOCK_REWARD                          = uint64_t(16417602225601500000);
+ or  
+const UINT64_C GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000);
+} 
+
 const unsigned EMISSION_SPEED_FACTOR                         = 25; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
 static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now !!! ¡¡¡
 
