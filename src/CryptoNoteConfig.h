@@ -28,19 +28,21 @@ const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal mechanization !!! ¡¡¡
   
 //TODO Specify total number of available coins
+//TODO ((uint64_t)(-1)) equals to 18446744073709551616
+//TODO ((uint64_t) is maximum claim value 18446744073709551615
 //TODO ((uint64_t)(11615)) equals to 18446744073709540000
 //TODO or you can define number explicitly UINT64_C(858986905600000000)
 // Bitcuty money supply in coin is 16417602.225601500000 BCUTY
 // Bitcuty genesis block reward in coin is 2029141.848108040000 BCUTY 
 // Bitcuty total value in coin is 18446744.073709540000 BCUTY
-const values blob & TOTAL_EMISSION_BLOCK(MONEY_SUPPLY, GENESIS_BLOCK_REWARD("PREMINED_COINS")) {
+const values blob & TOTAL_EMISSION_BLOCK(MONEY_SUPPLY, GENESIS_BLOCK_REWARD) {
  
 const uint64_t MONEY_SUPPLY                                  = uint64_t(11615);
  or
 const UINT64_C MONEY_SUPPLY                                  = UINT64_C(18446744073709540000);
  and 
 const uint64_t GENESIS_BLOCK_REWARD                          = uint64_t(16417602225601500000);
- or  
+ or                                                                    
 const UINT64_C GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000);
 } 
 
