@@ -12,36 +12,47 @@ namespace CryptoNote {
 namespace parameters {
 
 const var      BITCUTY                                       = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain !!! ¡¡¡
-const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generations Block !!! ¡¡¡
-const size_t   BITCUTY_BLOB_NUMBER_HEIGHT                    = 0; // Auto switch for "1" to event creation first Block !!! ¡¡¡
-const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per blob !!! ¡¡¡
-const uint64_t BITCUTY_MAX_BLOCK_NUMBER                      = 4550000; // Maximum generation the blocks per blob !!! ¡¡¡
-const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Space for one Block the 1MB to 32MB + 0,09MB for transaction in each Block ('data in binary')!!! ¡¡¡
+const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = Infinity; // Number blob for generations Block !!! ¡¡¡
+const size_t   BITCUTY_BLOB_HEIGHT                           = 0; // Auto switch for "1" to event creation first Block to the next blob switch a "2", ,,, "!!! ¡¡¡
+const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per blob !!! ¡¡¡                                      
+const size_t   BITCUTY_MAX_BLOCK_NUMBER                      = 156250; // Maximum generation the Blocks per blob !!! ¡¡¡
+const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Space for one top big Block the 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
 
 const size_t   BITCUTY_MAX_TX_SIZE                           = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
 //TODO Currency-specific address prefix
 const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
 //TODO Choose maturity period for your currency 
 const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 15; // Get the rewards a big big reward !!! ¡¡¡
-const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best block every 15 sec * 15 equals 225 sec or 3 min 45 sec / 1000 [millisecond] !!! ¡¡¡
+const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best Block every 15 sec * 15 equals 225 sec or 3 min 45 sec / 1000 [millisecond] !!! ¡¡¡
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal mechanization !!! ¡¡¡
   
 //TODO Specify total number of available coins
 //TODO ((uint64_t)(-1)) equals to 18446744073709551616
+//TODO ((uint64_t) is maximum claim value 18446744073709551615
+//TODO ((uint64_t)(11615)) equals to 18446744073709540000
 //TODO or you can define number explicitly UINT64_C(858986905600000000)
-// Bitcuty money supply in coin is 16417602.225601500000 BCUTY
-// Bitcuty genesis block reward in coin is 2029141.848108040000 BCUTY 
-// Bitcuty total value in coin is 18446744.073709540000 BCUTY
-const uint64_t MONEY_SUPPLY                                  = UINT64_C(16417602225601500000) // 89% for generate uint64_t(2029141848108040000) !!! ¡¡¡
-const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000) // 11% for the creator uint64_t(16417602225601500000) !!! ¡¡¡
+// Bitcuty money supply in coin is 16417602.225601500000 @BCUTY
+// Bitcuty genesis block reward in coin is 2029141.848108040000 @BCUTY 
+// Bitcuty total value BLOB(Height1) in coin is 18446744.073709540000 @BCUTY
+const values blob & TOTAL_EMISSION_BLOCK(MONEY_SUPPLY, GENESIS_BLOCK_REWARD) {
+ 
+const uint64_t MONEY_SUPPLY                                  = uint64_t(11615);
+ or
+const UINT64_C MONEY_SUPPLY                                  = UINT64_C(18446744073709540000);
+ and 
+const uint64_t GENESIS_BLOCK_REWARD                          = uint64_t(16417602225601500000);
+ or                                                                    
+const UINT64_C GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000);
+} 
+
 const unsigned EMISSION_SPEED_FACTOR                         = 25; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
 static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now !!! ¡¡¡
 
 //TODO Define number of blocks for block size median calculation
 const size_t   BITCUTY_REWARD_BLOCKS_WINDOW                  = 15; // !!!
 const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 888888; // Magic-bit the MB bit, abracadabra byte per bit swap to currencies, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
-const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371; // Equals nine percent of the block space ('data-in-binary')!!! ¡¡¡
+const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 159688; // Equals block space for transactions ('data-in-binary')!!! ¡¡¡
 //TODO Define number of digits
 const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12; // It's BB-BCUTY !!! ¡¡¡
 //TODO Define minimum fee for transactions
@@ -56,7 +67,7 @@ const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 10
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
 const size_t   DIFFICULTY_CUT                                = 5759998; // ^%_(-)_(*) minings all`in !!! ¡¡¡
 const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to bests performance !!! ¡¡¡
-static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // 'equals 0 .end' !!! ¡¡¡
+static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // 'equals 0 .end ' !!! ¡¡¡
 
 const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // 1MB  ('data in binary') !!! ¡¡¡
  ¡¡¡const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR     = 4096 * 1024; // 4 MB ('data in binary') !!! ¡¡¡
@@ -83,8 +94,8 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 } // parameters
 
 //TODO Put here the name of your currency
-const char     CRYPTONOTE_NAME[]                             = "Bitcuty"; // BCUTY !!! ¡¡¡
-const char     CRYPTONOTE_SYMBOL[]                           = "BCUTY"; // Bitcuty !!! ¡¡¡
+const char     CRYPTONOTE_NAME[]                             = Bitcuty; // BCUTY !!! ¡¡¡
+const char     CRYPTONOTE_SYMBOL[]                           = BCUTY; // Bitcuty !!! ¡¡¡
 const char     GENESIS_COINBASE_TX_HEX[]                     = ""; // The best first block to the first blob chain and the only first !!! ¡¡¡ ¡¡¡ ¡¡¡
 
 const uint8_t  TRANSACTION_VERSION_1                         =  1; // !!! ¡¡¡
