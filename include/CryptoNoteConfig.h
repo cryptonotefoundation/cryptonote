@@ -119,8 +119,7 @@ const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT                    = 60 * 2 * 1000; //
 const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 5000;          // 5 seconds ¡¡¡
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "8f80f9a5a434a9f1510d13336228debfee9c918ce505efe225d8c94d045fa115"; // !!! ¡¡¡
 
-¡¡¡
-//TODO Add here your network seed nodes and joins the Bitcuty Cryptonote team, claiming insider ('tag BCUTY' or 'BCUTY tag'); Bitcuty on global accessibilitys !!! ¡¡¡ ¡¡¡ 
+// Add here your network nodes and joins the Bitcuty Cryptonote Team, claiming insider ('tag BCUTY' or 'BCUTY tag'); Bitcuty on global accessibilitys !!! ¡¡¡ ¡¡¡ 
 const std::initializer_list<const char*> SEED_NODES = {
 // Localhost Bitcuty
 "127.0.0.1:3984"
@@ -161,6 +160,6 @@ __attribute__((unused))
 const std::initializer_list<CheckpointData> CHECKPOINTS = {
   //{ 10000, "84b6345731e2702cdaadc6ce5e5238c4ca5ecf48e3447136b2ed829b8a95f3ad" },
 };
-} // CryptoNote !_!!! ¡_¡¡¡
+} // CryptoNote ¡¡¡¡¡¡¡
 
 #define ALLOW_DEBUG_COMMANDS
