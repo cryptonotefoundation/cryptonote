@@ -40,7 +40,7 @@ static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FA
 
 //TODO Define number of blocks for block size median calculation
 const size_t   BITCUTY_REWARD_BLOCKS_WINDOW                  = 15; // !!!
-const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 783333; // Magic-bit the MB bit, abracadabra byte per bit swap to currencies, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
+const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 888888; // Magic-bit the MB bit, abracadabra byte per bit swap to currencies, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
 const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371; // Equals nine percent of the block space ('data-in-binary')!!! ¡¡¡
 //TODO Define number of digits
 const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12; // It's BB-BCUTY !!! ¡¡¡
