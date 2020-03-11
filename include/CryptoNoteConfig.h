@@ -60,7 +60,7 @@ const size_t   DIFFICULTY_LAG                                = 0; // selfajustme
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // equals 0.end !!! ¡¡¡
 
 const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // 1MB  (in binary) !!! ¡¡¡
- ¡¡¡const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 4096 * 1024; // 4 MB (in binary) !!! ¡¡¡
+ ¡¡¡const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR     = 4096 * 1024; // 4 MB (in binary) !!! ¡¡¡
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET; // Works all the time !!! ¡¡¡
 
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1; // !!! ¡¡¡
