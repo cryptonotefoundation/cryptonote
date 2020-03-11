@@ -55,7 +55,7 @@ const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 10
 //TODO We recommend not to change it.
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
 const size_t   DIFFICULTY_CUT                                = 5759998; // ^%_(-)_(*) minings all`in !!! ¡¡¡
-const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to bests performances !!! ¡¡¡
+const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to bests performance !!! ¡¡¡
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // 'equals 0 .end' !!! ¡¡¡
 
 const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // 1MB  ('data in binary') !!! ¡¡¡
