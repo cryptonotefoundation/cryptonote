@@ -17,7 +17,7 @@ const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Nu
 const size_t   BITCUTY_BLOB_NUMBER_HEIGHT                    = 0; // Auto switch for "1" to event creation first Block !!! ¡¡¡
 const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte per blob !!! ¡¡¡
 const uint64_t BITCUTY_MAX_BLOCK_NUMBER                      = 4587156; // Maximum generation the blocks per blob !!! ¡¡¡
-const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 36574330; // Space for one Block the 1MB to 32MB+ 0,09MB for transaction in each Block !!! ¡¡¡
+const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 36574330; // Space for one Block the 1MB to 32MB + 0,09MB for transaction in each Block !!! ¡¡¡
 
 const size_t   BITCUTY_MAX_TX_SIZE                           = 33648803; // Appreciate to the top block 32MB + space transaction !!! ¡¡¡
 //TODO Currency-specific address prefix
