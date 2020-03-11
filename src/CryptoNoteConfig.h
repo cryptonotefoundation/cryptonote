@@ -15,7 +15,7 @@ const var      BITCUTY                                       = CRYPTONOTE; // Bi
 const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generations Block !!! ¡¡¡
 const size_t   BITCUTY_BLOB_HEIGHT                           = 0; // Auto switch for "1" to event creation first Block to the next blob switch a "2", ,,, "!!! ¡¡¡
 const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per blob !!! ¡¡¡                                      
-const uint64_t BITCUTY_MAX_BLOCK_NUMBER                      = 156250; // Maximum generation the blocks per blob !!! ¡¡¡
+const size_t BITCUTY_MAX_BLOCK_NUMBER                      = 156250; // Maximum generation the blocks per blob !!! ¡¡¡
 const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Space for one top big Block the 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
 
 const size_t   BITCUTY_MAX_TX_SIZE                           = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
