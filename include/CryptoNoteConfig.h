@@ -40,7 +40,7 @@ const values blob & TOTAL_EMISSION_BLOCK(MONEY_SUPPLY, GENESIS_BLOCK_REWARD) {
 
 const uint64_t BLOB_MONEY_SUPPLY                             = UINT64_C(18446744073709540000); // For each BLOB !!! ¡¡¡
 const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000); // For the creator !!! ¡¡¡
-} 
+}; 
 
 const unsigned EMISSION_SPEED_FACTOR                         = 25; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
 static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now !!! ¡¡¡
