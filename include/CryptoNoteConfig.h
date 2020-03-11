@@ -55,7 +55,7 @@ const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 10
 //TODO There are options to tune CryptoNote's difficulty retargeting function.
 //TODO We recommend not to change it.
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
-const size_t   DIFFICULTY_CUT                                = 5759998; // ^!%_(-)_(*) mining all`in overflow !!! ¡¡¡
+const size_t   DIFFICULTY_CUT                                = 5759998; // ^%_(-)_(*) mining all`in !!! ¡¡¡
 const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to best performances !!! ¡¡¡
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // equals 0.end !!! ¡¡¡
 
