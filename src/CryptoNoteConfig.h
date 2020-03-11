@@ -12,7 +12,7 @@ namespace CryptoNote {
 namespace parameters {
 
 const var      BITCUTY                                       = CRYPTONOTE; // Bitcuty the Cryptonote Blockchain !!! ¡¡¡
-const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = "Infinity"; // Number blob for generations Block !!! ¡¡¡
+const size_t   BITCUTY_NUMBER_BLOB_TOTAL                     = Infinity; // Number blob for generations Block !!! ¡¡¡
 const size_t   BITCUTY_BLOB_HEIGHT                           = 0; // Auto switch for "1" to event creation first Block to the next blob switch a "2", ,,, "!!! ¡¡¡
 const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per blob !!! ¡¡¡                                      
 const size_t   BITCUTY_MAX_BLOCK_NUMBER                      = 156250; // Maximum generation the Blocks per blob !!! ¡¡¡
@@ -94,8 +94,8 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 } // parameters
 
 //TODO Put here the name of your currency
-const char     CRYPTONOTE_NAME[]                             = "Bitcuty"; // BCUTY !!! ¡¡¡
-const char     CRYPTONOTE_SYMBOL[]                           = "BCUTY"; // Bitcuty !!! ¡¡¡
+const char     CRYPTONOTE_NAME[]                             = Bitcuty; // BCUTY !!! ¡¡¡
+const char     CRYPTONOTE_SYMBOL[]                           = BCUTY; // Bitcuty !!! ¡¡¡
 const char     GENESIS_COINBASE_TX_HEX[]                     = ""; // The best first block to the first blob chain and the only first !!! ¡¡¡ ¡¡¡ ¡¡¡
 
 const uint8_t  TRANSACTION_VERSION_1                         =  1; // !!! ¡¡¡
