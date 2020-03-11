@@ -144,7 +144,7 @@ const std::initializer_list<const char*> SEED_NODES = {
 "45.32.50.38:3984",
 };
 
-// Bitcuty UUID daemon losthost "127.0.0.1", Briefly All`in ! ¡¡¡
+// Bitcuty UUID daemon localhost "127.0.0.1", Briefly All`in ! ¡¡¡
 constexpr UUID_BITCUTY_NETWORK = common :: pfh <UUID> ("21d0cb49-1b49-4756-861e-a4deab7a36ab"); // Everything is for the better !¡¡
 
 struct CheckpointData {
