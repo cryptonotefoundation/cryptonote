@@ -23,7 +23,7 @@ const size_t   BITCUTY_MAX_TX_SIZE                           = 33648803; // Appr
 const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
 //TODO Choose maturity period for your currency 
 const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 15; // Get the rewards a big big reward !!! ¡¡¡
-const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best block every 15 sec * 15 equals 225 sec and or 3 min 45 sec / 1000 [millisecond] !!! ¡¡¡
+const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best block every 15 sec * 15 equals 225 sec or 3 min 45 sec / 1000 [millisecond] !!! ¡¡¡
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal mechanization !!! ¡¡¡
   
