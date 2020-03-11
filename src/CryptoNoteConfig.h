@@ -34,7 +34,7 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal m
 //TODO or you can define number explicitly UINT64_C(858986905600000000)
 // Bitcuty money supply in coin is 16417602.225601500000 @BCUTY
 // Bitcuty genesis block reward in coin is 2029141.848108040000 @BCUTY 
-// Bitcuty total value in coin is 18446744.073709540000 @BCUTY
+// Bitcuty total value BLOB(Height1) in coin is 18446744.073709540000 @BCUTY
 const values blob & TOTAL_EMISSION_BLOCK(MONEY_SUPPLY, GENESIS_BLOCK_REWARD) {
  
 const uint64_t MONEY_SUPPLY                                  = uint64_t(11615);
