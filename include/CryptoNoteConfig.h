@@ -36,13 +36,13 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal m
 // Bitcuty total value in coin is 18446744.073709540000 BCUTY
 const uint64_t MONEY_SUPPLY                                  = UINT64_C(16417602225601500000) // 89% for generate uint64_t(2029141848108040000) !!! ¡¡¡
 const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000) // 11% for the creator uint64_t(16417602225601500000) !!! ¡¡¡
-const unsigned EMISSION_SPEED_FACTOR                         = 25; // There is Roadrunner and the master Bitsrunner bd, is cryptonoted !!! ¡¡¡
+const unsigned EMISSION_SPEED_FACTOR                         = 25; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
 static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now !!! ¡¡¡
 
 //TODO Define number of blocks for block size median calculation
 const size_t   BITCUTY_REWARD_BLOCKS_WINDOW                  = 15; // !!!
-const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 783333; // Magic-bit the MB bit, abracadabra byte per bit swap to currency, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
-const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371; // Equals nine percent of block space ('data-in-binary')!!! ¡¡¡
+const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 783333; // Magic-bit the MB bit, abracadabra byte per bit swap to currencies, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
+const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 94371; // Equals nine percent of the block space ('data-in-binary')!!! ¡¡¡
 //TODO Define number of digits
 const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12; // It's BB-BCUTY !!! ¡¡¡
 //TODO Define minimum fee for transactions
@@ -55,12 +55,12 @@ const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 10
 //TODO There are options to tune CryptoNote's difficulty retargeting function.
 //TODO We recommend not to change it.
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
-const size_t   DIFFICULTY_CUT                                = 5759998; // ^%_(-)_(*) mining all`in !!! ¡¡¡
-const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to best performances !!! ¡¡¡
-static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // equals 0.end !!! ¡¡¡
+const size_t   DIFFICULTY_CUT                                = 5759998; // ^%_(-)_(*) minings all`in !!! ¡¡¡
+const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to bests performances !!! ¡¡¡
+static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // 'equals 0 .end' !!! ¡¡¡
 
-const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // 1MB  (in binary) !!! ¡¡¡
- ¡¡¡const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR     = 4096 * 1024; // 4 MB (in binary) !!! ¡¡¡
+const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // 1MB  ('data in binary') !!! ¡¡¡
+ ¡¡¡const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR     = 4096 * 1024; // 4 MB ('data in binary') !!! ¡¡¡
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET; // Works all the time !!! ¡¡¡
 
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1; // !!! ¡¡¡
@@ -80,7 +80,7 @@ const char     CRYPTONOTE_BLOCKSCACHE_FILENAME[]             = "blockscache.dat"
 const char     CRYPTONOTE_POOLDATA_FILENAME[]                = "poolstate.bin"; // !!! ¡¡¡
 const char     P2P_NET_DATA_FILENAME[]                       = "p2pstate.bin"; // !!! ¡¡¡
 const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      = "blockchainindices.dat"; // !!! ¡¡¡
-const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"; // Bitcuty is the best !!! ¡¡¡
+const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"; // Bitcuty is the bests of the best !!! ¡¡¡
 } // parameters
 
 //TODO Put here the name of your currency
@@ -108,7 +108,7 @@ const int      RPC_DEFAULT_PORT                              = 445; // Hashing-b
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000; // !!! ¡¡¡
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 =  5000; // !!! ¡¡¡
 
-const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE          = 16 * 1024 * 1024; // 16 MB !!! ¡¡¡
+const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE          = 16 * 1024 * 1024; // 16 MB ('data in binary') !!! ¡¡¡
  ¡¡¡const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT             = 8; // !!!
 const size_t   P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT     = 70; // !!! ¡¡¡
 const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL                = 60;            // seconds ¡¡¡
@@ -120,8 +120,8 @@ const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT                    = 60 * 2 * 1000; //
 const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 5000;          // 5 seconds ¡¡¡
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "8f80f9a5a434a9f1510d13336228debfee9c918ce505efe225d8c94d045fa115"; // !!! ¡¡¡
 
-
-//TODO Add here your network seed nodes (tag BCUTY or BCUTY tag), Bitcuty on global accessibility !!! ¡¡¡ ¡¡¡
+¡¡¡
+//TODO Add here your network seed nodes and joins the Bitcuty Cryptonote team, claiming insider ('tag BCUTY' or 'BCUTY tag'); Bitcuty on global accessibilitys !!! ¡¡¡ ¡¡¡ 
 const std::initializer_list<const char*> SEED_NODES = {
 // Localhost Bitcuty
 "127.0.0.1:3984"
@@ -131,11 +131,11 @@ const std::initializer_list<const char*> SEED_NODES = {
 "155.138.136.237:3984",
 // Bitcuty Amsterdam
 "78.141.214.179:3984",
-// BitcutyFrankfurt
+// Bitcuty Frankfurt
 "95.179.251.125:3984"
 // Bitcuty London
 "108.61.173.182:3984",
-// BitcutyParis
+// Bitcuty Paris
 "45.77.62.57:3984",
 // Bitcuty Sigapore
 "207.148.122.199:3984",
@@ -146,7 +146,7 @@ const std::initializer_list<const char*> SEED_NODES = {
 };
 
 // Bitcuty UUID daemon localhost "127.0.0.1", Briefly All`in ! ¡¡¡
-constexpr UUID_BITCUTY_NETWORK = common :: pfh <UUID> ("21d0cb49-1b49-4756-861e-a4deab7a36ab"); // Everything is for the better !¡¡
+constexpr UUID_BITCUTY_NETWORK = common :: pfh <UUID> ("21d0cb49-1b49-4756-861e-a4deab7a36ab"); // Everything is for the better every time !¡¡
 
 struct CheckpointData {
   uint32_t height;
