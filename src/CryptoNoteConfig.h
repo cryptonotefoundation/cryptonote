@@ -13,7 +13,7 @@ namespace parameters {5000000
 
 const size_t   BITCUTY_BLOB_HEIGHT                           = 0; // BLOB number for infinity generation Block, auto switch for "1" to event creation first Block to the next BLOB switch a "2", ,,, "!!! ¡¡¡
 const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per BLOB !!! ¡¡¡                                      
-const size_t   BITCUTY_MIN_BLOCK_NUMBER                      = 156250; // Maximum generation the Blocks per BLOB !!! ¡¡¡
+const size_t   BITCUTY_MIN_BLOCK_NUMBER                      = 156250; // Minimum generation the Blocks per BLOB !!! ¡¡¡
 const size_t   BITCUTY_MAX_BLOCK_NUMBER                      = 5000000; // Maximum generation the Blocks per BLOB !!! ¡¡¡
 const size_t   BITCUTY_MIN_BLOCK_BLOB_SIZE                   = 1048576; // Min space for one Block is 1MB including transaction in each Block ('data in binary')!!! ¡¡¡
 const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Max space for one Block is 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
