@@ -21,11 +21,11 @@ const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Max 
 const size_t   BITCUTY_MAX_TX_SIZE                           = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
 //TODO Currency-specific address prefix
 const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
-//TODO Choose maturity period for your currency 
-const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 15; // Get the rewards a big big reward !!! ¡¡¡
-const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 225 / 15; // Best Block every 15 sec * 15 equals 225 sec or 3 min 45 sec / 1000 [millisecond] !!! ¡¡¡
+//TODO Choose maturity period for your currency
+const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 8; // Get the rewards a big big reward !!! ¡¡¡
+const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 86400 / 720 / 8 // Best Block every 15 sec * 8 equals 120 sec or 2 min / 1000 [millisecond] !!! ¡¡¡    
 
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal mechanization !!! ¡¡¡
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60; // Temporal mechanization !!! ¡¡¡
   
 //TODO Specify total number of available coins
 //TODO ((uint64_t)(-1)) equals to 18446744073709551616
@@ -37,14 +37,12 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal m
 // Bitcuty total value BLOB(Height1) in coin is 18446744.073709540000 @BCUTY
 const uint64_t MONEY_SUPPLY                                  = UINT64_C(18446744073709540000); // @BCUTY per BLOB              
 const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000); // @BCUTY for creator
-const uint64_t UNIT_REWARD-PER-BLOCK_BLOB["1"]               = UINT64_C(3283520445120); // @BCUTY reward for the BLOB number 1 and for each Block the 1MB including transaction space, autoajusting rewarding according to the total of data contained in the Block !!! ¡¡¡
-const uint64_t UNIT_REWARD-PER-BLOCK_BLOB["2TOINFINITY"]     = UINT64_C(3689348814741); // @BCUTY reward for the BLOB number 2 to infinitly and for each Block the 1MB including transaction space, autoajusting rewarding according to the total of data contained in the Block !!! ¡¡¡
 
-const unsigned EMISSION_SPEED_FACTOR                         = 25; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
+const unsigned EMISSION_SPEED_FACTOR                         = 30; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
 static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now !!! ¡¡¡
 
 //TODO Define number of blocks for block size median calculation
-const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 15; // !!!
+const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100; // !!!
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 888888; // Magic-bit the MB bit, abracadabra byte per bit swap to currencies, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
 const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 159688; // Equals block space for transactions ('data-in-binary')!!! ¡¡¡
 //TODO Define number of digits
@@ -55,11 +53,11 @@ const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE; // I
 
 //TODO Define preferred block's target time
 const uint64_t DIFFICULTY_TARGET                             = 15; // The data is all right !!! ¡¡¡
-const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1000 * 1 / DIFFICULTY_TARGET; // "'%H:%M:%S:%MS:*1 / Difficultie sure Targetings', '15: 0\n0 in 15 sec'" !!! ¡¡¡
+const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1000 * 1 / DIFFICULTY_TARGET; // "'%H:%M:%S:%MS:*1 / Difficultie sure Targetings', "15: 0\n0 in 15 sec" !!! ¡¡¡
 //TODO There are options to tune CryptoNote's difficulty retargeting function.
 //TODO We recommend not to change it.
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
-const size_t   DIFFICULTY_CUT                                = 2879998; // ^%_(-)_(*) minings all`in !!! ¡¡¡
+const size_t   DIFFICULTY_CUT                                = 2880000; // ^%_(-)_(*) minings all`in !!! ¡¡¡
 const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to bests performance !!! ¡¡¡
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // 'equals 0 .end ' !!! ¡¡¡
 
@@ -102,7 +100,7 @@ const uint8_t  BLOCK_MINOR_VERSION_0                         =  0; // !!! ¡¡¡
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1; // !!! ¡¡¡
 
 const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        =  10000;  // by default, blocks ids count in synchronizing nows !!! ¡¡¡
-const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  100;    // by default, blocks count in blocks downloading nows !!! ¡¡¡
+const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  200;    // by default, blocks count in blocks downloading nows !!! ¡¡¡
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;   // !!! ¡¡¡
 //TODO This port will be used by the daemon to establish connections with p2p network
 const int      P2P_DEFAULT_PORT                              = 3984; // Hashing-b and Cryptonote, it`s solid !!! ¡¡¡
@@ -113,7 +111,7 @@ const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                = 1000; // !!! ¡¡
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 = 5000; // !!! ¡¡¡
 
 const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE          = 16 * 1024 * 1024; // 16 MB ('data in binary') !!! ¡¡¡
-const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT                 = 8; // !!!
+const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT                 = 12; // !!!
 const size_t   P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT     = 70; // !!! ¡¡¡
 const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL                = 60;            // seconds ¡¡¡
 const uint32_t P2P_DEFAULT_PACKET_MAX_SIZE                   = 50000000;      // 50000000 bytes maximum packet size ¡¡¡
