@@ -1,3 +1,4 @@
+
 // Copyright (c) 2011-2016 The Cryptonote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -11,19 +12,19 @@
 namespace CryptoNote {
 namespace parameters {
 
-const size_t   BITCUTY_BLOB_HEIGHT                           = 0; // BLOB number for infinity generation Block, auto switch for "1" to event creation first Block to the next BLOB switch a "2", ,,, "!!! ¡¡¡
-const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per BLOB !!! ¡¡¡                                      
-const size_t   BITCUTY_MIN_BLOCK_NUMBER                      = 156250; // Minimum generation the Blocks per BLOB !!! ¡¡¡
-const size_t   BITCUTY_MAX_BLOCK_NUMBER                      = 5000000; // Maximum generation the Blocks per BLOB !!! ¡¡¡
-const size_t   BITCUTY_MIN_BLOCK_BLOB_SIZE                   = 1048576; // Min space for one Block is 1MB including transaction in each Block ('data in binary')!!! ¡¡¡
-const size_t   BITCUTY_MAX_BLOCK_BLOB_SIZE                   = 33554432; // Max space for one Block is 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
+const size_t   CRYPTONOTE_BLOB_HEIGHT                        = 0; // BLOB number for infinity generation Block, auto switch for "1" to event creation first Block to the next BLOB switch a "2", ,,, "!!! ¡¡¡
+const size_t   CRYPTONOTE_TOTAL_SIZE_PER_BLOB                = 5242880000000; // Size total Byte('data in binary') per BLOB !!! ¡¡¡                                      
+const size_t   CRYPTONOTE_MIN_BLOCK_NUMBER                   = 156250; // Minimum generation the Blocks per BLOB !!! ¡¡¡
+const size_t   CRYPTONOTE_MAX_BLOCK_NUMBER                   = 5000000; // Maximum generation the Blocks per BLOB !!! ¡¡¡
+const size_t   CRYPTONOTE_MIN_BLOCK_BLOB_SIZE                = 1048576; // Min space for one Block is 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
+const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 33554432; // Max space for one Block is 1MB including transaction in each Block ('data in binary')!!! ¡¡¡
 
-const size_t   BITCUTY_MAX_TX_SIZE                           = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
+const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
 //TODO Currency-specific address prefix
-const uint64_t BITCUTY_PUBLIC_ADDRESS_BASE58_PREFIX          = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
+const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
 //TODO Choose maturity period for your currency
-const size_t   BITCUTY_MINED_MONEY_UNLOCK_WINDOW             = 8; // Get the rewards a big big reward !!! ¡¡¡
-const uint64_t BITCUTY_BLOCK_FUTURE_TIME_LIMIT               = 86400 / 720 / 8 // Best Block every 15 sec * 8 equals 120 sec or 2 min / 1000 [millisecond] !!! ¡¡¡    
+const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 8; // Get the rewards a big big reward !!! ¡¡¡
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 86400 / 720 / 8 // Best Block every 15 sec * 8 equals 120 sec or 2 min / 1000 [millisecond] !!! ¡¡¡    
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60; // Temporal mechanization !!! ¡¡¡
   
