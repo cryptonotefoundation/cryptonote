@@ -16,8 +16,8 @@ const size_t   CRYPTONOTE_BLOB_HEIGHT                        = 0; // BLOB number
 const size_t   CRYPTONOTE_TOTAL_SIZE_PER_BLOB                = 5242880000000; // Size total Byte('data in binary') per BLOB !!! ¡¡¡                                      
 const size_t   CRYPTONOTE_MIN_BLOCK_NUMBER                   = 156250; // Minimum generation the Blocks per BLOB !!! ¡¡¡
 const size_t   CRYPTONOTE_MAX_BLOCK_NUMBER                   = 5000000; // Maximum generation the Blocks per BLOB !!! ¡¡¡
-const size_t   CRYPTONOTE_MIN_BLOCK_BLOB_SIZE                = 1048576; // Min space for one Block is 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
-const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 33554432; // Max space for one Block is 1MB including transaction in each Block ('data in binary')!!! ¡¡¡
+const size_t   CRYPTONOTE_MIN_BLOCK_BLOB_SIZE                = 1048576; // Min space for one Block is 1MB including transaction in each Block ('data in binary')!!! ¡¡¡
+const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 33554432; // Max space for one Block is 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
 
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
 //TODO Currency-specific address prefix
