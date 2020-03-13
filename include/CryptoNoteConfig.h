@@ -1,4 +1,3 @@
-
 // Copyright (c) 2011-2016 The Cryptonote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -19,15 +18,15 @@ const size_t   CRYPTONOTE_MAX_BLOCK_NUMBER                   = 5000000; // Maxim
 const size_t   CRYPTONOTE_MIN_BLOCK_BLOB_SIZE                = 1048576; // Min space for one Block is 1MB including transaction in each Block ('data in binary')!!! ¡¡¡
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 33554432; // Max space for one Block is 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
 
-const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 33554432; // Appreciate to the top Block 32MB + space transaction ('data in binary')!!! ¡¡¡
+const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 268435456; // Appreciate to the top Block 32MB * 8 including space transaction ('data in binary')!!! ¡¡¡
 //TODO Currency-specific address prefix
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
 //TODO Choose maturity period for your currency
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 8; // Get the rewards a big big reward !!! ¡¡¡
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 86400 / 720 / 8 // Best Block every 15 sec * 8 equals 120 sec or 2 min / 1000 [millisecond] !!! ¡¡¡    
 
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60; // Temporal mechanization !!! ¡¡¡
-  
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60 / 60 / 60 / 12; // Temporal mechanization !!! ¡¡¡
+
 //TODO Specify total number of available coins
 //TODO ((uint64_t)(-1)) equals to 18446744073709551616
 //TODO ((uint64_t) is maximum claim value 18446744073709551615
@@ -38,18 +37,21 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60; // Temporal m
 // Bitcuty total value BLOB(Height1) in coin is 18446744.073709540000 @BCUTY
 const uint64_t MONEY_SUPPLY                                  = UINT64_C(18446744073709540000); // @BCUTY per BLOB              
 const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000); // @BCUTY for creator
+const uint64_t BYTE_REWARD_BLOB["1"]                         = uint256_C(000003131409116); // Number 15 decimals digit is reward @BCUTY per Byte for the BLOB number 1
+const uint64_t BYTE_REWARD_BLOB["2":"INFINITY"]              = uint256_C(000003518437209); // Number 15 decimals digit is reward @BCUTY per Byte for the BLOB number 2 to infinity
 
 const unsigned EMISSION_SPEED_FACTOR                         = 30; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
-static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now !!! ¡¡¡
+static_assert(EMISSION_SPEED_FACTOR = 30 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now is the Cryptonote supercharger full MB version Bitcuty[BCUTY] !!! ¡¡¡
 
 //TODO Define number of blocks for block size median calculation
 const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100; // !!!
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 888888; // Magic-bit the MB bit, abracadabra byte per bit swap to currencies, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
 const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 159688; // Equals block space for transactions ('data-in-binary')!!! ¡¡¡
+
 //TODO Define number of digits
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 12; // It's BB-BCUTY !!! ¡¡¡
 //TODO Define minimum fee for transactions
-const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333); // It is 0,00083333% fee per transaction !!! ¡¡¡
+const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333); // It is 0,000833333333% fee per transaction !!! ¡¡¡
 const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE; // It is minimum fee !!! ¡¡¡
 
 //TODO Define preferred block's target time
@@ -60,10 +62,10 @@ const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 10
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
 const size_t   DIFFICULTY_CUT                                = 2880000; // ^%_(-)_(*) minings all`in !!! ¡¡¡
 const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to bests performance !!! ¡¡¡
-static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // 'equals 0 .end ' !!! ¡¡¡
+static_assert(2 * DIFFICULTY_CUT = DIFFICULTY_WINDOW); // 'equals 0 .end ' !!! ¡¡¡
 
-const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024: * 32; // 1MB to 32MB ('data in binary') !!! ¡¡¡
-const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 4096 * 1024; // 1MB ('data in binary') !!! ¡¡¡
+const size_t   MAX_BLOCK_SIZE_INITIAL                        = 32 * 1024; // 32 * MB Backboot Block ('data in binary'), is pending  !!! ¡¡¡
+const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 32 * 1024; // 32 * MB Data Block ('data in binary') !!! ¡¡¡
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET; // Works all the time !!! ¡¡¡
 
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1; // !!! ¡¡¡
@@ -87,9 +89,9 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 } // parameters
 
 //TODO Put here the name of your currency
-const char     CRYPTONOTE_NAME                               = "bitcuty"; // BCUTY !!! ¡¡¡
-const char     CRYPTONOTE_SYMBOL                             = "bcuty"; // Bitcuty !!! ¡¡¡
-const char     GENESIS_COINBASE_TX_HEX                       = ""; // The best first block to the first blob chain and the only first !!! ¡¡¡ ¡¡¡ ¡¡¡                       
+const char     CRYPTONOTE_NAME[]                             = "Bitcuty"; // BCUTY !!! ¡¡¡
+const char     CRYPTONOTE_SYMBOL[]                           = "Bcuty"; // Bitcuty !!! ¡¡¡
+const char     GENESIS_COINBASE_TX_HEX[]                     = ""; to generate the best first block to the first blob chain and the only first !!! ¡¡¡ ¡¡¡ ¡¡¡                       
 
 const uint8_t  TRANSACTION_VERSION_1                         =  1; // !!! ¡¡¡
 const uint8_t  TRANSACTION_VERSION_2                         =  2; // !!! ¡¡¡
