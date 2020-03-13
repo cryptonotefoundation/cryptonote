@@ -9,7 +9,7 @@
 #include <initializer_list>
 
 namespace CryptoNote {
-namespace parameters {5000000
+namespace parameters {
 
 const size_t   BITCUTY_BLOB_HEIGHT                           = 0; // BLOB number for infinity generation Block, auto switch for "1" to event creation first Block to the next BLOB switch a "2", ,,, "!!! ¡¡¡
 const size_t   BITCUTY_TOTAL_SIZE_PER_BLOB                   = 5242880000000; // Size total Byte('data in binary') per BLOB !!! ¡¡¡                                      
@@ -37,20 +37,20 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 15; // Temporal m
 // Bitcuty total value BLOB(Height1) in coin is 18446744.073709540000 @BCUTY
 const uint64_t MONEY_SUPPLY                                  = UINT64_C(18446744073709540000); // @BCUTY per BLOB              
 const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000); // @BCUTY for creator
-const uint64_t BCUTY_UNIT_REWARD-PER-BLOCK_BLOB[1]           = UINT64_C(3283520445120); // @BCUTY reward for the BLOB number 1 and for each Block the 1MB including transaction space, autoajusting rewarding according to the total of data contained in the Block !!! ¡¡¡
-const uint64_t BCUTY_UNIT_REWARD-PER-BLOCK_BLOB[2TOINFINITY] = UINT64_C(3689348814741); // @BCUTY reward for the BLOB number 2 to infinitly and for each Block the 1MB including transaction space, autoajusting rewarding according to the total of data contained in the Block !!! ¡¡¡
+const uint64_t UNIT_REWARD-PER-BLOCK_BLOB["1"]               = UINT64_C(3283520445120); // @BCUTY reward for the BLOB number 1 and for each Block the 1MB including transaction space, autoajusting rewarding according to the total of data contained in the Block !!! ¡¡¡
+const uint64_t UNIT_REWARD-PER-BLOCK_BLOB["2TOINFINITY"]     = UINT64_C(3689348814741); // @BCUTY reward for the BLOB number 2 to infinitly and for each Block the 1MB including transaction space, autoajusting rewarding according to the total of data contained in the Block !!! ¡¡¡
 
 const unsigned EMISSION_SPEED_FACTOR                         = 25; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
 static_assert(EMISSION_SPEED_FACTOR <= 25 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now !!! ¡¡¡
 
 //TODO Define number of blocks for block size median calculation
-const size_t   BITCUTY_REWARD_BLOCKS_WINDOW                  = 15; // !!!
-const size_t   BITCUTY_BLOCK_GRANTED_FULL_REWARD_ZONE        = 888888; // Magic-bit the MB bit, abracadabra byte per bit swap to currencies, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
-const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 159688; // Equals block space for transactions ('data-in-binary')!!! ¡¡¡
+const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 15; // !!!
+const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 888888; // Magic-bit the MB bit, abracadabra byte per bit swap to currencies, is the Cryptonote Blockchain Bitcuty !!! ¡¡¡ 
+const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 159688; // Equals block space for transactions ('data-in-binary')!!! ¡¡¡
 //TODO Define number of digits
-const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12; // It's BB-BCUTY !!! ¡¡¡
+const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 12; // It's BB-BCUTY !!! ¡¡¡
 //TODO Define minimum fee for transactions
-const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333); // It is minimum fee !!! ¡¡¡
+const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333); // It is 0,00083333% fee per transaction !!! ¡¡¡
 const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE; // It is minimum fee !!! ¡¡¡
 
 //TODO Define preferred block's target time
@@ -59,12 +59,12 @@ const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 10
 //TODO There are options to tune CryptoNote's difficulty retargeting function.
 //TODO We recommend not to change it.
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
-const size_t   DIFFICULTY_CUT                                = 5759998; // ^%_(-)_(*) minings all`in !!! ¡¡¡
+const size_t   DIFFICULTY_CUT                                = 2879998; // ^%_(-)_(*) minings all`in !!! ¡¡¡
 const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to bests performance !!! ¡¡¡
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "DIFFICULTY_WINDOW or DIFFICULTY_CUT"); // 'equals 0 .end ' !!! ¡¡¡
 
-const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // 1MB  ('data in binary') !!! ¡¡¡
- ¡¡¡const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR     = 4096 * 1024; // 4 MB ('data in binary') !!! ¡¡¡
+const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024: * 32; // 1MB to 32MB ('data in binary') !!! ¡¡¡
+const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 4096 * 1024; // 1MB ('data in binary') !!! ¡¡¡
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET; // Works all the time !!! ¡¡¡
 
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1; // !!! ¡¡¡
@@ -88,9 +88,9 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 } // parameters
 
 //TODO Put here the name of your currency
-const char     CRYPTONOTE_NAME[]                             = Bitcuty; // BCUTY !!! ¡¡¡
-const char     CRYPTONOTE_SYMBOL[]                           = BCUTY; // Bitcuty !!! ¡¡¡
-const char     GENESIS_COINBASE_TX_HEX[]                     = ""; // The best first block to the first blob chain and the only first !!! ¡¡¡ ¡¡¡ ¡¡¡
+const char     CRYPTONOTE_NAME                               = "bitcuty"; // BCUTY !!! ¡¡¡
+const char     CRYPTONOTE_SYMBOL                             = "bcuty"; // Bitcuty !!! ¡¡¡
+const char     GENESIS_COINBASE_TX_HEX                       = ""; // The best first block to the first blob chain and the only first !!! ¡¡¡ ¡¡¡ ¡¡¡                       
 
 const uint8_t  TRANSACTION_VERSION_1                         =  1; // !!! ¡¡¡
 const uint8_t  TRANSACTION_VERSION_2                         =  2; // !!! ¡¡¡
@@ -109,11 +109,11 @@ const int      P2P_DEFAULT_PORT                              = 3984; // Hashing-
 //TODO This port will be used by the daemon to interact with simlewallet
 const int      RPC_DEFAULT_PORT                              = 445; // Hashing-b and Cryptonote, are solid !!! ¡¡¡
   
-const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000; // !!! ¡¡¡
-const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 =  5000; // !!! ¡¡¡
+const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                = 1000; // !!! ¡¡¡
+const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 = 5000; // !!! ¡¡¡
 
 const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE          = 16 * 1024 * 1024; // 16 MB ('data in binary') !!! ¡¡¡
- ¡¡¡const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT             = 8; // !!!
+const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT                 = 8; // !!!
 const size_t   P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT     = 70; // !!! ¡¡¡
 const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL                = 60;            // seconds ¡¡¡
 const uint32_t P2P_DEFAULT_PACKET_MAX_SIZE                   = 50000000;      // 50000000 bytes maximum packet size ¡¡¡
@@ -148,8 +148,7 @@ const std::initializer_list<const char*> SEED_NODES = {
 "45.32.50.38:3984",
 };
 
-// Bitcuty UUID daemon localhost "127.0.0.1", Briefly All`in ! ¡¡¡
-constexpr UUID_BITCUTY_NETWORK = common :: pfh <UUID> ("21d0cb49-1b49-4756-861e-a4deab7a36ab"); // Everything is for the better every time !¡¡
+
 
 struct CheckpointData {
   uint32_t height;
