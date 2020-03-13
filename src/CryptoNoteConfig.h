@@ -50,7 +50,7 @@ const size_t   BITCUTY_COINBASE_BLOB_RESERVED_SIZE           = 159688; // Equals
 //TODO Define number of digits
 const size_t   BITCUTY_DISPLAY_DECIMAL_POINT                 = 12; // It's BB-BCUTY !!! ¡¡¡
 //TODO Define minimum fee for transactions
-const uint64_t MINIMUM_FEE                                   = UINT64_C(2736200000); // It is 0,000833333333% fee per Block the 1MB !!! ¡¡¡
+const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333); // It is minimum fee !!! ¡¡¡
 const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE; // It is minimum fee !!! ¡¡¡
 
 //TODO Define preferred block's target time
