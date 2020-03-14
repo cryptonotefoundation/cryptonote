@@ -23,9 +23,9 @@ const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 268435456; // App
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
 //TODO Choose maturity period for your currency
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 8; // Get the rewards a big big reward !!! ¡¡¡
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 86400 / 720 / 8 // Best Block every 15 sec * 8 equals 120 sec or 2 min / 1000 [millisecond] !!! ¡¡¡    
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 720 / 8 // Best Block every 15 sec * 8 equals 120 sec or 2 min / 1000 [millisecond] !!! ¡¡¡    
 
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60 / 60 / 60 / 12; // Temporal mechanization !!! ¡¡¡
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 55; // Temporal mechanization !!! ¡¡¡
 
 //TODO Specify total number of available coins
 //TODO ((uint64_t)(-1)) equals to 18446744073709551616
