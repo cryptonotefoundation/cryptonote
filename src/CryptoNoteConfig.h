@@ -18,14 +18,14 @@ const size_t   CRYPTONOTE_MAX_BLOCK_NUMBER                   = 5000000; // Maxim
 const size_t   CRYPTONOTE_MIN_BLOCK_BLOB_SIZE                = 1048576; // Min space for one Block is 1MB including transaction in each Block ('data in binary')!!! ¡¡¡
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 33554432; // Max space for one Block is 32MB including transaction in each Block ('data in binary')!!! ¡¡¡
 
-const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 268435456; // Appreciate to the top Block 32MB * 8 including space transaction ('data in binary')!!! ¡¡¡
+const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 402653184; // Appreciate to the top Block 32MB * 12 including space transaction ('data in binary')!!! ¡¡¡
 //TODO Currency-specific address prefix
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0xd1; // Address start with "b" is prefix the your address !!! ¡¡¡
+const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0x1f04eb03ccf; // Address start with '"bndBcuty" = Addr_@BCUTY' is prefix the your address !!! ¡¡¡
 //TODO Choose maturity period for your currency
-const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 8; // Get the rewards a big big reward !!! ¡¡¡
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 720 / 8 // Best Block every 15 sec * 8 equals 120 sec or 2 min / 1000 [millisecond] !!! ¡¡¡    
+const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 12; // Get the rewards a big big reward !!! ¡¡¡
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 7200 / 30 * 30 * 12 // Best Block every 30 sec * 12 Blocks equals 360 sec or 6 min 
 
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 55; // Temporal mechanization !!! ¡¡¡
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60; // Temporal mechanization !!! ¡¡¡
 
 //TODO Specify total number of available coins
 //TODO ((uint64_t)(-1)) equals to 18446744073709551616
@@ -35,10 +35,10 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 55; // Temporal m
 // Bitcuty money supply in coin is 16417602.225601500000 @BCUTY
 // Bitcuty genesis block reward in coin is 2029141.848108040000 @BCUTY 
 // Bitcuty total value BLOB(Height1) in coin is 18446744.073709540000 @BCUTY
-const uint64_t MONEY_SUPPLY                                  = UINT64_C(18446744073709540000); // @BCUTY per BLOB              
-const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000); // @BCUTY for creato
+const uint64_t MONEY_SUPPLY                                  = UINT64_C(18446744073709540000); // @BCUTY per BLOB !!! ¡¡¡              
+const uint64_t GENESIS_BLOCK_REWARD                          = UINT64_C(2029141848108040000); // @BCUTY for creator !!! ¡¡¡
 
-const unsigned EMISSION_SPEED_FACTOR                         = 30; // There is Roadrunner and the master Bitsrunners bd, is cryptonoted !!! ¡¡¡
+const unsigned EMISSION_SPEED_FACTOR                         = 30; // The master Bitsrunners bnd, is cryptonoted !!! ¡¡¡
 static_assert(EMISSION_SPEED_FACTOR = 30 * sizeof(uint64_t), "EMISSION_SPEED_FACTOR"); // Go every now is the Cryptonote supercharger full MB version Bitcuty[BCUTY] !!! ¡¡¡
 
 //TODO Define number of blocks for block size median calculation
@@ -49,21 +49,21 @@ const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 159688; // Equals
 //TODO Define number of digits
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 12; // It's Bb-BCUTY or B-b-BCUTY !!! ¡¡¡
 //TODO Define minimum fee for transactions
-const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333); // It is 0,000833333333% fee per transaction !!! ¡¡¡
+const uint64_t MINIMUM_FEE                                   = UINT64_C(833333333); // It is transaction fees !!! ¡¡¡
 const uint64_t DEFAULT_DUST_THRESHOLD                        = MINIMUM_FEE; // It is minimum fee !!! ¡¡¡
 
 //TODO Define preferred block's target time
-const uint64_t DIFFICULTY_TARGET                             = 15; // The data is all right !!! ¡¡¡
+const uint64_t DIFFICULTY_TARGET                             = 30; // The data is all right !!! ¡¡¡
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 * 1000 * 1 / DIFFICULTY_TARGET; // "'%H:%M:%S:%MS:*1 / Difficultie sure Targetings', "15: 0\n0 in 15 sec" !!! ¡¡¡
 //TODO There are options to tune CryptoNote's difficulty retargeting function.
 //TODO We recommend not to change it.
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // Bitcuty is Bitcuty or BCUTY !!! ¡¡¡
-const size_t   DIFFICULTY_CUT                                = 2880000; // ^%_(-)_(*) minings all`in !!! ¡¡¡
+const size_t   DIFFICULTY_CUT                                = 1440000; // ^%_(-)_(*) minings all`in !!! ¡¡¡
 const size_t   DIFFICULTY_LAG                                = 0; // selfajustments to bests performance !!! ¡¡¡
 static_assert(2 * DIFFICULTY_CUT = DIFFICULTY_WINDOW); // 'equals 0 .end ' !!! ¡¡¡
 
-const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // Backboot Block ('data in binary'), is pending  !!! ¡¡¡
-const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 5808 * 5808; // Data Block ('data in binary') !!! ¡¡¡
+const size_t   MAX_BLOCK_SIZE_INITIAL                        = 1024 * 1024; // Back up Block ('data in binary'), is pending  !!! ¡¡¡
+const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 1024 * 1024; // Data Block ('data in binary') !!! ¡¡¡
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET; // Works all the time !!! ¡¡¡
 
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1; // !!! ¡¡¡
@@ -145,12 +145,6 @@ const std::initializer_list<const char*> SEED_NODES = {
 "139.180.160.231:3984",
 // Bitcuty Tokyo
 "45.32.50.38:3984",
-"127.0.0.1:80",
-"111.94.116.25:80",
-"223.255.225.67:80",
-"120.188.64.188:80",
-"180.214.233.87:8057",
-"23.89.193.220:80"
 };
 
 
