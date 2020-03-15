@@ -23,7 +23,7 @@ const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 402653184; // App
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0x1f04eb03ccf; // Address start with '"bndBcuty" = Addr_@BCUTY' is prefix the your address !!! ¡¡¡
 //TODO Choose maturity period for your currency
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 12; // Get the rewards a big big reward !!! ¡¡¡
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 7200 / 30 * 30 * 12 // Best Block every 30 sec * 12 equals 360 sec or 6 min 
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 7200 / 30 * 30 * 12 ** // Best Block every 30 sec * 12 equals 360 sec or 6 min 
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60; // Temporal mechanization !!! ¡¡¡
 
