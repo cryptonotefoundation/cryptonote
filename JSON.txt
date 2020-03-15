@@ -1,0 +1,43 @@
+{
+  "extension_folder":"bitcuty",
+  "name": "bitcuty",
+  "git": "https://github.com/BLockChainsB/Bitcuty.git",
+  "branch":"master"
+}
+
+{
+    "id": "bitcuty",
+    "jsonrpc": "1.0",
+    "result": {
+        "base_coin": 
+        "name": "bitcuty",
+        "git": "https://github.com/BLockChainsB/Bitcuty.git"
+    }
+    "core" {
+        "SEED_NODES": ["127.0.0.1:3984", "149.28.116.20:3984", "155.138.143.216:3984", "78.141.214.179:3984", "95.179.251.125:3984", "108.61.173.182:3984", "45.77.62.57:3984", "207.148.122.199:3984", "139.180.160.231:3984", "45.32.50.38:3984"],
+        "EMISSION_SPEED_FACTOR": 30,
+        "DIFFICULTY_TARGET": 30,
+        "CRYPTONOTE_DISPLAY_DECIMAL_POINT": 12,
+        "MONEY_SUPPLY": 18446744073709540000,
+        "GENESIS_BLOCK_REWARD": 2029141848000000000,
+        "m_standarsBlockReward": 3.689,
+        "DEFAULT_DUST_THRESHOLD": 833333333,
+        "MINIMUM_FEE": 833333333,
+        "CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW": 12,
+        "CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE": 888888,
+        "CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1": 444444,
+        "CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX": "bndBcuty||0x1f04eb03ccf",
+        "P2P_DEFAULT_PORT": 3984,
+        "RPC_DEFAULT_PORT": 445,
+        "UPGRADE_HEIGHT_V2": 1,
+        "UPGRADE_HEIGHT_V3": 2,
+        "DIFFICULTY_CUT": 1440000,
+        "DIFFICULTY_LAG": 0,
+        "EXPECTED_NUMBER_OF_BLOCKS_PER_DAY": 2880000,
+        "MAX_BLOCK_SIZE_INITIAL": 1048576,
+        "UPGRADE_HEIGHT": 1
+        "BITCUTY_NETWORK: "13099a86-66f7-11ea-915d-17085f435ef4",
+
+    }
+}
+

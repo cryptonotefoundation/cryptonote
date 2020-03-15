@@ -1,0 +1,1 @@
+make -j4 -e --include-dir=include/CryptoNoteConfig.h -L -k -i make -j3 -e --include-dir=include/CryptoNoteConfig.h test-release test-debug build-release build-debug -k -i make ${CORRECTION}${CONFIGURE_FILE}${SET}${BUILD}${DEBUG} -B -e --include-dir=include/CryptoNoteConfig.h -j2 -k -i env.install: touch $@ install: .env.Bitcuty -j1 -B
