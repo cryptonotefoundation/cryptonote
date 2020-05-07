@@ -1,4 +1,9 @@
 # Universal Windows Platform
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: 'alimohamedgo.SDGCoin'
+    arguments: 'alimohamedgo.SDGCoin'
 # Build a Universal Windows Platform project using Visual Studio.
 # Add steps that test and distribute an app, save build artifacts, and more:
 # https://aka.ms/yaml
