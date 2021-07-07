@@ -79,6 +79,12 @@ int keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
     uint8_t temp[144];
     int i, rsiz, rsizw;
 
+    /* for some reason the enum from hash-ops.h is not valid here when
+       compiling - is this a C vs C++ thing? Anyhow, lets just redefine it for 
+       now. */
+
+    const int HASH_DATA_AREA = 136;
+
     rsiz = sizeof(state_t) == mdlen ? HASH_DATA_AREA : 200 - 2 * mdlen;
     rsizw = rsiz / 8;
     
@@ -91,7 +97,8 @@ int keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
     }
     
     // last block and padding
-    memcpy(temp, in, inlen);
+    if (inlen > 0)
+      memcpy(temp, in, inlen);
     temp[inlen++] = 1;
     memset(temp + inlen, 0, rsiz - inlen);
     temp[rsiz - 1] |= 0x80;

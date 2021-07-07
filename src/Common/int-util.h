@@ -1,6 +1,20 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018 ryo-project
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -9,6 +23,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/param.h>
+#include <math.h>
+
+#if defined(__ANDROID__)
+#include <byteswap.h>
+#endif
 
 #if defined(_MSC_VER)
 #include <stdlib.h>
@@ -113,15 +132,25 @@ static inline uint32_t div128_32(uint64_t dividend_hi, uint64_t dividend_lo, uin
 static inline uint32_t ident32(uint32_t x) { return x; }
 static inline uint64_t ident64(uint64_t x) { return x; }
 
+#ifndef __OpenBSD__
+#  if defined(__ANDROID__) && defined(__swap32) && !defined(swap32)
+#      define swap32 __swap32
+#  elif !defined(swap32)
 static inline uint32_t swap32(uint32_t x) {
-  x = ((x & 0x00ff00ff) << 8) | ((x & 0xff00ff00) >> 8);
-  return (x << 16) | (x >> 16);
+	x = ((x & 0x00ff00ff) << 8) | ((x & 0xff00ff00) >> 8);
+	return (x << 16) | (x >> 16);
 }
+#  endif
+#  if defined(__ANDROID__) && defined(__swap64) && !defined(swap64)
+#      define swap64 __swap64
+#  elif !defined(swap64)
 static inline uint64_t swap64(uint64_t x) {
-  x = ((x & 0x00ff00ff00ff00ff) <<  8) | ((x & 0xff00ff00ff00ff00) >>  8);
-  x = ((x & 0x0000ffff0000ffff) << 16) | ((x & 0xffff0000ffff0000) >> 16);
-  return (x << 32) | (x >> 32);
+	x = ((x & 0x00ff00ff00ff00ff) << 8) | ((x & 0xff00ff00ff00ff00) >> 8);
+	x = ((x & 0x0000ffff0000ffff) << 16) | ((x & 0xffff0000ffff0000) >> 16);
+	return (x << 32) | (x >> 32);
 }
+#  endif
+#endif /* __OpenBSD__ */
 
 #if defined(__GNUC__)
 #define UNUSED __attribute__((unused))
@@ -162,6 +191,25 @@ static inline void memcpy_swap64(void *dst, const void *src, size_t n) {
   for (i = 0; i < n; i++) {
     ((uint64_t *) dst)[i] = swap64(((const uint64_t *) src)[i]);
   }
+}
+
+// Calculate ln(p) of Poisson distribution
+// https://github.com/ryo-currency/ryo-writeups/blob/master/poisson-writeup.md
+// Original idea : https://stackoverflow.com/questions/30156803/implementing-poisson-distribution-in-c
+// Using logarithms avoids dealing with very large (k!) and very small (p < 10^-44) numbers
+// lam     - lambda parameter - in our case, how many blocks, on average, you would expect to see in the interval
+// k       - k parameter - in our case, how many blocks we have actually seen
+//           !!! k must not be zero
+// return  - ln(p)
+
+static inline double calc_poisson_ln(double lam, uint64_t k)
+{
+  double logx = -lam + k * log(lam);
+  do
+  {
+    logx -= log((double) k); // This can be tabulated
+  } while (--k > 0);
+  return logx;
 }
 
 #if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN) || !defined(BIG_ENDIAN)

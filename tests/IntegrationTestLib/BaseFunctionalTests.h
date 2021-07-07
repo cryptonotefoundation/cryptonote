@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -66,7 +79,7 @@ namespace Tests {
 
       void init(po::options_description& desc) {
         desc.add_options()
-          ("daemon-dir,d", po::value<std::string>()->default_value("."), "path to daemon")
+          ("daemon-dir,d", po::value<std::string>()->default_value("."), "path to bytecoind.exe")
           ("data-dir,n", po::value<std::string>()->default_value("."), "path to daemon's data directory")
           ("add-daemons,a", po::value<std::vector<std::string>>()->multitoken(), "add daemon to topology");
       }
@@ -127,6 +140,7 @@ namespace Tests {
       std::vector< std::unique_ptr<TestNode> > nodeDaemons;
       System::Dispatcher& m_dispatcher;
       const CryptoNote::Currency& m_currency;
+	  Logging::ConsoleLogger m_logger;
 
       void launchTestnet(size_t count, Topology t = Line);
       void launchTestnetWithInprocNode(size_t count, Topology t = Line);
@@ -153,11 +167,9 @@ namespace Tests {
 
       bool prepareAndSubmitBlock(TestNode& node, CryptoNote::Block&& blockTemplate);
 
-    private:
 #ifdef __linux__
       std::vector<__pid_t> pids;
 #endif
-
 
       Logging::ConsoleLogger logger;
       std::unique_ptr<CryptoNote::INode> mainNode;

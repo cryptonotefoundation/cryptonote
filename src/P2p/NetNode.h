@@ -1,6 +1,22 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2014-2018, The Monero project
+// Copyright (c) 2014-2018, The Forknote developers
+// Copyright (c) 2016-2020, The Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -8,6 +24,7 @@
 #include <unordered_map>
 
 #include <boost/functional/hash.hpp>
+#include <boost/uuid/uuid.hpp>
 
 #include <System/Context.h>
 #include <System/ContextGroup.h>
@@ -72,6 +89,7 @@ namespace CryptoNote
     System::Context<void>* context;
     PeerIdType peerId;
     System::TcpConnection connection;
+    std::set<NetworkAddress> sent_addresses;
 
     P2pConnectionContext(System::Dispatcher& dispatcher, Logging::ILogger& log, System::TcpConnection&& conn) :
       context(nullptr),
@@ -111,8 +129,6 @@ namespace CryptoNote
   {
   public:
 
-    static void init_options(boost::program_options::options_description& desc);
-
     NodeServer(System::Dispatcher& dispatcher, CryptoNote::CryptoNoteProtocolHandler& payload_handler, Logging::ILogger& log);
 
     bool run();
@@ -127,12 +143,18 @@ namespace CryptoNote
     // debug functions
     bool log_peerlist();
     bool log_connections();
+    bool log_banlist();
     virtual uint64_t get_connections_count() override;
     size_t get_outgoing_connections_count();
 
     CryptoNote::PeerlistManager& getPeerlistManager() { return m_peerlist; }
+    bool ban_host(const uint32_t address_ip, time_t seconds = P2P_IP_BLOCKTIME) override;
+    bool unban_host(const uint32_t address_ip) override;
+    std::map<uint32_t, time_t> get_blocked_hosts() override { return m_blocked_hosts; };
 
   private:
+
+    enum PeerType { anchor = 0, white, gray };
 
     int handleCommand(const LevinProtocol::Command& cmd, BinaryArray& buff_out, P2pConnectionContext& context, bool& handled);
 
@@ -149,8 +171,9 @@ namespace CryptoNote
     bool init_config();
     bool make_default_config();
     bool store_config();
+#ifdef ALLOW_DEBUG_COMMANDS
     bool check_trust(const proof_of_trust& tr);
-    void initUpnp();
+#endif
 
     bool handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContext& context, bool just_take_peerlist = false);
     bool timedSync();
@@ -163,33 +186,42 @@ namespace CryptoNote
     //----------------- i_p2p_endpoint -------------------------------------------------------------
     virtual void relay_notify_to_all(int command, const BinaryArray& data_buff, const net_connection_id* excludeConnection) override;
     virtual bool invoke_notify_to_peer(int command, const BinaryArray& req_buff, const CryptoNoteConnectionContext& context) override;
+    virtual void drop_connection(CryptoNoteConnectionContext& context, bool add_fail) override;
     virtual void for_each_connection(std::function<void(CryptoNote::CryptoNoteConnectionContext&, PeerIdType)> f) override;
-    virtual void externalRelayNotifyToAll(int command, const BinaryArray& data_buff) override;
+    virtual void externalRelayNotifyToAll(int command, const BinaryArray& data_buff, const net_connection_id* excludeConnection) override;
+    virtual void externalRelayNotifyToList(int command, const BinaryArray &data_buff, const std::list<boost::uuids::uuid> relayList) override;
 
     //-----------------------------------------------------------------------------------------------
-    bool handle_command_line(const boost::program_options::variables_map& vm);
+    bool add_host_fail(const uint32_t address_ip);
+    bool block_host(const uint32_t address_ip, time_t seconds = P2P_IP_BLOCKTIME);
+    bool unblock_host(const uint32_t address_ip);
+    bool is_remote_host_allowed(const uint32_t address_ip);
+    bool is_addr_recently_failed(const uint32_t address_ip);
     bool handleConfig(const NetNodeConfig& config);
     bool append_net_address(std::vector<NetworkAddress>& nodes, const std::string& addr);
     bool idle_worker();
-    bool handle_remote_peerlist(const std::list<PeerlistEntry>& peerlist, time_t local_time, const CryptoNoteConnectionContext& context);
+    bool handle_remote_peerlist(const std::vector<PeerlistEntry>& peerlist, time_t local_time, const CryptoNoteConnectionContext& context);
     bool get_local_node_data(basic_node_data& node_data);
 
-    bool merge_peerlist_with_local(const std::list<PeerlistEntry>& bs);
-    bool fix_time_delta(std::list<PeerlistEntry>& local_peerlist, time_t local_time, int64_t& delta);
+    bool fix_time_delta(std::vector<PeerlistEntry>& local_peerlist, time_t local_time, int64_t& delta);
 
     bool connections_maker();
     bool make_new_connection_from_peerlist(bool use_white_list);
-    bool try_to_connect_and_handshake_with_new_peer(const NetworkAddress& na, bool just_take_peerlist = false, uint64_t last_seen_stamp = 0, bool white = true);
+    bool make_new_connection_from_anchor_peerlist(const std::vector<AnchorPeerlistEntry>& anchor_peerlist);
+    bool try_to_connect_and_handshake_with_new_peer(const NetworkAddress& na, bool just_take_peerlist = false, uint64_t last_seen_stamp = 0, PeerType peer_type = white, uint64_t first_seen_stamp = 0);
     bool is_peer_used(const PeerlistEntry& peer);
+    bool is_peer_used(const AnchorPeerlistEntry& peer);
     bool is_addr_connected(const NetworkAddress& peer);  
     bool try_ping(basic_node_data& node_data, P2pConnectionContext& context);
-    bool make_expected_connections_count(bool white_list, size_t expected_connections);
+    bool make_expected_connections_count(PeerType peer_type, size_t expected_connections);
     bool is_priority_node(const NetworkAddress& na);
 
     bool connect_to_peerlist(const std::vector<NetworkAddress>& peers);
 
     bool parse_peers_and_add_to_container(const boost::program_options::variables_map& vm, 
       const command_line::arg_descriptor<std::vector<std::string> > & arg, std::vector<NetworkAddress>& container);
+
+    bool gray_peerlist_housekeeping();
 
     //debug functions
     std::string print_connections_container();
@@ -240,9 +272,10 @@ namespace CryptoNote
     CryptoNoteProtocolHandler& m_payload_handler;
     PeerlistManager m_peerlist;
 
-    // OnceInInterval m_peer_handshake_idle_maker_interval;
+    OnceInInterval m_peer_handshake_idle_maker_interval;
     OnceInInterval m_connections_maker_interval;
     OnceInInterval m_peerlist_store_interval;
+    OnceInInterval m_gray_peerlist_housekeeping_interval;
     System::Timer m_timedSyncTimer;
 
     std::string m_bind_ip;
@@ -253,8 +286,12 @@ namespace CryptoNote
     std::vector<NetworkAddress> m_priority_peers;
     std::vector<NetworkAddress> m_exclusive_peers;
     std::vector<NetworkAddress> m_seed_nodes;
-    std::list<PeerlistEntry> m_command_line_peers;
+    std::vector<PeerlistEntry> m_command_line_peers;
     uint64_t m_peer_livetime;
     boost::uuids::uuid m_network_id;
+    std::map<uint32_t, time_t> m_blocked_hosts;
+    std::map<uint32_t, uint64_t> m_host_fails_score;
+
+    mutable std::mutex mutex;
   };
 }

@@ -1,21 +1,41 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018, Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CryptoNoteFormatUtils.h"
 
 #include <set>
+
 #include <Logging/LoggerRef.h>
+#include <Common/BinaryArray.hpp>
 #include <Common/Varint.h>
+#include "Common/Base58.h"
 
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
+#include "CryptoNoteSerialization.h"
 
 #include "Account.h"
 #include "CryptoNoteBasicImpl.h"
 #include "CryptoNoteSerialization.h"
 #include "TransactionExtra.h"
 #include "CryptoNoteTools.h"
+#include "Currency.h"
+#include "Rpc/CoreRpcServerCommandsDefinitions.h"
 
 #include "CryptoNoteConfig.h"
 
@@ -99,6 +119,19 @@ uint64_t get_tx_fee(const Transaction& tx) {
   return r;
 }
 
+bool generateDeterministicTransactionKeys(const Crypto::Hash& inputsHash, const Crypto::SecretKey& viewSecretKey, KeyPair& generatedKeys) {
+  BinaryArray ba;
+  Common::append(ba, std::begin(viewSecretKey.data), std::end(viewSecretKey.data));
+  Common::append(ba, std::begin(inputsHash.data), std::end(inputsHash.data));
+
+  hash_to_scalar(ba.data(), ba.size(), generatedKeys.secretKey);
+  return Crypto::secret_key_to_public_key(generatedKeys.secretKey, generatedKeys.publicKey);
+}
+
+bool generateDeterministicTransactionKeys(const Transaction& tx, const SecretKey& viewSecretKey, KeyPair& generatedKeys) {
+  Crypto::Hash inputsHash = getObjectHash(tx.inputs);
+  return generateDeterministicTransactionKeys(inputsHash, viewSecretKey, generatedKeys);
+}
 
 bool constructTransaction(
   const AccountKeys& sender_account_keys,
@@ -107,6 +140,7 @@ bool constructTransaction(
   std::vector<uint8_t> extra,
   Transaction& tx,
   uint64_t unlock_time,
+  Crypto::SecretKey &tx_key,
   Logging::ILogger& log) {
   LoggerRef logger(log, "construct_tx");
 
@@ -118,8 +152,6 @@ bool constructTransaction(
   tx.unlockTime = unlock_time;
 
   tx.extra = extra;
-  KeyPair txkey = generateKeyPair();
-  addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
 
   struct input_generation_context_data {
     KeyPair in_ephemeral;
@@ -163,6 +195,17 @@ bool constructTransaction(
     input_to_key.outputIndexes = absolute_output_offsets_to_relative(input_to_key.outputIndexes);
     tx.inputs.push_back(input_to_key);
   }
+
+  KeyPair txkey;
+  if (!generateDeterministicTransactionKeys(getObjectHash(tx.inputs), sender_account_keys.viewSecretKey, txkey)) {
+    logger(ERROR) << "Couldn't generate deterministic transaction keys";
+    return false;
+  }
+
+  addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
+
+  tx_key = txkey.secretKey;
+
 
   // "Shuffle" outs
   std::vector<TransactionDestinationEntry> shuffled_dsts(destinations);
@@ -275,8 +318,10 @@ bool check_inputs_types_supported(const TransactionPrefix& tx) {
 }
 
 bool check_outs_valid(const TransactionPrefix& tx, std::string* error) {
+  std::unordered_set<PublicKey> keys_seen;
   for (const TransactionOutput& out : tx.outputs) {
     if (out.target.type() == typeid(KeyOutput)) {
+ 
       if (out.amount == 0) {
         if (error) {
           *error = "Zero amount ouput";
@@ -290,6 +335,14 @@ bool check_outs_valid(const TransactionPrefix& tx, std::string* error) {
         }
         return false;
       }
+
+      if (keys_seen.find(boost::get<KeyOutput>(out.target).key) != keys_seen.end()) {
+        if (error) {
+          *error = "The same output target is present more than once";
+        }
+        return false;
+      }
+      keys_seen.insert(boost::get<KeyOutput>(out.target).key);
     } else if (out.target.type() == typeid(MultisignatureOutput)) {
       const MultisignatureOutput& multisignatureOutput = ::boost::get<MultisignatureOutput>(out.target);
       if (multisignatureOutput.requiredSignatureCount > multisignatureOutput.keys.size()) {
@@ -305,6 +358,15 @@ bool check_outs_valid(const TransactionPrefix& tx, std::string* error) {
           }
           return false;
         }
+
+        if (keys_seen.find(key) != keys_seen.end()) {
+          if (error) {
+            *error = "The same multisignature output target is present more than once";
+          }
+          return false;
+        }
+		keys_seen.insert(key);
+
       }
     } else {
       if (error) {
@@ -440,10 +502,25 @@ bool get_block_hashing_blob(const Block& b, BinaryArray& ba) {
   return true;
 }
 
+bool get_parent_block_hashing_blob(const Block& b, BinaryArray& blob) {
+  auto serializer = makeParentBlockSerializer(b, true, true);
+  return toBinaryArray(serializer, blob);
+}
+
 bool get_block_hash(const Block& b, Hash& res) {
   BinaryArray ba;
   if (!get_block_hashing_blob(b, ba)) {
     return false;
+  }
+
+  // The header of block version 1 differs from headers of blocks starting from v.2
+  if (BLOCK_MAJOR_VERSION_2 == b.majorVersion || BLOCK_MAJOR_VERSION_3 == b.majorVersion) {
+    BinaryArray parent_blob;
+    auto serializer = makeParentBlockSerializer(b, true, false);
+    if (!toBinaryArray(serializer, parent_blob))
+      return false;
+
+    ba.insert(ba.end(), parent_blob.begin(), parent_blob.end());
   }
 
   return getObjectHash(ba, res);
@@ -466,10 +543,17 @@ bool get_aux_block_header_hash(const Block& b, Hash& res) {
 
 bool get_block_longhash(cn_context &context, const Block& b, Hash& res) {
   BinaryArray bd;
-  if (!get_block_hashing_blob(b, bd)) {
+  if (b.majorVersion == BLOCK_MAJOR_VERSION_1 || b.majorVersion >= BLOCK_MAJOR_VERSION_4) {
+    if (!get_block_hashing_blob(b, bd)) {
+      return false;
+    }
+  } else if (b.majorVersion == BLOCK_MAJOR_VERSION_2 || b.majorVersion == BLOCK_MAJOR_VERSION_3) {
+    if (!get_parent_block_hashing_blob(b, bd)) {
+      return false;
+    }
+  } else {
     return false;
   }
-
   cn_slow_hash(context, bd.data(), bd.size(), res);
   return true;
 }
@@ -511,6 +595,161 @@ Hash get_tx_tree_hash(const Block& b) {
     txs_ids.push_back(th);
   }
   return get_tx_tree_hash(txs_ids);
+}
+
+bool is_valid_decomposed_amount(uint64_t amount) {
+  auto it = std::lower_bound(Currency::PRETTY_AMOUNTS.begin(), Currency::PRETTY_AMOUNTS.end(), amount);
+  if (it == Currency::PRETTY_AMOUNTS.end() || amount != *it) {
+	  return false;
+  }
+  return true;
+}
+
+bool getTransactionProof(const Crypto::Hash& transactionHash, const CryptoNote::AccountPublicAddress& destinationAddress, const Crypto::SecretKey& transactionKey, std::string& transactionProof, Logging::ILogger& log) {
+  LoggerRef logger(log, "get_tx_proof"); 
+  Crypto::KeyImage p = *reinterpret_cast<const Crypto::KeyImage*>(&destinationAddress.viewPublicKey);
+  Crypto::KeyImage k = *reinterpret_cast<const Crypto::KeyImage*>(&transactionKey);
+  Crypto::KeyImage pk = Crypto::scalarmultKey(p, k);
+  Crypto::PublicKey R;
+  Crypto::PublicKey rA = reinterpret_cast<const PublicKey&>(pk);
+  Crypto::secret_key_to_public_key(transactionKey, R);
+  Crypto::Signature sig;
+
+  try {
+    Crypto::generate_tx_proof(transactionHash, R, destinationAddress.viewPublicKey, rA, transactionKey, sig);
+  } catch (const std::runtime_error &e) {
+    logger(ERROR, BRIGHT_RED) << "Proof generation error: " << *e.what();
+    return false;
+  }
+
+  transactionProof = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_TX_PROOF_BASE58_PREFIX, std::string((const char *)&rA, sizeof(Crypto::PublicKey)) + std::string((const char *)&sig, sizeof(Crypto::Signature)));
+
+  return true;
+}
+
+bool getReserveProof(const std::vector<TransactionOutputInformation>& selectedTransfers, const CryptoNote::AccountKeys& accountKeys, const uint64_t& amount, const std::string& message, std::string& reserveProof, Logging::ILogger& log) {
+  LoggerRef logger(log, "get_reserve_proof");
+
+  // compute signature prefix hash
+  std::string prefix_data = message;
+  prefix_data.append((const char*)&accountKeys.address, sizeof(CryptoNote::AccountPublicAddress));
+
+  std::vector<Crypto::KeyImage> kimages;
+  CryptoNote::KeyPair ephemeral;
+
+  // have to repeat this to get key image as we don't store m_key_image
+  for (size_t i = 0; i < selectedTransfers.size(); ++i) {
+    const TransactionOutputInformation &td = selectedTransfers[i];
+
+    // derive ephemeral secret key
+    Crypto::KeyImage ki;
+    const bool r = CryptoNote::generate_key_image_helper(accountKeys, td.transactionPublicKey, td.outputInTransaction, ephemeral, ki);
+    if (!r) {
+      logger(ERROR) << "Failed to generate key image";
+      return false;
+    }
+    // now we can insert key image
+    prefix_data.append((const char*)&ki, sizeof(Crypto::PublicKey));
+    kimages.push_back(ki);
+  }
+
+  Crypto::Hash prefix_hash;
+  Crypto::cn_fast_hash(prefix_data.data(), prefix_data.size(), prefix_hash);
+
+  // generate proof entries
+  std::vector<reserve_proof_entry> proofs(selectedTransfers.size());
+
+  for (size_t i = 0; i < selectedTransfers.size(); ++i) {
+    const TransactionOutputInformation &td = selectedTransfers[i];
+    reserve_proof_entry& proof = proofs[i];
+    proof.key_image = kimages[i];
+    proof.transaction_id = td.transactionHash;
+    proof.index_in_transaction = td.outputInTransaction;
+
+    auto txPubKey = td.transactionPublicKey;
+
+    for (int i = 0; i < 2; ++i) {
+      Crypto::KeyImage sk = Crypto::scalarmultKey(*reinterpret_cast<const Crypto::KeyImage*>(&txPubKey), *reinterpret_cast<const Crypto::KeyImage*>(&accountKeys.viewSecretKey));
+      proof.shared_secret = *reinterpret_cast<const Crypto::PublicKey *>(&sk);
+
+      Crypto::KeyDerivation derivation;
+      if (!Crypto::generate_key_derivation(proof.shared_secret, accountKeys.viewSecretKey, derivation)) {
+        logger(ERROR) << "Failed to generate key derivation";
+        return false;
+      }
+    }
+
+    // generate signature for shared secret
+    Crypto::generate_tx_proof(prefix_hash, accountKeys.address.viewPublicKey, txPubKey, proof.shared_secret, accountKeys.viewSecretKey, proof.shared_secret_sig);
+
+    // derive ephemeral secret key
+    Crypto::KeyImage ki;
+    CryptoNote::KeyPair ephemeral;
+
+    const bool r = CryptoNote::generate_key_image_helper(accountKeys, td.transactionPublicKey, td.outputInTransaction, ephemeral, ki);
+    if (!r) {
+      logger(ERROR) << "Failed to generate key image";
+      return false;
+    }
+
+    if (ephemeral.publicKey != td.outputKey) {
+      logger(ERROR) << "Derived public key doesn't agree with the stored one";
+      return false;
+    }
+
+    // generate signature for key image
+    const std::vector<const Crypto::PublicKey *>& pubs = { &ephemeral.publicKey };
+
+    Crypto::generate_ring_signature(prefix_hash, proof.key_image, &pubs[0], 1, ephemeral.secretKey, 0, &proof.key_image_sig);
+  }
+
+  // generate signature for the spend key that received those outputs
+  Crypto::Signature signature;
+  Crypto::generate_signature(prefix_hash, accountKeys.address.spendPublicKey, accountKeys.spendSecretKey, signature);
+
+  // serialize & encode
+  reserve_proof p;
+  p.proofs.assign(proofs.begin(), proofs.end());
+  memcpy(&p.signature, &signature, sizeof(signature));
+
+  BinaryArray ba = toBinaryArray(p);
+  std::string ret(ba.begin(), ba.end());
+
+  reserveProof = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_RESERVE_PROOF_BASE58_PREFIX, ret);
+
+  return true;
+}
+
+std::string signMessage(const std::string &data, const CryptoNote::AccountKeys &keys) {
+  Crypto::Hash hash;
+  Crypto::cn_fast_hash(data.data(), data.size(), hash);
+  
+  Crypto::Signature signature;
+  Crypto::generate_signature(hash, keys.address.spendPublicKey, keys.spendSecretKey, signature);
+  return Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_KEYS_SIGNATURE_BASE58_PREFIX, std::string((const char *)&signature, sizeof(signature)));
+}
+
+bool verifyMessage(const std::string &data, const CryptoNote::AccountPublicAddress &address, const std::string &signature, Logging::ILogger& log) {
+  LoggerRef logger(log, "verify_message");
+
+  std::string decoded;
+  uint64_t prefix;
+  if (!Tools::Base58::decode_addr(signature, prefix, decoded) || prefix != CryptoNote::parameters::CRYPTONOTE_KEYS_SIGNATURE_BASE58_PREFIX) {
+    logger(Logging::ERROR) << "Signature decoding error";
+    return false;
+  }
+
+  Crypto::Signature s;
+  if (sizeof(s) != decoded.size()) {
+    logger(Logging::ERROR) << "Signature size wrong";
+    return false;
+  }
+
+  Crypto::Hash hash;
+  Crypto::cn_fast_hash(data.data(), data.size(), hash);
+
+  memcpy(&s, decoded.data(), sizeof(s));
+  return Crypto::check_signature(hash, address.spendPublicKey, s);
 }
 
 }

@@ -1,7 +1,8 @@
-/* $Id: upnpreplyparse.c,v 1.15 2013/06/06 21:36:40 nanard Exp $ */
-/* MiniUPnP project
+/* $Id: upnpreplyparse.c,v 1.19 2015/07/15 10:29:11 nanard Exp $ */
+/* vim: tabstop=4 shiftwidth=4 noexpandtab
+ * MiniUPnP project
  * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2006-2013 Thomas Bernard
+ * (c) 2006-2017 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -26,12 +27,12 @@ NameValueParserStartElt(void * d, const char * name, int l)
 }
 
 static void
-NameValueParserEndElt(void * d, const char * name, int l)
+NameValueParserEndElt(void * d, const char * name, int namelen)
 {
     struct NameValueParserData * data = (struct NameValueParserData *)d;
     struct NameValue * nv;
 	(void)name;
-	(void)l;
+	(void)namelen;
 	if(!data->topelt)
 		return;
 	if(strcmp(data->curelt, "NewPortListing") != 0)
@@ -40,6 +41,15 @@ NameValueParserEndElt(void * d, const char * name, int l)
 		/* standard case. Limited to n chars strings */
 		l = data->cdatalen;
 	    nv = malloc(sizeof(struct NameValue));
+		if(nv == NULL)
+		{
+			/* malloc error */
+#ifdef DEBUG
+			fprintf(stderr, "%s: error allocating memory",
+			        "NameValueParserEndElt");
+#endif /* DEBUG */
+			return;
+		}
 	    if(l>=(int)sizeof(nv->value))
 	        l = sizeof(nv->value) - 1;
 	    strncpy(nv->name, data->curelt, 64);
@@ -53,7 +63,8 @@ NameValueParserEndElt(void * d, const char * name, int l)
 		{
 			nv->value[0] = '\0';
 		}
-	    LIST_INSERT_HEAD( &(data->head), nv, entries);
+		nv->l_next = data->l_head;	/* insert in list */
+		data->l_head = nv;
 	}
 	data->cdata = NULL;
 	data->cdatalen = 0;
@@ -71,6 +82,10 @@ NameValueParserGetData(void * d, const char * datas, int l)
 		if(!data->portListing)
 		{
 			/* malloc error */
+#ifdef DEBUG
+			fprintf(stderr, "%s: error allocating memory",
+			        "NameValueParserGetData");
+#endif /* DEBUG */
 			return;
 		}
 		memcpy(data->portListing, datas, l);
@@ -89,19 +104,17 @@ void
 ParseNameValue(const char * buffer, int bufsize,
                struct NameValueParserData * data)
 {
-    struct xmlparser parser;
-    LIST_INIT(&(data->head));
-	data->portListing = NULL;
-	data->portListingLength = 0;
-    /* init xmlparser object */
-    parser.xmlstart = buffer;
-    parser.xmlsize = bufsize;
-    parser.data = data;
-    parser.starteltfunc = NameValueParserStartElt;
-    parser.endeltfunc = NameValueParserEndElt;
-    parser.datafunc = NameValueParserGetData;
+	struct xmlparser parser;
+	memset(data, 0, sizeof(struct NameValueParserData));
+	/* init xmlparser object */
+	parser.xmlstart = buffer;
+	parser.xmlsize = bufsize;
+	parser.data = data;
+	parser.starteltfunc = NameValueParserStartElt;
+	parser.endeltfunc = NameValueParserEndElt;
+	parser.datafunc = NameValueParserGetData;
 	parser.attfunc = 0;
-    parsexml(&parser);
+	parsexml(&parser);
 }
 
 void
@@ -114,9 +127,9 @@ ClearNameValueList(struct NameValueParserData * pdata)
 		pdata->portListing = NULL;
 		pdata->portListingLength = 0;
 	}
-    while((nv = pdata->head.lh_first) != NULL)
+    while((nv = pdata->l_head) != NULL)
     {
-        LIST_REMOVE(nv, entries);
+		pdata->l_head = nv->l_next;
         free(nv);
     }
 }
@@ -127,9 +140,9 @@ GetValueFromNameValueList(struct NameValueParserData * pdata,
 {
     struct NameValue * nv;
     char * p = NULL;
-    for(nv = pdata->head.lh_first;
+    for(nv = pdata->l_head;
         (nv != NULL) && (p == NULL);
-        nv = nv->entries.le_next)
+        nv = nv->l_next)
     {
         if(strcmp(nv->name, Name) == 0)
             p = nv->value;
@@ -171,13 +184,13 @@ DisplayNameValueList(char * buffer, int bufsize)
     struct NameValueParserData pdata;
     struct NameValue * nv;
     ParseNameValue(buffer, bufsize, &pdata);
-    for(nv = pdata.head.lh_first;
+    for(nv = pdata.l_head;
         nv != NULL;
-        nv = nv->entries.le_next)
+        nv = nv->l_next)
     {
         printf("%s = %s\n", nv->name, nv->value);
     }
     ClearNameValueList(&pdata);
 }
-#endif
+#endif /* DEBUG */
 

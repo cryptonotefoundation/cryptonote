@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -21,7 +34,7 @@ TEST(peer_list, peer_list_general)
 #define ADD_GRAY_NODE(ip_, port_, id_, last_seen_) {  PeerlistEntry ple; ple.last_seen=last_seen_;ple.adr.ip = ip_; ple.adr.port = port_; ple.id = id_;plm.append_with_peer_gray(ple);}  
 #define ADD_WHITE_NODE(ip_, port_, id_, last_seen_) {  PeerlistEntry ple;ple.last_seen=last_seen_; ple.adr.ip = ip_; ple.adr.port = port_; ple.id = id_;plm.append_with_peer_white(ple);}  
 
-#define PRINT_HEAD(step) {std::list<PeerlistEntry> bs_head; bool r = plm.get_peerlist_head(bs_head, 100);std::cout << "step " << step << ": " << bs_head.size() << std::endl;}
+#define PRINT_HEAD(step) {std::vector<PeerlistEntry> bs_head; bool r = plm.get_peerlist_head(bs_head, 100);std::cout << "step " << step << ": " << bs_head.size() << std::endl;}
 
   ADD_GRAY_NODE(MAKE_IP(123,43,12,1), 8080, 121241, 34345);
   ADD_GRAY_NODE(MAKE_IP(123,43,12,2), 8080, 121241, 34345);
@@ -37,7 +50,7 @@ TEST(peer_list, peer_list_general)
   size_t gray_list_size = plm.get_gray_peers_count();
   ASSERT_EQ(gray_list_size, 1);
 
-  std::list<PeerlistEntry> bs_head;
+  std::vector<PeerlistEntry> bs_head;
   bool r = plm.get_peerlist_head(bs_head, 100);
   std::cout << bs_head.size() << std::endl;
   ASSERT_TRUE(r);
@@ -57,7 +70,7 @@ TEST(peer_list, merge_peer_lists)
   //ADD_NODE_TO_PL("\2", \3, 0x\1, (1353346618 -(\4*60*60*24+\5*60*60+\6*60+\7 )));\n
   PeerlistManager plm;
   plm.init(false);
-  std::list<PeerlistEntry> outer_bs;
+  std::vector<PeerlistEntry> outer_bs;
 
 
 }

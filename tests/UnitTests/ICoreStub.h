@@ -1,12 +1,26 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <cstdint>
 #include <unordered_map>
 
+#include "Common/ObserverManager.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/ICore.h"
 #include "CryptoNoteCore/ICoreObserver.h"
@@ -60,8 +74,8 @@ public:
   virtual bool getBackwardBlocksSizes(uint32_t fromHeight, std::vector<size_t>& sizes, size_t count) override;
   virtual bool getBlockSize(const Crypto::Hash& hash, size_t& size) override;
   virtual bool getAlreadyGeneratedCoins(const Crypto::Hash& hash, uint64_t& generatedCoins) override;
-  virtual bool getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
-      uint64_t& reward, int64_t& emissionChange) override;
+  virtual bool getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
+    uint64_t& reward, int64_t& emissionChange) override;
   virtual bool scanOutputkeysForIndices(const CryptoNote::KeyInput& txInToKey, std::list<std::pair<Crypto::Hash, size_t>>& outputReferences) override;
   virtual bool getBlockDifficulty(uint32_t height, CryptoNote::difficulty_type& difficulty) override;
   virtual bool getBlockContainingTx(const Crypto::Hash& txId, Crypto::Hash& blockId, uint32_t& blockHeight) override;
@@ -73,12 +87,16 @@ public:
   virtual bool getPoolTransactionsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<CryptoNote::Transaction>& transactions, uint64_t& transactionsNumberWithinTimestamps) override;
   virtual bool getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<CryptoNote::Transaction>& transactions) override;
   virtual std::unique_ptr<CryptoNote::IBlock> getBlock(const Crypto::Hash& blockId) override;
-  virtual bool handleIncomingTransaction(const CryptoNote::Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, CryptoNote::tx_verification_context& tvc, bool keptByBlock) override;
+  virtual bool handleIncomingTransaction(const CryptoNote::Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, CryptoNote::tx_verification_context& tvc, bool keptByBlock, uint32_t height) override;
   virtual std::error_code executeLocked(const std::function<std::error_code()>& func) override;
 
   virtual bool addMessageQueue(CryptoNote::MessageQueue<CryptoNote::BlockchainMessage>& messageQueuePtr) override;
   virtual bool removeMessageQueue(CryptoNote::MessageQueue<CryptoNote::BlockchainMessage>& messageQueuePtr) override;
-
+  
+  virtual uint64_t getMinimalFeeForHeight(uint32_t height) override;
+  virtual uint64_t getMinimalFee() override;
+  virtual uint8_t getBlockMajorVersionForHeight(uint32_t height) override;
+  virtual uint8_t getCurrentBlockMajorVersion() override;
 
   void set_blockchain_top(uint32_t height, const Crypto::Hash& top_id);
   void set_outputs_gindexs(const std::vector<uint32_t>& indexs, bool result);
@@ -108,4 +126,5 @@ private:
   std::unordered_map<Crypto::Hash, CryptoNote::Transaction> transactionPool;
   bool poolTxVerificationResult;
   bool poolChangesResult;
+  Tools::ObserverManager<CryptoNote::ICoreObserver> m_observerManager;
 };

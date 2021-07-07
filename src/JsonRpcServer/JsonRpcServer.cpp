@@ -1,6 +1,21 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright(c) 2014 - 2017 XDN - project developers
+// Copyright(c) 2018 The Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "JsonRpcServer.h"
 
@@ -17,7 +32,7 @@
 #include <System/Ipv4Address.h>
 #include "HTTP/HttpParser.h"
 #include "HTTP/HttpResponse.h"
-
+#include "Rpc/JsonRpc.h"
 #include "Common/JsonValue.h"
 #include "Serialization/JsonInputValueSerializer.h"
 #include "Serialization/JsonOutputStreamSerializer.h"
@@ -32,10 +47,15 @@ JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, 
 {
 }
 
-void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort) {
-  HttpServer::start(bindAddress, bindPort);
+void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort, uint16_t bindPortSSL,
+                          bool server_ssl_enable, const std::string& m_rpcUser, const std::string& m_rpcPassword) {
+  HttpServer::start(bindAddress, bindPort, bindPortSSL, server_ssl_enable, m_rpcUser, m_rpcPassword);
   stopEvent.wait();
   HttpServer::stop();
+}
+
+void JsonRpcServer::setCerts(const std::string& chain_file, const std::string& key_file, const std::string& dh_file){
+  HttpServer::setCerts(chain_file, key_file, dh_file);
 }
 
 void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNote::HttpResponse& resp) {
@@ -52,6 +72,12 @@ void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNot
       } catch (std::runtime_error&) {
         logger(Logging::DEBUGGING) << "Couldn't parse request: \"" << req.getBody() << "\"";
         makeJsonParsingErrorResponse(jsonRpcResponse);
+        
+        resp.addHeader("Content-Type", "application/json");
+        resp.addHeader("Access-Control-Allow-Origin", "*");
+        resp.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        resp.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+
         resp.setStatus(CryptoNote::HttpResponse::STATUS_200);
         resp.setBody(jsonRpcResponse.toString());
         return;
@@ -92,7 +118,7 @@ void JsonRpcServer::makeErrorResponse(const std::error_code& ec, Common::JsonVal
   JsonValue error(JsonValue::OBJECT);
 
   JsonValue code;
-  code = static_cast<int64_t>(-32000); //Application specific error code
+  code = static_cast<int64_t>(CryptoNote::JsonRpc::errParseError); //Application specific error code
 
   JsonValue message;
   message = ec.message();
@@ -140,7 +166,7 @@ void JsonRpcServer::makeMethodNotFoundResponse(Common::JsonValue& resp) {
   JsonValue error(JsonValue::OBJECT);
 
   JsonValue code;
-  code = static_cast<int64_t>(-32601); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
+  code = static_cast<int64_t>(CryptoNote::JsonRpc::errMethodNotFound); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
 
   JsonValue message;
   message = "Method not found";
@@ -164,7 +190,7 @@ void JsonRpcServer::makeJsonParsingErrorResponse(Common::JsonValue& resp) {
 
   JsonValue error(JsonValue::OBJECT);
   JsonValue code;
-  code = static_cast<int64_t>(-32700); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
+  code = static_cast<int64_t>(CryptoNote::JsonRpc::errParseError); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
 
   JsonValue message = "Parse error";
 

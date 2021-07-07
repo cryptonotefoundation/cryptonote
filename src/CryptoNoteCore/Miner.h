@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -36,8 +49,6 @@ namespace CryptoNote {
     bool is_mining();
     bool on_idle();
     void on_synchronized();
-    //synchronous analog (for fast calls)
-    static bool find_nonce_for_given_block(Crypto::cn_context &context, Block& bl, const difficulty_type& diffic);
     void pause();
     void resume();
     void do_print_hashrate(bool do_hr);

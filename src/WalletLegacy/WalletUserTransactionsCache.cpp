@@ -1,9 +1,24 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018, Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "IWalletLegacy.h"
 #include "Wallet/WalletErrors.h"
+#include "CryptoNoteCore/TransactionExtra.h"
 #include "WalletLegacy/WalletUserTransactionsCache.h"
 #include "WalletLegacy/WalletLegacySerialization.h"
 #include "WalletLegacy/WalletUtils.h"
@@ -27,6 +42,7 @@ bool WalletUserTransactionsCache::serialize(CryptoNote::ISerializer& s) {
 
     updateUnconfirmedTransactions();
     deleteOutdatedTransactions();
+	rebuildPaymentsIndex();
   } else {
     UserTransactions txsToSave;
     UserTransfers transfersToSave;
@@ -38,6 +54,47 @@ bool WalletUserTransactionsCache::serialize(CryptoNote::ISerializer& s) {
   }
 
   return true;
+}
+
+bool paymentIdIsSet(const PaymentId& paymentId) {
+  return paymentId != NULL_HASH;
+}
+
+bool canInsertTransactionToIndex(const WalletLegacyTransaction& info) {
+  return info.state == WalletLegacyTransactionState::Active && info.blockHeight != WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT &&
+      info.totalAmount > 0 && !info.extra.empty();
+}
+
+void WalletUserTransactionsCache::pushToPaymentsIndex(const PaymentId& paymentId, Offset distance) {
+  m_paymentsIndex[paymentId].push_back(distance);
+}
+
+void WalletUserTransactionsCache::popFromPaymentsIndex(const PaymentId& paymentId, Offset distance) {
+  auto it = m_paymentsIndex.find(paymentId);
+  if (it == m_paymentsIndex.end()) {
+    return;
+  }
+
+  auto toErase = std::lower_bound(it->second.begin(), it->second.end(), distance);
+  if (toErase == it->second.end() || *toErase != distance) {
+    return;
+  }
+
+  it->second.erase(toErase);
+}
+
+void WalletUserTransactionsCache::rebuildPaymentsIndex() {
+  auto begin = std::begin(m_transactions);
+  auto end = std::end(m_transactions);
+  std::vector<uint8_t> extra;
+  for (auto it = begin; it != end; ++it) {
+    PaymentId paymentId;
+    extra.insert(extra.begin(), it->extra.begin(), it->extra.end());
+    if (canInsertTransactionToIndex(*it) && getPaymentIdFromTxExtra(extra, paymentId)) {
+      pushToPaymentsIndex(paymentId, std::distance(begin, it));
+    }
+    extra.clear();
+  }
 }
 
 uint64_t WalletUserTransactionsCache::unconfirmedTransactionsAmount() const {
@@ -72,16 +129,18 @@ TransactionId WalletUserTransactionsCache::addNewTransaction(
   transaction.blockHeight = WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT;
   transaction.state = WalletLegacyTransactionState::Sending;
   transaction.unlockTime = unlockTime;
+  transaction.secretKey = NULL_SECRET_KEY;
 
   return insertTransaction(std::move(transaction));
 }
 
 void WalletUserTransactionsCache::updateTransaction(
-  TransactionId transactionId, const CryptoNote::Transaction& tx, uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs) {
+  TransactionId transactionId, const CryptoNote::Transaction& tx, uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs, Crypto::SecretKey& tx_key) {
   // update extra field from created transaction
   auto& txInfo = m_transactions.at(transactionId);
   txInfo.extra.assign(tx.extra.begin(), tx.extra.end());
-  m_unconfirmedTransactions.add(tx, transactionId, amount, usedOutputs);
+  txInfo.secretKey = tx_key;
+  m_unconfirmedTransactions.add(tx, transactionId, amount, usedOutputs, tx_key);
 }
 
 void WalletUserTransactionsCache::updateTransactionSendingState(TransactionId transactionId, std::error_code ec) {
@@ -102,9 +161,8 @@ std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionUpd
 
   if (!m_unconfirmedTransactions.findTransactionId(txInfo.transactionHash, id)) {
     id = findTransactionByHash(txInfo.transactionHash);
-  } else {
-    m_unconfirmedTransactions.erase(txInfo.transactionHash);
   }
+  m_unconfirmedTransactions.erase(txInfo.transactionHash);
 
   bool isCoinbase = txInfo.totalAmountIn == 0;
 
@@ -122,6 +180,7 @@ std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionUpd
     transaction.extra.assign(txInfo.extra.begin(), txInfo.extra.end());
     transaction.state = WalletLegacyTransactionState::Active;
     transaction.unlockTime = txInfo.unlockTime;
+    transaction.secretKey = NULL_SECRET_KEY;
 
     id = insertTransaction(std::move(transaction));
     // notification event
@@ -151,6 +210,12 @@ std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionDel
   std::shared_ptr<WalletLegacyEvent> event;
   if (id != CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID) {
     WalletLegacyTransaction& tr = getTransaction(id);
+	std::vector<uint8_t> extra(tr.extra.begin(), tr.extra.end());
+    PaymentId paymentId;
+    if (getPaymentIdFromTxExtra(extra, paymentId)) {
+      popFromPaymentsIndex(paymentId, id);
+    }
+
     tr.blockHeight = WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT;
     tr.timestamp = 0;
     tr.state = WalletLegacyTransactionState::Deleted;
@@ -181,6 +246,26 @@ TransactionId WalletUserTransactionsCache::findTransactionByTransferId(TransferI
     return WALLET_LEGACY_INVALID_TRANSACTION_ID;
 
   return id;
+}
+
+std::vector<Payments> WalletUserTransactionsCache::getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const {
+  std::vector<Payments> payments(paymentIds.size());
+  auto payment = payments.begin();
+  for (auto& key : paymentIds) {
+    payment->paymentId = key;
+    auto it = m_paymentsIndex.find(key);
+    if (it != m_paymentsIndex.end()) {
+      std::transform(it->second.begin(), it->second.end(), std::back_inserter(payment->transactions),
+      [this](decltype(it->second)::value_type val) {
+        assert(val < m_transactions.size());
+        return m_transactions[val];
+      });
+    }
+
+    ++payment;
+  }
+
+  return payments;
 }
 
 bool WalletUserTransactionsCache::getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) const

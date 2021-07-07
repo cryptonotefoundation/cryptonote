@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ICoreStub.h"
 
@@ -28,11 +41,11 @@ ICoreStub::ICoreStub(const CryptoNote::Block& genesisBlock) :
 }
 
 bool ICoreStub::addObserver(CryptoNote::ICoreObserver* observer) {
-  return true;
+  return m_observerManager.add(observer);
 }
 
 bool ICoreStub::removeObserver(CryptoNote::ICoreObserver* observer) {
-  return true;
+  return m_observerManager.remove(observer);
 }
 
 void ICoreStub::get_blockchain_top(uint32_t& height, Crypto::Hash& top_id) {
@@ -77,6 +90,7 @@ bool ICoreStub::handle_incoming_tx(CryptoNote::BinaryArray const& tx_blob, Crypt
 void ICoreStub::set_blockchain_top(uint32_t height, const Crypto::Hash& top_id) {
   topHeight = height;
   topId = top_id;
+  m_observerManager.notify(&CryptoNote::ICoreObserver::blockchainUpdated);
 }
 
 void ICoreStub::set_outputs_gindexs(const std::vector<uint32_t>& indexs, bool result) {
@@ -244,7 +258,7 @@ bool ICoreStub::getAlreadyGeneratedCoins(const Crypto::Hash& hash, uint64_t& gen
   return true;
 }
 
-bool ICoreStub::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
+bool ICoreStub::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
     uint64_t& reward, int64_t& emissionChange) {
   return true;
 }
@@ -278,7 +292,7 @@ bool ICoreStub::getMultisigOutputReference(const CryptoNote::MultisignatureInput
 void ICoreStub::addBlock(const CryptoNote::Block& block) {
   uint32_t height = boost::get<CryptoNote::BaseInput>(block.baseTransaction.inputs.front()).blockIndex;
   Crypto::Hash hash = CryptoNote::get_block_hash(block);
-  if (height > topHeight) {
+  if (height > topHeight || blocks.empty()) {
     topHeight = height;
     topId = hash;
   }
@@ -289,6 +303,8 @@ void ICoreStub::addBlock(const CryptoNote::Block& block) {
   for (auto txHash : block.transactionHashes) {
     blockHashByTxHashIndex.emplace(std::make_pair(txHash, hash));
   }
+
+  m_observerManager.notify(&CryptoNote::ICoreObserver::blockchainUpdated);
 }
 
 void ICoreStub::addTransaction(const CryptoNote::Transaction& tx) {
@@ -324,9 +340,9 @@ std::unique_ptr<CryptoNote::IBlock> ICoreStub::getBlock(const Crypto::Hash& bloc
   return std::unique_ptr<CryptoNote::IBlock>(nullptr);
 }
 
-bool ICoreStub::handleIncomingTransaction(const CryptoNote::Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, CryptoNote::tx_verification_context& tvc, bool keptByBlock) {
+bool ICoreStub::handleIncomingTransaction(const CryptoNote::Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, CryptoNote::tx_verification_context& tvc, bool keptByBlock, uint32_t height) {
   auto result = transactionPool.emplace(std::make_pair(txHash, tx));
-  tvc.m_verifivation_failed = !poolTxVerificationResult;
+  tvc.m_verification_failed = !poolTxVerificationResult;
   tvc.m_added_to_pool = true;
   tvc.m_should_be_relayed = result.second;
   return poolTxVerificationResult;
@@ -351,3 +367,16 @@ bool ICoreStub::removeMessageQueue(CryptoNote::MessageQueue<CryptoNote::Blockcha
 void ICoreStub::setPoolChangesResult(bool result) {
   poolChangesResult = result;
 }
+
+uint64_t ICoreStub::getMinimalFeeForHeight(uint32_t height) {
+	return 10000000000ULL;
+};
+uint64_t ICoreStub::getMinimalFee() {
+	return 10000000000ULL;
+};
+uint8_t ICoreStub::getBlockMajorVersionForHeight(uint32_t height) {
+	return (uint8_t)4;
+};
+uint8_t ICoreStub::getCurrentBlockMajorVersion() {
+	return (uint8_t)4;
+};

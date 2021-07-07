@@ -1,4 +1,7 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 XDN developers
+// Copyright (c) 2006-2013 Andrey N.Sabelnikov, www.sabelnikov.net
+// Copyright (c) 2016-2017 The Karbowanec developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +12,9 @@
 #include <sstream>
 
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <Windows.h>
 #else
 #include <unistd.h>
@@ -39,6 +45,24 @@ void AsyncConsoleReader::start() {
 bool AsyncConsoleReader::getline(std::string& line) {
   return m_queue.pop(line);
 }
+
+void AsyncConsoleReader::pause() {
+  if (m_stop) {
+    return;
+  }
+
+  m_stop = true;
+
+  if (m_thread.joinable()) {
+    m_thread.join();
+  }
+
+  m_thread = std::thread();
+}
+
+void AsyncConsoleReader::unpause() {
+  start();
+} 
 
 void AsyncConsoleReader::stop() {
 
@@ -80,7 +104,11 @@ void AsyncConsoleReader::consoleThread() {
 
 bool AsyncConsoleReader::waitInput() {
 #ifndef _WIN32
-  int stdin_fileno = ::fileno(stdin);
+  #if defined(__OpenBSD__) || defined(__ANDROID__)
+    int stdin_fileno = fileno(stdin);
+  #else
+    int stdin_fileno = ::fileno(stdin);
+  #endif
 
   while (!m_stop) {
     fd_set read_set;
@@ -103,6 +131,20 @@ bool AsyncConsoleReader::waitInput() {
 
     if (retval > 0) {
       return true;
+    }
+  }
+#else
+  while (!m_stop.load(std::memory_order_relaxed))
+  {
+    int retval = ::WaitForSingleObject(::GetStdHandle(STD_INPUT_HANDLE), 100);
+    switch (retval)
+    {
+      case WAIT_FAILED:
+        return false;
+      case WAIT_OBJECT_0:
+        return true;
+      default:
+        break;
     }
   }
 #endif
@@ -134,6 +176,14 @@ void ConsoleHandler::stop() {
   wait();
 }
 
+void ConsoleHandler::pause() {
+  m_consoleReader.pause();
+}
+
+void ConsoleHandler::unpause() {
+  m_consoleReader.unpause();
+}
+  
 void ConsoleHandler::wait() {
 
   try {
@@ -191,9 +241,40 @@ bool ConsoleHandler::runCommand(const std::vector<std::string>& cmdAndArgs) {
 }
 
 void ConsoleHandler::handleCommand(const std::string& cmd) {
-  std::vector<std::string> args;
-  boost::split(args, cmd, boost::is_any_of(" "), boost::token_compress_on);
-  runCommand(args);
+  bool parseString = false;
+  std::string arg;
+  std::vector<std::string> argList;
+
+  for (auto ch : cmd) {
+    switch (ch) {
+    case ' ':
+      if (parseString) {
+        arg += ch;
+      } else if (!arg.empty()) {
+        argList.emplace_back(std::move(arg));
+        arg.clear();
+      }
+      break;
+
+    case '"':
+      if (!arg.empty()) {
+        argList.emplace_back(std::move(arg));
+        arg.clear();
+      }
+
+      parseString = !parseString;
+      break;
+
+    default:
+      arg += ch;
+    }
+  }
+
+  if (!arg.empty()) {
+    argList.emplace_back(std::move(arg));
+  }
+
+  runCommand(argList);
 }
 
 void ConsoleHandler::handlerThread() {

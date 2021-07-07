@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Miner.h"
 
@@ -17,6 +30,7 @@
 #include <boost/utility/value_init.hpp>
 
 #include "crypto/crypto.h"
+#include "crypto/random.h"
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
 #include "Serialization/SerializationTools.h"
@@ -58,9 +72,23 @@ namespace CryptoNote
     std::lock_guard<decltype(m_template_lock)> lk(m_template_lock);
 
     m_template = bl;
+
+    if (m_template.majorVersion == BLOCK_MAJOR_VERSION_2 || m_template.majorVersion == BLOCK_MAJOR_VERSION_3) {
+      CryptoNote::TransactionExtraMergeMiningTag mm_tag;
+      mm_tag.depth = 0;
+      if (!CryptoNote::get_aux_block_header_hash(m_template, mm_tag.merkleRoot)) {
+        return false;
+      }
+
+      m_template.parentBlock.baseTransaction.extra.clear();
+      if (!CryptoNote::appendMergeMiningTagToExtra(m_template.parentBlock.baseTransaction.extra, mm_tag)) {
+        return false;
+      }
+    }
+
     m_diffic = di;
     ++m_template_no;
-    m_starter_nonce = Crypto::rand<uint32_t>();
+    m_starter_nonce = Random::randomValue<uint32_t>();
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
@@ -203,7 +231,7 @@ namespace CryptoNote
 
     m_mine_address = adr;
     m_threads_total = static_cast<uint32_t>(threads_count);
-    m_starter_nonce = Crypto::rand<uint32_t>();
+    m_starter_nonce = Random::randomValue<uint32_t>();
 
     if (!m_template_no) {
       request_block_template(); //lets update block template
@@ -245,66 +273,10 @@ namespace CryptoNote
     }
 
     m_threads.clear();
+    m_current_hash_rate = 0;
+    m_last_hash_rates.clear();
     logger(INFO) << "Mining has been stopped, " << m_threads.size() << " finished" ;
     return true;
-  }
-  //-----------------------------------------------------------------------------------------------------
-  bool miner::find_nonce_for_given_block(Crypto::cn_context &context, Block& bl, const difficulty_type& diffic) {
-
-    unsigned nthreads = std::thread::hardware_concurrency();
-
-    if (nthreads > 0 && diffic > 5) {
-      std::vector<std::future<void>> threads(nthreads);
-      std::atomic<uint32_t> foundNonce;
-      std::atomic<bool> found(false);
-      uint32_t startNonce = Crypto::rand<uint32_t>();
-
-      for (unsigned i = 0; i < nthreads; ++i) {
-        threads[i] = std::async(std::launch::async, [&, i]() {
-          Crypto::cn_context localctx;
-          Crypto::Hash h;
-
-          Block lb(bl); // copy to local block
-
-          for (uint32_t nonce = startNonce + i; !found; nonce += nthreads) {
-            lb.nonce = nonce;
-
-            if (!get_block_longhash(localctx, lb, h)) {
-              return;
-            }
-
-            if (check_hash(h, diffic)) {
-              foundNonce = nonce;
-              found = true;
-              return;
-            }
-          }
-        });
-      }
-
-      for (auto& t : threads) {
-        t.wait();
-      }
-
-      if (found) {
-        bl.nonce = foundNonce.load();
-      }
-
-      return found;
-    } else {
-      for (; bl.nonce != std::numeric_limits<uint32_t>::max(); bl.nonce++) {
-        Crypto::Hash h;
-        if (!get_block_longhash(context, bl, h)) {
-          return false;
-        }
-
-        if (check_hash(h, diffic)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
   }
   //-----------------------------------------------------------------------------------------------------
   void miner::on_synchronized()

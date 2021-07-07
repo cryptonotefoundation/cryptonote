@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Chaingen.h"
 
@@ -16,6 +29,7 @@
 #include "RingSignature.h"
 #include "TransactionTests.h"
 #include "TransactionValidation.h"
+#include "Upgrade.h"
 #include "RandomOuts.h"
 
 namespace po = boost::program_options;
@@ -70,6 +84,10 @@ int main(int argc, char* argv[])
   }
   else if (command_line::get_arg(vm, arg_generate_and_play_test_data))
   {
+#define GENERATE_AND_PLAY_EX_2VER(TestCase) \
+  GENERATE_AND_PLAY_EX(TestCase(CryptoNote::BLOCK_MAJOR_VERSION_1)) \
+  GENERATE_AND_PLAY_EX(TestCase(CryptoNote::BLOCK_MAJOR_VERSION_2))
+
     GENERATE_AND_PLAY(gen_simple_chain_001);
     GENERATE_AND_PLAY(gen_simple_chain_split_1);
     GENERATE_AND_PLAY(one_block);
@@ -79,33 +97,41 @@ int main(int argc, char* argv[])
     //GENERATE_AND_PLAY(gen_ring_signature_big); // Takes up to XXX hours (if CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW == 10)
 
     //// Block verification tests
-    GENERATE_AND_PLAY(TestBlockMajorVersionAccepted);
-    GENERATE_AND_PLAY(TestBlockMajorVersionRejected);
-    GENERATE_AND_PLAY(TestBlockBigMinorVersion);
-    GENERATE_AND_PLAY(gen_block_ts_not_checked);
-    GENERATE_AND_PLAY(gen_block_ts_in_past);
-    GENERATE_AND_PLAY(gen_block_ts_in_future_rejected);
-    GENERATE_AND_PLAY(gen_block_ts_in_future_accepted);
-    GENERATE_AND_PLAY(gen_block_invalid_prev_id);
-    GENERATE_AND_PLAY(gen_block_invalid_nonce);
-    GENERATE_AND_PLAY(gen_block_no_miner_tx);
-    GENERATE_AND_PLAY(gen_block_unlock_time_is_low);
-    GENERATE_AND_PLAY(gen_block_unlock_time_is_high);
-    GENERATE_AND_PLAY(gen_block_unlock_time_is_timestamp_in_past);
-    GENERATE_AND_PLAY(gen_block_unlock_time_is_timestamp_in_future);
-    GENERATE_AND_PLAY(gen_block_height_is_low);
-    GENERATE_AND_PLAY(gen_block_height_is_high);
-    GENERATE_AND_PLAY(gen_block_miner_tx_has_2_tx_gen_in);
-    GENERATE_AND_PLAY(gen_block_miner_tx_has_2_in);
-    GENERATE_AND_PLAY(gen_block_miner_tx_with_txin_to_key);
-    GENERATE_AND_PLAY(gen_block_miner_tx_out_is_small);
-    GENERATE_AND_PLAY(gen_block_miner_tx_out_is_big);
-    GENERATE_AND_PLAY(gen_block_miner_tx_has_no_out);
-    GENERATE_AND_PLAY(gen_block_miner_tx_has_out_to_alice);
-    GENERATE_AND_PLAY(gen_block_has_invalid_tx);
-    GENERATE_AND_PLAY(gen_block_is_too_big);
-    GENERATE_AND_PLAY(TestBlockCumulativeSizeExceedsLimit);
+    GENERATE_AND_PLAY_EX_2VER(TestBlockMajorVersionAccepted);
+    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(CryptoNote::BLOCK_MAJOR_VERSION_1, CryptoNote::BLOCK_MAJOR_VERSION_2));
+    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(CryptoNote::BLOCK_MAJOR_VERSION_2, CryptoNote::BLOCK_MAJOR_VERSION_1));
+    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(CryptoNote::BLOCK_MAJOR_VERSION_2, CryptoNote::BLOCK_MAJOR_VERSION_2 + 1));
+    GENERATE_AND_PLAY_EX_2VER(TestBlockBigMinorVersion);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_ts_not_checked);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_ts_in_past);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_ts_in_future_rejected);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_ts_in_future_accepted);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_invalid_prev_id);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_invalid_nonce);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_no_miner_tx);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_unlock_time_is_low);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_unlock_time_is_high);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_unlock_time_is_timestamp_in_past);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_unlock_time_is_timestamp_in_future);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_height_is_low);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_height_is_high);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_miner_tx_has_2_tx_gen_in);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_miner_tx_has_2_in);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_miner_tx_with_txin_to_key);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_miner_tx_out_is_small);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_miner_tx_out_is_big);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_miner_tx_has_no_out);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_miner_tx_has_out_to_alice);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_has_invalid_tx);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_is_too_big);
+    GENERATE_AND_PLAY_EX_2VER(TestBlockCumulativeSizeExceedsLimit);
     //GENERATE_AND_PLAY_EX_2VER(gen_block_invalid_binary_format); // Takes up to 30 minutes, if CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW == 10
+
+    GENERATE_AND_PLAY(TestMaxSizeOfParentBlock);
+    GENERATE_AND_PLAY(TestBigParentBlock);
+    GENERATE_AND_PLAY(TestBlock2ExtraEmpty);
+    GENERATE_AND_PLAY(TestBlock2ExtraWithoutMMTag);
+    GENERATE_AND_PLAY(TestBlock2ExtraWithGarbage);
 
     // Transaction verification tests
     GENERATE_AND_PLAY(gen_tx_big_version);
@@ -175,6 +201,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_uint_overflow_2);
 
     GENERATE_AND_PLAY(gen_block_reward);
+    GENERATE_AND_PLAY(gen_upgrade);
     GENERATE_AND_PLAY(GetRandomOutputs);
 
     std::cout << (failed_tests.empty() ? concolor::green : concolor::magenta);

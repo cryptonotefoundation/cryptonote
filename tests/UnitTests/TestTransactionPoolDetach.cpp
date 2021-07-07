@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -111,11 +124,12 @@ class DetachTest : public ::testing::Test, public IBlockchainSynchronizerObserve
 public:
 
   DetachTest() :
+    m_logger(Logging::ERROR),
     m_currency(CryptoNote::CurrencyBuilder(m_logger).currency()),
     generator(m_currency),
     m_node(generator),
-    m_sync(m_node, m_currency.genesisBlockHash()),
-    m_transfersSync(m_currency, m_sync, m_node) {
+    m_sync(m_node, m_logger, m_currency.genesisBlockHash()),
+    m_transfersSync(m_currency, m_logger, m_sync, m_node) {
   }
 
   void addAccounts(size_t count) {
@@ -353,8 +367,8 @@ TEST_F(DetachTest, testDetachWithWallet) {
   auto fee = m_currency.minimumFee();
 
   generator.generateEmptyBlocks(5);
-  WalletLegacy Alice(m_currency, m_node);
-  WalletLegacy Bob(m_currency, m_node);
+  WalletLegacy Alice(m_currency, m_node, m_logger);
+  WalletLegacy Bob(m_currency, m_node, m_logger);
 
   CompletionWalletObserver AliceCompleted, BobCompleted;
   AliceCompleted.syncCompleted = std::promise<std::error_code>();

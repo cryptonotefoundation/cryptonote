@@ -1,12 +1,27 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2019, The Karbowanec developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Miner.h"
 
 #include <functional>
 
 #include "crypto/crypto.h"
+#include "crypto/random.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 
 #include <System/InterruptedException.h>
@@ -63,11 +78,11 @@ void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
   m_logger(Logging::INFO) << "Starting mining for difficulty " << blockMiningParameters.difficulty;
 
   try {
-    blockMiningParameters.blockTemplate.nonce = Crypto::rand<uint32_t>();
+    blockMiningParameters.blockTemplate.nonce = Random::randomValue<uint32_t>();
 
     for (size_t i = 0; i < threadCount; ++i) {
       m_workers.emplace_back(std::unique_ptr<System::RemoteContext<void>> (
-        new System::RemoteContext<void>(m_dispatcher, std::bind(&Miner::workerFunc, this, blockMiningParameters.blockTemplate, blockMiningParameters.difficulty, threadCount)))
+        new System::RemoteContext<void>(m_dispatcher, std::bind(&Miner::workerFunc, this, blockMiningParameters.blockTemplate, blockMiningParameters.difficulty, (uint32_t)threadCount)))
       );
 
       blockMiningParameters.blockTemplate.nonce++;

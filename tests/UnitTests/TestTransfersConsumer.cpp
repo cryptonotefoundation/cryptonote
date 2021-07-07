@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -83,7 +96,7 @@ TransfersConsumerTest::TransfersConsumerTest() :
   m_generator(m_currency),
   m_node(m_generator, true),
   m_accountKeys(generateAccountKeys()),
-  m_consumer(m_currency, m_node, m_accountKeys.viewSecretKey)
+  m_consumer(m_currency, m_node, m_logger, m_accountKeys.viewSecretKey)
 {
 }
 
@@ -410,7 +423,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesError) 
 
   INodeGlobalIndicesStub node;
 
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   auto subscription = getAccountSubscriptionWithSyncStart(m_accountKeys, 1234, 10);
 
@@ -529,7 +542,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsPrope
   };
 
   INodeGlobalIndicesStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   AccountSubscription subscription = getAccountSubscription(m_accountKeys);
   subscription.syncStart.height = 0;
@@ -567,7 +580,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsNotCa
   };
 
   INodeGlobalIndicesStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   AccountSubscription subscription = getAccountSubscription(m_accountKeys);
   subscription.syncStart.height = 0;
@@ -637,7 +650,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformation) {
   const uint64_t index = 2;
 
   INodeGlobalIndexStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   node.globalIndex = index;
 
@@ -670,7 +683,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformationMulti
   const uint64_t index = 2;
 
   INodeGlobalIndexStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   node.globalIndex = index;
 

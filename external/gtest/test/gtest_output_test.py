@@ -29,7 +29,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Tests the text output of Google C++ Testing Framework.
+"""Tests the text output of Google C++ Testing and Mocking Framework.
+
 
 SYNOPSIS
        gtest_output_test.py --build_dir=BUILD/DIR --gengolden
@@ -40,6 +41,7 @@ SYNOPSIS
 
 __author__ = 'wan@google.com (Zhanyong Wan)'
 
+import difflib
 import os
 import re
 import sys
@@ -50,6 +52,10 @@ import gtest_test_utils
 GENGOLDEN_FLAG = '--gengolden'
 CATCH_EXCEPTIONS_ENV_VAR_NAME = 'GTEST_CATCH_EXCEPTIONS'
 
+# The flag indicating stacktraces are not supported
+NO_STACKTRACE_SUPPORT_FLAG = '--no_stacktrace_support'
+
+IS_LINUX = os.name == 'posix' and os.uname()[0] == 'Linux'
 IS_WINDOWS = os.name == 'nt'
 
 # TODO(vladl@google.com): remove the _lin suffix.
@@ -58,22 +64,22 @@ GOLDEN_NAME = 'gtest_output_test_golden_lin.txt'
 PROGRAM_PATH = gtest_test_utils.GetTestExecutablePath('gtest_output_test_')
 
 # At least one command we exercise must not have the
-# --gtest_internal_skip_environment_and_ad_hoc_tests flag.
+# 'internal_skip_environment_and_ad_hoc_tests' argument.
 COMMAND_LIST_TESTS = ({}, [PROGRAM_PATH, '--gtest_list_tests'])
 COMMAND_WITH_COLOR = ({}, [PROGRAM_PATH, '--gtest_color=yes'])
 COMMAND_WITH_TIME = ({}, [PROGRAM_PATH,
                           '--gtest_print_time',
-                          '--gtest_internal_skip_environment_and_ad_hoc_tests',
+                          'internal_skip_environment_and_ad_hoc_tests',
                           '--gtest_filter=FatalFailureTest.*:LoggingTest.*'])
 COMMAND_WITH_DISABLED = (
     {}, [PROGRAM_PATH,
          '--gtest_also_run_disabled_tests',
-         '--gtest_internal_skip_environment_and_ad_hoc_tests',
+         'internal_skip_environment_and_ad_hoc_tests',
          '--gtest_filter=*DISABLED_*'])
 COMMAND_WITH_SHARDING = (
     {'GTEST_SHARD_INDEX': '1', 'GTEST_TOTAL_SHARDS': '2'},
     [PROGRAM_PATH,
-     '--gtest_internal_skip_environment_and_ad_hoc_tests',
+     'internal_skip_environment_and_ad_hoc_tests',
      '--gtest_filter=PassingTest.*'])
 
 GOLDEN_PATH = os.path.join(gtest_test_utils.GetSourceDir(), GOLDEN_NAME)
@@ -98,7 +104,8 @@ def RemoveLocations(test_output):
        'FILE_NAME:#: '.
   """
 
-  return re.sub(r'.*[/\\](.+)(\:\d+|\(\d+\))\: ', r'\1:#: ', test_output)
+  return re.sub(r'.*[/\\]((gtest_output_test_|gtest).cc)(\:\d+|\(\d+\))\: ',
+                r'\1:#: ', test_output)
 
 
 def RemoveStackTraceDetails(output):
@@ -248,12 +255,12 @@ test_list = GetShellCommandOutput(COMMAND_LIST_TESTS)
 SUPPORTS_DEATH_TESTS = 'DeathTest' in test_list
 SUPPORTS_TYPED_TESTS = 'TypedTest' in test_list
 SUPPORTS_THREADS = 'ExpectFailureWithThreadsTest' in test_list
-SUPPORTS_STACK_TRACES = False
+SUPPORTS_STACK_TRACES = NO_STACKTRACE_SUPPORT_FLAG not in sys.argv
 
 CAN_GENERATE_GOLDEN_FILE = (SUPPORTS_DEATH_TESTS and
                             SUPPORTS_TYPED_TESTS and
-                            SUPPORTS_THREADS)
-
+                            SUPPORTS_THREADS and
+                            SUPPORTS_STACK_TRACES)
 
 class GTestOutputTest(gtest_test_utils.TestCase):
   def RemoveUnsupportedTests(self, test_output):
@@ -294,7 +301,11 @@ class GTestOutputTest(gtest_test_utils.TestCase):
     normalized_golden = RemoveTypeInfoDetails(golden)
 
     if CAN_GENERATE_GOLDEN_FILE:
-      self.assertEqual(normalized_golden, normalized_actual)
+      self.assertEqual(normalized_golden, normalized_actual,
+                       '\n'.join(difflib.unified_diff(
+                           normalized_golden.split('\n'),
+                           normalized_actual.split('\n'),
+                           'golden', 'actual')))
     else:
       normalized_actual = NormalizeToCurrentPlatform(
           RemoveTestCounts(normalized_actual))
@@ -316,7 +327,11 @@ class GTestOutputTest(gtest_test_utils.TestCase):
 
 
 if __name__ == '__main__':
-  if sys.argv[1:] == [GENGOLDEN_FLAG]:
+  if NO_STACKTRACE_SUPPORT_FLAG in sys.argv:
+    # unittest.main() can't handle unknown flags
+    sys.argv.remove(NO_STACKTRACE_SUPPORT_FLAG)
+
+  if GENGOLDEN_FLAG in sys.argv:
     if CAN_GENERATE_GOLDEN_FILE:
       output = GetOutputOfAllCommands()
       golden_file = open(GOLDEN_PATH, 'wb')
@@ -325,9 +340,9 @@ if __name__ == '__main__':
     else:
       message = (
           """Unable to write a golden file when compiled in an environment
-that does not support all the required features (death tests, typed tests,
-and multiple threads).  Please generate the golden file using a binary built
-with those features enabled.""")
+that does not support all the required features (death tests,
+typed tests, stack traces, and multiple threads).
+Please build this test and generate the golden file using Blaze on Linux.""")
 
       sys.stderr.write(message)
       sys.exit(1)

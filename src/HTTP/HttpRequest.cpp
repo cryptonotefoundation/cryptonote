@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "HttpRequest.h"
 
@@ -39,13 +52,16 @@ namespace CryptoNote {
     url = u;
   }
 
+  void HttpRequest::setHost(const std::string& host) {
+    m_host = host;
+  }
+
   std::ostream& HttpRequest::printHttpRequest(std::ostream& os) const {
     os << "POST " << url << " HTTP/1.1\r\n";
     auto host = headers.find("Host");
     if (host == headers.end()) {
-      os << "Host: " << "127.0.0.1" << "\r\n";
+      os << "Host: " << m_host << "\r\n";
     }
-
     for (auto pair : headers) {
       os << pair.first << ": " << pair.second << "\r\n";
     }

@@ -1,6 +1,20 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2014-2016 XDN developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "HttpParser.h"
 
@@ -26,6 +40,7 @@ namespace CryptoNote {
 
 HttpResponse::HTTP_STATUS HttpParser::parseResponseStatusFromString(const std::string& status) {
   if (status == "200 OK" || status == "200 Ok") return CryptoNote::HttpResponse::STATUS_200;
+  else if (status.substr(0, 4) == "401 ") return CryptoNote::HttpResponse::STATUS_401;
   else if (status == "404 Not Found") return CryptoNote::HttpResponse::STATUS_404;
   else if (status == "500 Internal Server Error") return CryptoNote::HttpResponse::STATUS_500;
   else throw std::system_error(make_error_code(CryptoNote::error::HttpParserErrorCodes::UNEXPECTED_SYMBOL),

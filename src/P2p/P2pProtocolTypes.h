@@ -1,12 +1,28 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2014-2017, The Monero project
+// Copyright (c) 2016-2020, The Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <string.h>
 #include <tuple>
 #include <boost/uuid/uuid.hpp>
+#include "android.h"
 #include "Common/StringTools.h"
 
 namespace CryptoNote
@@ -28,6 +44,13 @@ namespace CryptoNote
     NetworkAddress adr;
     PeerIdType id;
     uint64_t last_seen;
+  };
+
+  struct AnchorPeerlistEntry
+  {
+    NetworkAddress adr;
+    PeerIdType id;
+    int64_t first_seen;
   };
 
   struct connection_entry

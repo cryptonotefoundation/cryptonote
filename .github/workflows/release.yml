@@ -1,0 +1,197 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  build-windows:
+    name: Windows
+    runs-on: windows-latest
+    env:
+      BOOST_ROOT: C:\thirdparties\boost-1.72.0
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Install OpenSSL
+        run: choco install openssl
+
+      - name: Install Boost
+        shell: powershell
+        run: |
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/boost_1_72_0-msvc-14.2-64.exe"
+          (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost-installer.exe")
+          Start-Process -Wait -FilePath "$env:TEMP\boost-installer.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=$env:BOOST_ROOT"
+
+      - name: Build
+        shell: powershell
+        id: build
+        run: |
+          $build_folder = "build"
+          $krb_ver = "${{ github.ref }}" -replace 'refs/tags/'
+          $release_name = "Karbo-cli-win64-$krb_ver"
+          mkdir "$build_folder"
+          cd "$build_folder"
+          cmake -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT" -DBOOST_INCLUDE_DIRS="$env:BOOST_ROOT/include" ..
+          msbuild Karbowanec.sln /p:Configuration=Release /m
+          cd src\Release
+          Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
+          $sha256 = (Get-FileHash "$release_name.zip").Hash
+          $asset_path = "./$build_folder/src/Release/$release_name.zip"
+          echo "::set-output name=sha256::${sha256}"
+          echo "::set-output name=release_name::${release_name}.zip"
+          echo "::set-output name=asset_path::${asset_path}"
+          echo "::set-output name=krb_ver::${krb_ver}"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.build.outputs.asset_path }}
+          name: Karbo CLI Suite ${{ steps.build.outputs.krb_ver }}
+          body: |
+            **${{ steps.build.outputs.release_name }}**
+            ${{ steps.build.outputs.sha256 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    name: macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        id: build
+        run: |
+          build_folder="build/"
+          krb_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
+          release_name="Karbo-cli-macOS-$krb_ver"
+          brew install --force boost gcc
+          brew link boost --force
+          mkdir "$build_folder"
+          cd "$build_folder"
+          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
+          make
+          mkdir "$release_name"
+          exeFiles=()
+          for f in src/*; do [[ -x $f && -f $f ]] && strip "$f" && exeFiles+=( "$f" ); done
+          strip "${exeFiles[@]}"
+          cp "${exeFiles[@]}" "$release_name/"
+          zip -r "$release_name".zip "$release_name"
+          sha256=$(shasum -a 256 "$release_name".zip | awk '{print toupper($1)}')
+          asset_path="./$build_folder$release_name.zip"
+          echo "::set-output name=sha256::${sha256}"
+          echo "::set-output name=release_name::${release_name}.zip"
+          echo "::set-output name=asset_path::${asset_path}"
+          echo "::set-output name=krb_ver::${krb_ver}"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.build.outputs.asset_path }}
+          name: Karbo CLI Suite ${{ steps.build.outputs.krb_ver }}
+          body: |
+            **${{ steps.build.outputs.release_name }}**
+            ${{ steps.build.outputs.sha256 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-ubuntu20:
+    name: Ubuntu 20.04
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Build
+        id: build
+        run: |
+          sudo apt-get update && sudo apt-get install -y libboost-all-dev
+          build_folder="build/release"
+          krb_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
+          release_name=Karbo-cli-ubuntu20.04-"$krb_ver"
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+          cmake -D ARCH=default -D CMAKE_BUILD_TYPE=Release -D CMAKE_POSITION_INDEPENDENT_CODE:BOOL=true -D BOOST_IGNORE_SYSTEM_PATHS_DEFAULT=ON -D BOOST_ROOT=/usr ../..
+          make
+          cd src
+          exeFiles=()
+          for f in ./*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
+          strip "${exeFiles[@]}"
+          tar -czf "$release_name".tar.gz "${exeFiles[@]}"
+          mv "$release_name".tar.gz ../
+          cd ..
+          sha256=$(shasum -a 256 "$release_name".tar.gz | awk '{print toupper($1)}')
+          asset_path="./$build_folder/$release_name.tar.gz"
+          echo "::set-output name=sha256::${sha256}"
+          echo "::set-output name=release_name::${release_name}.tar.gz"
+          echo "::set-output name=asset_path::${asset_path}"
+          echo "::set-output name=krb_ver::${krb_ver}"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.build.outputs.asset_path }}
+          name: Karbo CLI Suite ${{ steps.build.outputs.krb_ver }}
+          body: |
+            **${{ steps.build.outputs.release_name }}**
+            ${{ steps.build.outputs.sha256 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-ubuntu18:
+    name: Ubuntu 18.04
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Build
+        id: build
+        run: |
+          sudo apt-get purge '*boost*'
+          sudo apt install -y libboost1.62-all-dev
+          build_folder="build/release"
+          krb_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
+          release_name=Karbo-cli-ubuntu18.04-"$krb_ver"
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+          cmake -D ARCH=default -D CMAKE_BUILD_TYPE=Release -D CMAKE_POSITION_INDEPENDENT_CODE:BOOL=true -D BOOST_IGNORE_SYSTEM_PATHS_DEFAULT=ON -D BOOST_ROOT=/usr ../..
+          make
+          cd src
+          exeFiles=()
+          for f in ./*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
+          strip "${exeFiles[@]}"
+          tar -czf "$release_name".tar.gz "${exeFiles[@]}"
+          mv "$release_name".tar.gz ../
+          cd ..
+          sha256=$(shasum -a 256 "$release_name".tar.gz | awk '{print toupper($1)}')
+          asset_path="./$build_folder/$release_name.tar.gz"
+          echo "::set-output name=sha256::${sha256}"
+          echo "::set-output name=release_name::${release_name}.tar.gz"
+          echo "::set-output name=asset_path::${asset_path}"
+          echo "::set-output name=krb_ver::${krb_ver}"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.build.outputs.asset_path }}
+          name: Karbo CLI Suite ${{ steps.build.outputs.krb_ver }}
+          body: |
+            **${{ steps.build.outputs.release_name }}**
+            ${{ steps.build.outputs.sha256 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "BlockchainMonitor.h"
 
@@ -13,6 +26,10 @@
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
 #include "Rpc/HttpClient.h"
+
+#if defined(WIN32)
+#undef ERROR
+#endif
 
 BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, size_t pollingInterval, Logging::ILogger& logger):
   m_dispatcher(dispatcher),
@@ -65,7 +82,7 @@ Crypto::Hash BlockchainMonitor::requestLastBlockHash() {
   m_logger(Logging::DEBUGGING) << "Requesting last block hash";
 
   try {
-    CryptoNote::HttpClient client(m_dispatcher, m_daemonHost, m_daemonPort);
+    CryptoNote::HttpClient client(m_dispatcher, m_daemonHost, m_daemonPort, false);
 
     CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request request;
     CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response response;

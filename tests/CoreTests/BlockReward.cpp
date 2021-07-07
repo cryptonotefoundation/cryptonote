@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "BlockReward.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
@@ -112,7 +125,7 @@ bool gen_block_reward::generate(std::vector<test_event_entry>& events) const
   MAKE_NEXT_BLOCK_TX_LIST(events, blk_7, blk_6, miner_account, txs_0);
   DO_CALLBACK(events, "mark_checked_block");
 
-  // Test: block reward == 0
+  // Test: block reward == transactions fee
   {
     Transaction tx_1 = construct_tx_with_fee(m_logger, events, blk_5, miner_account, bob_account, MK_COINS(1), 11 * m_currency.minimumFee());
     Transaction tx_2 = construct_tx_with_fee(m_logger, events, blk_5, miner_account, bob_account, MK_COINS(1), 13 * m_currency.minimumFee());
@@ -124,7 +137,7 @@ bool gen_block_reward::generate(std::vector<test_event_entry>& events) const
     size_t median = Common::medianValue(block_sizes);
 
     Transaction miner_tx;
-    bool r = constructMinerTxBySize(m_currency, miner_tx, get_block_height(blk_7) + 1, generator.getAlreadyGeneratedCoins(blk_7),
+    bool r = constructMinerTxBySize(m_currency, miner_tx, BLOCK_MAJOR_VERSION_1, get_block_height(blk_7) + 1, generator.getAlreadyGeneratedCoins(blk_7),
       miner_account.getAccountKeys().address, block_sizes, 2 * median - txs_1_size, 2 * median, txs_fee);
     if (!r)
       return false;
@@ -151,11 +164,11 @@ bool gen_block_reward::check_block_verification_context(const CryptoNote::block_
   if (m_invalid_block_index == event_idx)
   {
     m_invalid_block_index = 0;
-    return bvc.m_verifivation_failed;
+    return bvc.m_verification_failed;
   }
   else
   {
-    return !bvc.m_verifivation_failed;
+    return !bvc.m_verification_failed;
   }
 }
 
@@ -197,7 +210,7 @@ bool gen_block_reward::check_block_rewards(CryptoNote::core& /*c*/, size_t /*ev_
   CHECK_EQ(blk_rewards[6] + (5 + 7) * m_currency.minimumFee(), get_tx_out_amount(blk_n2.baseTransaction));
 
   Block blk_n3 = boost::get<Block>(events[m_checked_blocks_indices[7]]);
-  CHECK_EQ(0, get_tx_out_amount(blk_n3.baseTransaction));
+  CHECK_EQ((11 + 13) * m_currency.minimumFee(), get_tx_out_amount(blk_n3.baseTransaction));
 
   return true;
 }

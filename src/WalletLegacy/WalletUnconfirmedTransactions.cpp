@@ -1,6 +1,20 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018, Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "WalletUnconfirmedTransactions.h"
 #include "WalletLegacy/WalletLegacySerialization.h"
@@ -51,7 +65,7 @@ void WalletUnconfirmedTransactions::erase(const Hash& hash) {
 }
 
 void WalletUnconfirmedTransactions::add(const Transaction& tx, TransactionId transactionId, 
-  uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs) {
+  uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs, Crypto::SecretKey& tx_key) {
 
   UnconfirmedTransferDetails& utd = m_unconfirmedTxs[getObjectHash(tx)];
 
@@ -59,6 +73,7 @@ void WalletUnconfirmedTransactions::add(const Transaction& tx, TransactionId tra
   utd.sentTime = time(nullptr);
   utd.tx = tx;
   utd.transactionId = transactionId;
+  utd.secretKey = tx_key;
 
   uint64_t outsAmount = 0;
   // process used outputs

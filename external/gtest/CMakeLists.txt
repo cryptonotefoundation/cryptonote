@@ -22,6 +22,11 @@ option(gtest_build_samples "Build gtest's sample programs." OFF)
 
 option(gtest_disable_pthreads "Disable uses of pthreads in gtest." OFF)
 
+option(
+  gtest_hide_internal_symbols
+  "Build gtest with internal symbols hidden in shared libraries."
+  OFF)
+
 # Defines pre_project_set_up_hermetic_build() and set_up_hermetic_build().
 include(cmake/hermetic_build.cmake OPTIONAL)
 
@@ -39,11 +44,25 @@ endif()
 # as ${gtest_SOURCE_DIR} and to the root binary directory as
 # ${gtest_BINARY_DIR}.
 # Language "C" is required for find_package(Threads).
-project(gtest CXX C)
-cmake_minimum_required(VERSION 2.6.2)
+if (CMAKE_VERSION VERSION_LESS 3.0)
+  project(gtest CXX C)
+else()
+  cmake_policy(SET CMP0048 NEW)
+  project(gtest VERSION 1.9.0 LANGUAGES CXX C)
+endif()
+cmake_minimum_required(VERSION 2.6.4)
+
+if (POLICY CMP0063) # Visibility
+  cmake_policy(SET CMP0063 NEW)
+endif (POLICY CMP0063)
 
 if (COMMAND set_up_hermetic_build)
   set_up_hermetic_build()
+endif()
+
+if (gtest_hide_internal_symbols)
+  set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+  set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 endif()
 
 # Define helper functions and macros used by Google Test.
@@ -53,12 +72,21 @@ config_compiler_and_linker()  # Defined in internal_utils.cmake.
 
 # Where Google Test's .h files can be found.
 include_directories(
-  ${gtest_SOURCE_DIR}/include
-  ${gtest_SOURCE_DIR})
+  "${gtest_SOURCE_DIR}/include"
+  "${gtest_SOURCE_DIR}")
 
-# Where Google Test's libraries can be found.
-link_directories(${gtest_BINARY_DIR}/src)
-
+# Summary of tuple support for Microsoft Visual Studio:
+# Compiler    version(MS)  version(cmake)  Support
+# ----------  -----------  --------------  -----------------------------
+# <= VS 2010  <= 10        <= 1600         Use Google Tests's own tuple.
+# VS 2012     11           1700            std::tr1::tuple + _VARIADIC_MAX=10
+# VS 2013     12           1800            std::tr1::tuple
+# VS 2015     14           1900            std::tuple
+# VS 2017     15           >= 1910         std::tuple
+if (MSVC AND MSVC_VERSION EQUAL 1700)
+  add_definitions(/D _VARIADIC_MAX=10)
+endif()
+ 
 ########################################################################
 #
 # Defines the gtest & gtest_main libraries.  User tests should link
@@ -70,6 +98,38 @@ link_directories(${gtest_BINARY_DIR}/src)
 cxx_library(gtest "${cxx_strict}" src/gtest-all.cc)
 cxx_library(gtest_main "${cxx_strict}" src/gtest_main.cc)
 target_link_libraries(gtest_main gtest)
+
+# If the CMake version supports it, attach header directory information
+# to the targets for when we are part of a parent build (ie being pulled
+# in via add_subdirectory() rather than being a standalone build).
+if (DEFINED CMAKE_VERSION AND NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.11")
+  target_include_directories(gtest      SYSTEM INTERFACE "${gtest_SOURCE_DIR}/include")
+  target_include_directories(gtest_main SYSTEM INTERFACE "${gtest_SOURCE_DIR}/include")
+endif()
+
+########################################################################
+#
+# Install rules
+if(INSTALL_GTEST)
+  install(TARGETS gtest gtest_main
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  install(DIRECTORY "${gtest_SOURCE_DIR}/include/gtest"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+  # configure and install pkgconfig files
+  configure_file(
+    cmake/gtest.pc.in
+    "${CMAKE_BINARY_DIR}/gtest.pc"
+    @ONLY)
+  configure_file(
+    cmake/gtest_main.pc.in
+    "${CMAKE_BINARY_DIR}/gtest_main.pc"
+    @ONLY)
+  install(FILES "${CMAKE_BINARY_DIR}/gtest.pc" "${CMAKE_BINARY_DIR}/gtest_main.pc"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+endif()
 
 ########################################################################
 #
@@ -171,12 +231,10 @@ if (gtest_build_tests)
                         PROPERTIES
                         COMPILE_DEFINITIONS "GTEST_LINKED_AS_SHARED_LIBRARY=1")
 
-  if (NOT MSVC OR NOT MSVC_VERSION EQUAL 1600)
-    # The C++ Standard specifies tuple_element<int, class>.
-    # Yet MSVC 10's <utility> declares tuple_element<size_t, class>.
-    # That declaration conflicts with our own standard-conforming
-    # tuple implementation.  Therefore using our own tuple with
-    # MSVC 10 doesn't compile.
+  if (NOT MSVC OR MSVC_VERSION LESS 1600)  # 1600 is Visual Studio 2010.
+    # Visual Studio 2010, 2012, and 2013 define symbols in std::tr1 that
+    # conflict with our own definitions. Therefore using our own tuple does not
+    # work on those compilers.
     cxx_library(gtest_main_use_own_tuple "${cxx_use_own_tuple}"
       src/gtest-all.cc src/gtest_main.cc)
 
@@ -194,8 +252,8 @@ if (gtest_build_tests)
   cxx_executable(gtest_break_on_failure_unittest_ test gtest)
   py_test(gtest_break_on_failure_unittest)
 
-  # MSVC 7.1 does not support STL with exceptions disabled.
-  if (NOT MSVC OR MSVC_VERSION GREATER 1310)
+  # Visual Studio .NET 2003 does not support STL with exceptions disabled.
+  if (NOT MSVC OR MSVC_VERSION GREATER 1310)  # 1310 is Visual Studio .NET 2003
     cxx_executable_with_flags(
       gtest_catch_exceptions_no_ex_test_
       "${cxx_no_exception}"
@@ -226,7 +284,7 @@ if (gtest_build_tests)
   py_test(gtest_list_tests_unittest)
 
   cxx_executable(gtest_output_test_ test gtest)
-  py_test(gtest_output_test)
+  py_test(gtest_output_test --no_stacktrace_support)
 
   cxx_executable(gtest_shuffle_test_ test gtest)
   py_test(gtest_shuffle_test)
@@ -246,7 +304,9 @@ if (gtest_build_tests)
   cxx_executable(gtest_xml_outfile1_test_ test gtest_main)
   cxx_executable(gtest_xml_outfile2_test_ test gtest_main)
   py_test(gtest_xml_outfiles_test)
+  py_test(gtest_json_outfiles_test)
 
   cxx_executable(gtest_xml_output_unittest_ test gtest)
-  py_test(gtest_xml_output_unittest)
+  py_test(gtest_xml_output_unittest --no_stacktrace_support)
+  py_test(gtest_json_output_unittest)
 endif()

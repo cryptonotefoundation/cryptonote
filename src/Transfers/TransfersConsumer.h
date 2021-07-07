@@ -1,6 +1,21 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018, The BBSCoin Developers
+// Copyright (c) 2018, The Karbo Developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -10,6 +25,7 @@
 #include "TypeHelpers.h"
 
 #include "crypto/crypto.h"
+#include "Logging/LoggerRef.h"
 
 #include "IObservableImpl.h"
 
@@ -22,7 +38,7 @@ class INode;
 class TransfersConsumer: public IObservableImpl<IBlockchainConsumerObserver, IBlockchainConsumer> {
 public:
 
-  TransfersConsumer(const CryptoNote::Currency& currency, INode& node, const Crypto::SecretKey& viewSecret);
+  TransfersConsumer(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& logger, const Crypto::SecretKey& viewSecret);
 
   ITransfersSubscription& addSubscription(const AccountSubscription& subscription);
   // returns true if no subscribers left
@@ -31,6 +47,7 @@ public:
   void getSubscriptions(std::vector<AccountPublicAddress>& subscriptions);
 
   void initTransactionPool(const std::unordered_set<Crypto::Hash>& uncommitedTransactions);
+  void addPublicKeysSeen(const Crypto::Hash& transactionHash, const Crypto::PublicKey& outputKey);
   
   // IBlockchainConsumer
   virtual SynchronizationStart getSyncStart() override;
@@ -61,7 +78,8 @@ private:
   void processTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx, const PreprocessInfo& info);
   void processOutputs(const TransactionBlockInfo& blockInfo, TransfersSubscription& sub, const ITransactionReader& tx,
     const std::vector<TransactionOutputInformationIn>& outputs, const std::vector<uint32_t>& globalIdxs, bool& contains, bool& updated);
-
+  std::error_code createTransfers(const AccountKeys& account, const TransactionBlockInfo& blockInfo, const ITransactionReader& tx,
+    const std::vector<uint32_t>& outputs, const std::vector<uint32_t>& globalIdxs, std::vector<TransactionOutputInformationIn>& transfers);
   std::error_code getGlobalIndices(const Crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices);
 
   void updateSyncStart();
@@ -75,6 +93,7 @@ private:
 
   INode& m_node;
   const CryptoNote::Currency& m_currency;
+  Logging::LoggerRef m_logger;
 };
 
 }

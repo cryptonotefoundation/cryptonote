@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "MinerManager.h"
 
@@ -19,6 +32,10 @@
 
 using namespace CryptoNote;
 
+#if defined(WIN32)
+#undef ERROR
+#endif
+
 namespace Miner {
 
 namespace {
@@ -33,6 +50,21 @@ MinerEvent BlockchainUpdatedEvent() {
   MinerEvent event;
   event.type = MinerEventType::BLOCKCHAIN_UPDATED;
   return event;
+}
+
+void adjustMergeMiningTag(Block& blockTemplate) {
+  if (blockTemplate.majorVersion == BLOCK_MAJOR_VERSION_2 || blockTemplate.majorVersion >= BLOCK_MAJOR_VERSION_3) {
+    CryptoNote::TransactionExtraMergeMiningTag mmTag;
+    mmTag.depth = 0;
+    if (!CryptoNote::get_aux_block_header_hash(blockTemplate, mmTag.merkleRoot)) {
+      throw std::runtime_error("Couldn't get block header hash");
+    }
+
+    blockTemplate.parentBlock.baseTransaction.extra.clear();
+    if (!CryptoNote::appendMergeMiningTagToExtra(blockTemplate.parentBlock.baseTransaction.extra, mmTag)) {
+      throw std::runtime_error("Couldn't append merge mining tag");
+    }
+  }
 }
 
 }
@@ -179,7 +211,7 @@ void MinerManager::stopBlockchainMonitoring() {
 
 bool MinerManager::submitBlock(const Block& minedBlock, const std::string& daemonHost, uint16_t daemonPort) {
   try {
-    HttpClient client(m_dispatcher, daemonHost, daemonPort);
+    HttpClient client(m_dispatcher, daemonHost, daemonPort, false);
 
     COMMAND_RPC_SUBMITBLOCK::request request;
     request.emplace_back(Common::toHex(toBinaryArray(minedBlock)));
@@ -199,7 +231,7 @@ bool MinerManager::submitBlock(const Block& minedBlock, const std::string& daemo
 
 BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, const std::string& miningAddress) {
   try {
-    HttpClient client(dispatcher, daemonHost, daemonPort);
+    HttpClient client(dispatcher, daemonHost, daemonPort, false);
 
     COMMAND_RPC_GETBLOCKTEMPLATE::request request;
     request.wallet_address = miningAddress;
@@ -231,6 +263,8 @@ BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& 
 
 
 void MinerManager::adjustBlockTemplate(CryptoNote::Block& blockTemplate) const {
+  adjustMergeMiningTag(blockTemplate);
+
   if (m_config.firstBlockTimestamp == 0) {
     //no need to fix timestamp
     return;

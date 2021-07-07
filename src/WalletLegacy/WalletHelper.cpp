@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "WalletHelper.h"
 #include "Common/PathTools.h"
@@ -92,33 +105,37 @@ void WalletHelper::IWalletRemoveObserverGuard::removeObserver() {
   m_removed = true;
 }
 
-void WalletHelper::storeWallet(CryptoNote::IWalletLegacy& wallet, const std::string& walletFilename) {
-  boost::filesystem::path tempFile = boost::filesystem::unique_path(walletFilename + ".tmp.%%%%-%%%%");
+bool WalletHelper::storeWallet(CryptoNote::IWalletLegacy& wallet, const std::string& walletFilename) {
+	boost::filesystem::path tempFile = boost::filesystem::unique_path(walletFilename + ".tmp.%%%%-%%%%");
 
-  if (boost::filesystem::exists(walletFilename)) {
-    boost::filesystem::rename(walletFilename, tempFile);
-  }
+	if (boost::filesystem::exists(walletFilename)) {
+		boost::filesystem::rename(walletFilename, tempFile);
+	}
 
-  std::ofstream file;
-  try {
-    openOutputFileStream(walletFilename, file);
-  } catch (std::exception&) {
-    if (boost::filesystem::exists(tempFile)) {
-      boost::filesystem::rename(tempFile, walletFilename);
-    }
-    throw;
-  }
+	std::ofstream file;
+	try {
+		openOutputFileStream(walletFilename, file);
+	}
+	catch (std::exception&) {
+		if (boost::filesystem::exists(tempFile)) {
+			boost::filesystem::rename(tempFile, walletFilename);
+		}
+		throw;
+	}
 
-  std::error_code saveError = walletSaveWrapper(wallet, file, true, true);
-  if (saveError) {
-    file.close();
-    boost::filesystem::remove(walletFilename);
-    boost::filesystem::rename(tempFile, walletFilename);
-    throw std::system_error(saveError);
-  }
+	std::error_code saveError = walletSaveWrapper(wallet, file, true, true);
+	if (saveError) {
+		file.close();
+		boost::filesystem::remove(walletFilename);
+		boost::filesystem::rename(tempFile, walletFilename);
+		throw std::system_error(saveError);
+		return false;
+	}
 
-  file.close();
+	file.close();
 
-  boost::system::error_code ignore;
-  boost::filesystem::remove(tempFile, ignore);
+	boost::system::error_code ignore;
+	boost::filesystem::remove(tempFile, ignore);
+
+	return true;
 }

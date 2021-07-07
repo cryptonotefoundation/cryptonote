@@ -1,6 +1,20 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2020, The Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -37,12 +51,6 @@ namespace CryptoNote
     uint32_t packet_max_size;
     uint32_t config_id;
     uint32_t send_peerlist_sz;
-  };
-
-  enum P2PProtocolVersion : uint8_t {
-    V0 = 0,
-    V1 = 1,
-    CURRENT = V1
   };
 
   struct basic_node_data
@@ -101,7 +109,7 @@ namespace CryptoNote
     {
       basic_node_data node_data;
       CORE_SYNC_DATA payload_data;
-      std::list<PeerlistEntry> local_peerlist; 
+      std::vector<PeerlistEntry> local_peerlist; 
 
       void serialize(ISerializer& s) {
         KV_MEMBER(node_data)
@@ -133,7 +141,7 @@ namespace CryptoNote
     {
       uint64_t local_time;
       CORE_SYNC_DATA payload_data;
-      std::list<PeerlistEntry> local_peerlist;
+      std::vector<PeerlistEntry> local_peerlist;
 
       void serialize(ISerializer& s) {
         KV_MEMBER(local_time)
@@ -251,8 +259,8 @@ namespace CryptoNote
 
     struct response
     {
-      std::list<PeerlistEntry> local_peerlist_white;
-      std::list<PeerlistEntry> local_peerlist_gray;
+      std::vector<PeerlistEntry> local_peerlist_white;
+      std::vector<PeerlistEntry> local_peerlist_gray;
       std::list<connection_entry> connections_list;
       PeerIdType my_id;
       uint64_t local_time;

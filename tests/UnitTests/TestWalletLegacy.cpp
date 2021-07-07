@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -187,7 +200,7 @@ void WalletLegacyApi::SetUp() {
 void WalletLegacyApi::prepareAliceWallet() {
   decltype(aliceNode) newNode(new INodeTrivialRefreshStub(generator));
 
-  alice.reset(new CryptoNote::WalletLegacy(m_currency, *newNode));
+  alice.reset(new CryptoNote::WalletLegacy(m_currency, *newNode, m_logger));
   aliceNode = newNode;
 
   aliceWalletObserver.reset(new TrivialWalletObserver());
@@ -198,7 +211,7 @@ void WalletLegacyApi::prepareBobWallet() {
   bobNode.reset(new INodeTrivialRefreshStub(generator));
   bobWalletObserver.reset(new TrivialWalletObserver());
 
-  bob.reset(new CryptoNote::WalletLegacy(m_currency, *bobNode));
+  bob.reset(new CryptoNote::WalletLegacy(m_currency, *bobNode, m_logger));
   bob->addObserver(bobWalletObserver.get());
 }
 
@@ -206,7 +219,7 @@ void WalletLegacyApi::prepareCarolWallet() {
   carolNode.reset(new INodeTrivialRefreshStub(generator));
   carolWalletObserver.reset(new TrivialWalletObserver());
 
-  carol.reset(new CryptoNote::WalletLegacy(m_currency, *carolNode));
+  carol.reset(new CryptoNote::WalletLegacy(m_currency, *carolNode, m_logger));
   carol->addObserver(carolWalletObserver.get());
 }
 
@@ -1368,7 +1381,7 @@ TEST_F(WalletLegacyApi, outcommingExternalTransactionTotalAmount) {
   bob->shutdown();
   alice->shutdown();
 
-  CryptoNote::WalletLegacy wallet(m_currency, *aliceNode);
+  CryptoNote::WalletLegacy wallet(m_currency, *aliceNode, m_logger);
 
   ExternalTxChecker externalTransactionObserver(wallet);
   TrivialWalletObserver walletObserver;
@@ -1733,7 +1746,7 @@ TEST_F(WalletLegacyApi, outdatedUnconfirmedTransactionDeletedOnNewBlock) {
   CryptoNote::Currency currency(CryptoNote::CurrencyBuilder(m_logger).mempoolTxLiveTime(TRANSACTION_MEMPOOL_TIME).currency());
   TestBlockchainGenerator blockchainGenerator(currency);
   INodeTrivialRefreshStub node(blockchainGenerator);
-  CryptoNote::WalletLegacy wallet(currency, node);
+  CryptoNote::WalletLegacy wallet(currency, node, m_logger);
   TrivialWalletObserver walletObserver;
   wallet.addObserver(&walletObserver);
 
@@ -1769,7 +1782,7 @@ TEST_F(WalletLegacyApi, outdatedUnconfirmedTransactionDeletedOnLoad) {
   CryptoNote::Currency currency(CryptoNote::CurrencyBuilder(m_logger).mempoolTxLiveTime(TRANSACTION_MEMPOOL_TIME).currency());
   TestBlockchainGenerator blockchainGenerator(currency);
   INodeTrivialRefreshStub node(blockchainGenerator);
-  CryptoNote::WalletLegacy wallet(currency, node);
+  CryptoNote::WalletLegacy wallet(currency, node, m_logger);
   TrivialWalletObserver walletObserver;
   wallet.addObserver(&walletObserver);
 

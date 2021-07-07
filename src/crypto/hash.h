@@ -1,6 +1,20 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2020, The Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -46,7 +60,7 @@ namespace Crypto {
   };
 
   inline void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash) {
-    (*cn_slow_hash_f)(context.data, data, length, reinterpret_cast<void *>(&hash));
+    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash));
   }
 
   inline void tree_hash(const Hash *hashes, size_t count, Hash &root_hash) {
@@ -64,3 +78,9 @@ namespace Crypto {
 }
 
 CRYPTO_MAKE_HASHABLE(Hash)
+CRYPTO_MAKE_HASHABLE(EllipticCurveScalar)
+CRYPTO_MAKE_HASHABLE(EllipticCurvePoint)
+CRYPTO_MAKE_HASHABLE(PublicKey)
+CRYPTO_MAKE_HASHABLE(SecretKey)
+CRYPTO_MAKE_HASHABLE(KeyDerivation)
+CRYPTO_MAKE_HASHABLE(KeyImage)

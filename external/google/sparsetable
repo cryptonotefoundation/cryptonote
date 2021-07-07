@@ -75,7 +75,7 @@
 #include <google/sparsehash/libc_allocator_with_realloc.h>
 #include <google/type_traits.h> // for true_type, integral_constant, etc.
 
-#if STDC_HEADERS
+#if defined(STDC_HEADERS)
 #include <string.h>             // for memcpy
 #else
 #if !HAVE_MEMCPY

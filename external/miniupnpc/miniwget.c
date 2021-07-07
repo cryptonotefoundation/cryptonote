@@ -1,8 +1,8 @@
-/* $Id: miniwget.c,v 1.61 2014/02/05 17:27:48 nanard Exp $ */
+/* $Id: miniwget.c,v 1.78 2018/03/13 23:22:18 nanard Exp $ */
 /* Project : miniupnp
  * Website : http://miniupnp.free.fr/
  * Author : Thomas Bernard
- * Copyright (c) 2005-2014 Thomas Bernard
+ * Copyright (c) 2005-2018 Thomas Bernard
  * This software is subject to the conditions detailed in the
  * LICENCE file provided in this distribution. */
 
@@ -15,7 +15,6 @@
 #include <ws2tcpip.h>
 #include <io.h>
 #define MAXHOSTNAMELEN 64
-#define MIN(x,y) (((x)<(y))?(x):(y))
 #define snprintf _snprintf
 #define socklen_t int
 #ifndef strncasecmp
@@ -39,10 +38,16 @@
 #include <net/if.h>
 #include <netdb.h>
 #define closesocket close
+#include <strings.h>
 #endif /* #else _WIN32 */
-#if defined(__sun) || defined(sun)
+#ifdef __GNU__
+#define MAXHOSTNAMELEN 64
+#endif /* __GNU__ */
+
+#ifndef MIN
 #define MIN(x,y) (((x)<(y))?(x):(y))
-#endif
+#endif /* MIN */
+
 
 #include "miniupnpcstrings.h"
 #include "miniwget.h"
@@ -60,7 +65,7 @@
  * to the length parameter.
  */
 void *
-getHTTPResponse(int s, int * size)
+getHTTPResponse(SOCKET s, int * size, int * status_code)
 {
 	char buf[2048];
 	int n;
@@ -78,13 +83,35 @@ getHTTPResponse(int s, int * size)
 	unsigned int content_buf_used = 0;
 	char chunksize_buf[32];
 	unsigned int chunksize_buf_index;
+#ifdef DEBUG
+	char * reason_phrase = NULL;
+	int reason_phrase_len = 0;
+#endif
 
+	if(status_code) *status_code = -1;
 	header_buf = malloc(header_buf_len);
+	if(header_buf == NULL)
+	{
+#ifdef DEBUG
+		fprintf(stderr, "%s: Memory allocation error\n", "getHTTPResponse");
+#endif /* DEBUG */
+		*size = -1;
+		return NULL;
+	}
 	content_buf = malloc(content_buf_len);
+	if(content_buf == NULL)
+	{
+		free(header_buf);
+#ifdef DEBUG
+		fprintf(stderr, "%s: Memory allocation error\n", "getHTTPResponse");
+#endif /* DEBUG */
+		*size = -1;
+		return NULL;
+	}
 	chunksize_buf[0] = '\0';
 	chunksize_buf_index = 0;
 
-	while((n = receivedata(s, buf, 2048, 5000, NULL)) > 0)
+	while((n = receivedata(s, buf, sizeof(buf), 5000, NULL)) > 0)
 	{
 		if(endofheaders == 0)
 		{
@@ -93,7 +120,15 @@ getHTTPResponse(int s, int * size)
 			int colon=0;
 			int valuestart=0;
 			if(header_buf_used + n > header_buf_len) {
-				header_buf = realloc(header_buf, header_buf_used + n);
+				char * tmp = realloc(header_buf, header_buf_used + n);
+				if(tmp == NULL) {
+					/* memory allocation error */
+					free(header_buf);
+					free(content_buf);
+					*size = -1;
+					return NULL;
+				}
+				header_buf = tmp;
 				header_buf_len = header_buf_used + n;
 			}
 			memcpy(header_buf + header_buf_used, buf, n);
@@ -125,7 +160,7 @@ getHTTPResponse(int s, int * size)
 				continue;
 			/* parse header lines */
 			for(i = 0; i < endofheaders - 1; i++) {
-				if(colon <= linestart && header_buf[i]==':')
+				if(linestart > 0 && colon <= linestart && header_buf[i]==':')
 				{
 					colon = i;
 					while(i < (endofheaders-1)
@@ -136,7 +171,31 @@ getHTTPResponse(int s, int * size)
 				/* detecting end of line */
 				else if(header_buf[i]=='\r' || header_buf[i]=='\n')
 				{
-					if(colon > linestart && valuestart > colon)
+					if(linestart == 0 && status_code)
+					{
+						/* Status line
+						 * HTTP-Version SP Status-Code SP Reason-Phrase CRLF */
+						int sp;
+						for(sp = 0; sp < i; sp++)
+							if(header_buf[sp] == ' ')
+							{
+								if(*status_code < 0)
+									*status_code = atoi(header_buf + sp + 1);
+								else
+								{
+#ifdef DEBUG
+									reason_phrase = header_buf + sp + 1;
+									reason_phrase_len = i - sp - 1;
+#endif
+									break;
+								}
+							}
+#ifdef DEBUG
+						printf("HTTP status code = %d, Reason phrase = %.*s\n",
+						       *status_code, reason_phrase_len, reason_phrase);
+#endif
+					}
+					else if(colon > linestart && valuestart > colon)
 					{
 #ifdef DEBUG
 						printf("header='%.*s', value='%.*s'\n",
@@ -171,101 +230,118 @@ getHTTPResponse(int s, int * size)
 			memcpy(buf, header_buf + endofheaders, n);
 			/* if(headers) */
 		}
-		if(endofheaders)
+		/* if we get there, endofheaders != 0.
+		 * In the other case, there was a continue above */
+		/* content */
+		if(chunked)
 		{
-			/* content */
-			if(chunked)
+			int i = 0;
+			while(i < n)
 			{
-				int i = 0;
-				while(i < n)
+				if(chunksize == 0)
 				{
+					/* reading chunk size */
+					if(chunksize_buf_index == 0) {
+						/* skipping any leading CR LF */
+						if(i<n && buf[i] == '\r') i++;
+						if(i<n && buf[i] == '\n') i++;
+					}
+					while(i<n && isxdigit(buf[i])
+					     && chunksize_buf_index < (sizeof(chunksize_buf)-1))
+					{
+						chunksize_buf[chunksize_buf_index++] = buf[i];
+						chunksize_buf[chunksize_buf_index] = '\0';
+						i++;
+					}
+					while(i<n && buf[i] != '\r' && buf[i] != '\n')
+						i++; /* discarding chunk-extension */
+					if(i<n && buf[i] == '\r') i++;
+					if(i<n && buf[i] == '\n') {
+						unsigned int j;
+						for(j = 0; j < chunksize_buf_index; j++) {
+						if(chunksize_buf[j] >= '0'
+						   && chunksize_buf[j] <= '9')
+							chunksize = (chunksize << 4) + (chunksize_buf[j] - '0');
+						else
+							chunksize = (chunksize << 4) + ((chunksize_buf[j] | 32) - 'a' + 10);
+						}
+						chunksize_buf[0] = '\0';
+						chunksize_buf_index = 0;
+						i++;
+					} else {
+						/* not finished to get chunksize */
+						continue;
+					}
+#ifdef DEBUG
+					printf("chunksize = %u (%x)\n", chunksize, chunksize);
+#endif
 					if(chunksize == 0)
 					{
-						/* reading chunk size */
-						if(chunksize_buf_index == 0) {
-							/* skipping any leading CR LF */
-							if(i<n && buf[i] == '\r') i++;
-							if(i<n && buf[i] == '\n') i++;
-						}
-						while(i<n && isxdigit(buf[i])
-						     && chunksize_buf_index < (sizeof(chunksize_buf)-1))
-						{
-							chunksize_buf[chunksize_buf_index++] = buf[i];
-							chunksize_buf[chunksize_buf_index] = '\0';
-							i++;
-						}
-						while(i<n && buf[i] != '\r' && buf[i] != '\n')
-							i++; /* discarding chunk-extension */
-						if(i<n && buf[i] == '\r') i++;
-						if(i<n && buf[i] == '\n') {
-							unsigned int j;
-							for(j = 0; j < chunksize_buf_index; j++) {
-							if(chunksize_buf[j] >= '0'
-							   && chunksize_buf[j] <= '9')
-								chunksize = (chunksize << 4) + (chunksize_buf[j] - '0');
-							else
-								chunksize = (chunksize << 4) + ((chunksize_buf[j] | 32) - 'a' + 10);
-							}
-							chunksize_buf[0] = '\0';
-							chunksize_buf_index = 0;
-							i++;
-						} else {
-							/* not finished to get chunksize */
-							continue;
-						}
 #ifdef DEBUG
-						printf("chunksize = %u (%x)\n", chunksize, chunksize);
+						printf("end of HTTP content - %d %d\n", i, n);
+						/*printf("'%.*s'\n", n-i, buf+i);*/
 #endif
-						if(chunksize == 0)
-						{
-#ifdef DEBUG
-							printf("end of HTTP content - %d %d\n", i, n);
-							/*printf("'%.*s'\n", n-i, buf+i);*/
-#endif
-							goto end_of_stream;
-						}
+						goto end_of_stream;
 					}
-					bytestocopy = ((int)chunksize < (n - i))?chunksize:(unsigned int)(n - i);
-					if((content_buf_used + bytestocopy) > content_buf_len)
-					{
-						if(content_length >= (int)(content_buf_used + bytestocopy)) {
-							content_buf_len = content_length;
-						} else {
-							content_buf_len = content_buf_used + bytestocopy;
-						}
-						content_buf = (char *)realloc((void *)content_buf,
-						                              content_buf_len);
-					}
-					memcpy(content_buf + content_buf_used, buf + i, bytestocopy);
-					content_buf_used += bytestocopy;
-					i += bytestocopy;
-					chunksize -= bytestocopy;
 				}
-			}
-			else
-			{
-				/* not chunked */
-				if(content_length > 0
-				   && (int)(content_buf_used + n) > content_length) {
-					/* skipping additional bytes */
-					n = content_length - content_buf_used;
-				}
-				if(content_buf_used + n > content_buf_len)
+				/* it is guaranteed that (n >= i) */
+				bytestocopy = (chunksize < (unsigned int)(n - i))?chunksize:(unsigned int)(n - i);
+				if((content_buf_used + bytestocopy) > content_buf_len)
 				{
-					if(content_length >= (int)(content_buf_used + n)) {
+					char * tmp;
+					if((content_length >= 0) && ((unsigned int)content_length >= (content_buf_used + bytestocopy))) {
 						content_buf_len = content_length;
 					} else {
-						content_buf_len = content_buf_used + n;
+						content_buf_len = content_buf_used + bytestocopy;
 					}
-					content_buf = (char *)realloc((void *)content_buf,
-					                              content_buf_len);
+					tmp = realloc(content_buf, content_buf_len);
+					if(tmp == NULL) {
+						/* memory allocation error */
+						free(content_buf);
+						free(header_buf);
+						*size = -1;
+						return NULL;
+					}
+					content_buf = tmp;
 				}
-				memcpy(content_buf + content_buf_used, buf, n);
-				content_buf_used += n;
+				memcpy(content_buf + content_buf_used, buf + i, bytestocopy);
+				content_buf_used += bytestocopy;
+				i += bytestocopy;
+				chunksize -= bytestocopy;
 			}
 		}
+		else
+		{
+			/* not chunked */
+			if(content_length > 0
+			   && (content_buf_used + n) > (unsigned int)content_length) {
+				/* skipping additional bytes */
+				n = content_length - content_buf_used;
+			}
+			if(content_buf_used + n > content_buf_len)
+			{
+				char * tmp;
+				if(content_length >= 0
+				   && (unsigned int)content_length >= (content_buf_used + n)) {
+					content_buf_len = content_length;
+				} else {
+					content_buf_len = content_buf_used + n;
+				}
+				tmp = realloc(content_buf, content_buf_len);
+				if(tmp == NULL) {
+					/* memory allocation error */
+					free(content_buf);
+					free(header_buf);
+					*size = -1;
+					return NULL;
+				}
+				content_buf = tmp;
+			}
+			memcpy(content_buf + content_buf_used, buf, n);
+			content_buf_used += n;
+		}
 		/* use the Content-Length header value if available */
-		if(content_length > 0 && (int)content_buf_used >= content_length)
+		if(content_length > 0 && content_buf_used >= (unsigned int)content_length)
 		{
 #ifdef DEBUG
 			printf("End of HTTP content\n");
@@ -291,10 +367,11 @@ static void *
 miniwget3(const char * host,
           unsigned short port, const char * path,
           int * size, char * addr_str, int addr_str_len,
-          const char * httpversion, unsigned int scope_id)
+          const char * httpversion, unsigned int scope_id,
+          int * status_code)
 {
 	char buf[2048];
-    int s;
+    SOCKET s;
 	int n;
 	int len;
 	int sent;
@@ -302,7 +379,7 @@ miniwget3(const char * host,
 
 	*size = 0;
 	s = connecthostport(host, port, scope_id);
-	if(s < 0)
+	if(ISINVALID(s))
 		return NULL;
 
 	/* get address for caller ! */
@@ -364,10 +441,15 @@ miniwget3(const char * host,
                  "GET %s HTTP/%s\r\n"
 			     "Host: %s:%d\r\n"
 				 "Connection: Close\r\n"
-				 "User-Agent: " OS_STRING ", UPnP/1.0, MiniUPnPc/" MINIUPNPC_VERSION_STRING "\r\n"
+				 "User-Agent: " OS_STRING ", " UPNP_VERSION_STRING ", MiniUPnPc/" MINIUPNPC_VERSION_STRING "\r\n"
 
 				 "\r\n",
 			   path, httpversion, host, port);
+	if ((unsigned int)len >= sizeof(buf))
+	{
+		closesocket(s);
+		return NULL;
+	}
 	sent = 0;
 	/* sending the HTTP request */
 	while(sent < len)
@@ -384,7 +466,7 @@ miniwget3(const char * host,
 			sent += n;
 		}
 	}
-	content = getHTTPResponse(s, size);
+	content = getHTTPResponse(s, size, status_code);
 	closesocket(s);
 	return content;
 }
@@ -393,18 +475,20 @@ miniwget3(const char * host,
  * Call miniwget3(); retry with HTTP/1.1 if 1.0 fails. */
 static void *
 miniwget2(const char * host,
-		  unsigned short port, const char * path,
-		  int * size, char * addr_str, int addr_str_len,
-          unsigned int scope_id)
+          unsigned short port, const char * path,
+          int * size, char * addr_str, int addr_str_len,
+          unsigned int scope_id, int * status_code)
 {
 	char * respbuffer;
 
 #if 1
 	respbuffer = miniwget3(host, port, path, size,
-	                       addr_str, addr_str_len, "1.1", scope_id);
+	                       addr_str, addr_str_len, "1.1",
+	                       scope_id, status_code);
 #else
 	respbuffer = miniwget3(host, port, path, size,
-	                       addr_str, addr_str_len, "1.0", scope_id);
+	                       addr_str, addr_str_len, "1.0",
+	                       scope_id, status_code);
 	if (*size == 0)
 	{
 #ifdef DEBUG
@@ -412,7 +496,8 @@ miniwget2(const char * host,
 #endif
 		free(respbuffer);
 		respbuffer = miniwget3(host, port, path, size,
-		                       addr_str, addr_str_len, "1.1", scope_id);
+		                       addr_str, addr_str_len, "1.1",
+		                       scope_id, status_code);
 	}
 #endif
 	return respbuffer;
@@ -537,7 +622,8 @@ parseURL(const char * url,
 }
 
 void *
-miniwget(const char * url, int * size, unsigned int scope_id)
+miniwget(const char * url, int * size,
+         unsigned int scope_id, int * status_code)
 {
 	unsigned short port;
 	char * path;
@@ -550,12 +636,13 @@ miniwget(const char * url, int * size, unsigned int scope_id)
 	printf("parsed url : hostname='%s' port=%hu path='%s' scope_id=%u\n",
 	       hostname, port, path, scope_id);
 #endif
-	return miniwget2(hostname, port, path, size, 0, 0, scope_id);
+	return miniwget2(hostname, port, path, size, 0, 0, scope_id, status_code);
 }
 
 void *
 miniwget_getaddr(const char * url, int * size,
-                 char * addr, int addrlen, unsigned int scope_id)
+                 char * addr, int addrlen, unsigned int scope_id,
+                 int * status_code)
 {
 	unsigned short port;
 	char * path;
@@ -570,6 +657,6 @@ miniwget_getaddr(const char * url, int * size,
 	printf("parsed url : hostname='%s' port=%hu path='%s' scope_id=%u\n",
 	       hostname, port, path, scope_id);
 #endif
-	return miniwget2(hostname, port, path, size, addr, addrlen, scope_id);
+	return miniwget2(hostname, port, path, size, addr, addrlen, scope_id, status_code);
 }
 

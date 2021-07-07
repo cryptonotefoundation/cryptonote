@@ -1,220 +1,55 @@
-This is the reference code for [CryptoNote](https://cryptonote.org) cryptocurrency protocol.
+![Build check](https://github.com/seredat/karbowanec/workflows/Build%20check/badge.svg)
 
-* Launch your own CryptoNote currency: [CryptoNote Starter](https://cryptonotestarter.org/)
-* CryptoNote reference implementation: [CryptoNoteCoin](https://cryptonote-coin.org)
-* Discussion board and support: [CryptoNote Forum](https://forum.cryptonote.org)
+Karbo is people's electronic cash, a cryptocurrency, just like Bitcoin but Ukrainian and anonymous thanks to Cryptonote technology. The key principle of CryptoNote is adaptive parameters. Karbo already has adaptive block size limit and adaptive difficulty, which we improved, and which ensures it's stable emission rate and thus makes Karbo sound money. In addition in Karbo was implemented adaptive fee to keep transaction costs stable regardless of karbo price.
 
-## CryptoNote forking how-to
+**HARDFORK V4 IS SET AT HEIGHT 266000!!!** In this hardfork _we introduce adaptive minimal transaction fee_ as first step towards our goal. Information for exchanges and other services how to work with new fees: https://github.com/seredat/karbowanec/wiki/Dynamic-transaction-minimum-fee
 
-### Preparation
+Pools operating **'cryptonote-forknote-pool'** or compatible software should update Node-Cryptonote-Util to this version: https://github.com/aivve/node-cryptonote-util. The reference pool software is here: https://github.com/Karbovanets/karbo-pool.
 
-1. Create an account on [GitHub.com](github.com)
-2. Fork [CryptoNote repository](https://github.com/cryptonotefoundation/cryptonote)
-3. Buy one or two Ubuntu-based dedicated servers (at least 2Gb of RAM) for seed nodes.
-
-
-
-### First step. Give a name to your coin
-
-**Good name must be unique.** Check uniqueness with [google](http://google.com) and [Map of Coins](mapofcoins.com) or any other similar service.
-
-Name must be specified twice:
-
-**1. in file src/CryptoNoteConfig.h** - `CRYPTONOTE_NAME` constant
-
-Example: 
+Pools operating **'cryptonote-nodejs-pool'** should _change config on hardfork height_. The changes in config are:
 ```
-const char CRYPTONOTE_NAME[] = "furiouscoin";
+"daemonType": "default",
+"cnAlgorithm": "cryptonight",
+"cnVariant": 0,
+"cnBlobType": 0,
 ```
+The example of Karbo config is here: https://github.com/Karbovanets/cryptonote-nodejs-pool/blob/master/config_examples/karbo.json
 
-**2. in src/CMakeList.txt file** - set_property(TARGET daemon PROPERTY OUTPUT_NAME "YOURCOINNAME**d**")
 
-Example: 
-```
-set_property(TARGET daemon PROPERTY OUTPUT_NAME "furiouscoind")
-```
 
-**Note:** You should also change a repository name.
-
-
-### Second step. Emission logic 
-
-**1. Total money supply** (src/CryptoNoteConfig.h)
-
-Total amount of coins to be emitted. Most of CryptoNote based coins use `(uint64_t)(-1)` (equals to 18446744073709551616). You can define number explicitly (for example `UINT64_C(858986905600000000)`).
-
-Example:
-```
-const uint64_t MONEY_SUPPLY = (uint64_t)(-1);
-```
-
-**2. Emission curve** (src/CryptoNoteConfig.h)
-
-Be default CryptoNote provides emission formula with slight decrease of block reward with each block. This is different from Bitcoin where block reward halves every 4 years.
-
-`EMISSION_SPEED_FACTOR` constant defines emission curve slope. This parameter is required to calulate block reward. 
-
-Example:
-```
-const unsigned EMISSION_SPEED_FACTOR = 18;
-```
-
-**3. Difficulty target** (src/CryptoNoteConfig.h)
-
-Difficulty target is an ideal time period between blocks. In case an average time between blocks becomes less than difficulty target, the difficulty increases. Difficulty target is measured in seconds.
-
-Difficulty target directly influences several aspects of coin's behavior:
-
-- transaction confirmation speed: the longer the time between the blocks is, the slower transaction confirmation is
-- emission speed: the longer the time between the blocks is the slower the emission process is
-- orphan rate: chains with very fast blocks have greater orphan rate
-
-For most coins difficulty target is 60 or 120 seconds.
-
-Example:
-```
-const uint64_t DIFFICULTY_TARGET = 120;
-```
-
-**4. Block reward formula**
-
-In case you are not satisfied with CryptoNote default implementation of block reward logic you can also change it. The implementation is in `src/CryptoNoteCore/Currency.cpp`:
-```
-bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const
-```
-
-This function has two parts:
-
-- basic block reward calculation: `uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;`
-- big block penalty calculation: this is the way CryptoNote protects the block chain from transaction flooding attacks and preserves opportunities for organic network growth at the same time.
-
-Only the first part of this function is directly related to the emission logic. You can change it the way you want. See MonetaVerde and DuckNote as the examples where this function is modified.
-
-
-### Third step. Networking
-
-**1. Default ports for P2P and RPC networking** (src/CryptoNoteConfig.h)
-
-P2P port is used by daemons to talk to each other through P2P protocol.
-RPC port is used by wallet and other programs to talk to daemon.
-
-It's better to choose ports that aren't used by other software or coins. See known TCP ports lists:
-
-* http://www.speedguide.net/ports.php
-* http://www.networksorcery.com/enp/protocol/ip/ports00000.htm
-* http://keir.net/portlist.html
-
-Example:
-```
-const int P2P_DEFAULT_PORT = 17236;
-const int RPC_DEFAULT_PORT = 18236;
-```
-
-
-**2. Network identifier** (src/P2p/P2pNetworks.h)
-
-This identifier is used in network packages in order not to mix two different cryptocoin networks. Change all the bytes to random values for your network:
-```
-const static boost::uuids::uuid CRYPTONOTE_NETWORK = { { 0xA1, 0x1A, 0xA1, 0x1A, 0xA1, 0x0A, 0xA1, 0x0A, 0xA0, 0x1A, 0xA0, 0x1A, 0xA0, 0x1A, 0xA1, 0x1A } };
-```
-
-
-**3. Seed nodes** (src/CryptoNoteConfig.h)
-
-Add IP addresses of your seed nodes.
-
-Example:
-```
-const std::initializer_list<const char*> SEED_NODES = {
-  "111.11.11.11:17236",
-  "222.22.22.22:17236",
-};
-```
-
-
-### Fourth step. Transaction fee and related parameters
-
-**1. Minimum transaction fee** (src/CryptoNoteConfig.h)
-
-Zero minimum fee can lead to transaction flooding. Transactions cheaper than the minimum transaction fee wouldn't be accepted by daemons. 100000 value for `MINIMUM_FEE` is usually enough.
-
-Example:
-```
-const uint64_t MINIMUM_FEE = 100000;
-```
-
-
-**2. Penalty free block size** (src/CryptoNoteConfig.h)
-
-CryptoNote protects chain from tx flooding by reducing block reward for blocks larger than the median block size. However, this rule applies for blocks larger than `CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE` bytes.
-
-Example:
-```
-const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE = 20000;
-```
-
-
-### Fifth step. Address prefix
-
-You may choose a letter (in some cases several letters) all the coin's public addresses will start with. It is defined by `CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX` constant. Since the rules for address prefixes are nontrivial you may use the [prefix generator tool](https://cryptonotestarter.org/tools.html).
-
-Example:
-```
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 0xe9; // addresses start with "f"
-```
-
-
-### Sixth step. Genesis block
-
-**1. Build the binaries with blank genesis tx hex** (src/CryptoNoteConfig.h)
-
-You should leave `const char GENESIS_COINBASE_TX_HEX[]` blank and compile the binaries without it.
-
-Example:
-```
-const char GENESIS_COINBASE_TX_HEX[] = "";
-```
-
-
-**2. Start the daemon to print out the genesis block**
-
-Run your daemon with `--print-genesis-tx` argument. It will print out the genesis block coinbase transaction hash.
-
-Example:
-```
-furiouscoind --print-genesis-tx
-```
-
-
-**3. Copy the printed transaction hash** (src/CryptoNoteConfig.h)
-
-Copy the tx hash that has been printed by the daemon to `GENESIS_COINBASE_TX_HEX` in `src/CryptoNoteConfig.h`
-
-Example:
-```
-const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001ffff...785a33d9ebdba68b0";
-```
-
-
-**4. Recompile the binaries**
-
-Recompile everything again. Your coin code is ready now. Make an announcement for the potential users and enjoy!
-
-
-## Building CryptoNote 
+## Building Karbo 
 
 ### On *nix
 
-Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.55.
+Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.55 or later, OpenSSL.
 
 You may download them from:
 
-* http://gcc.gnu.org/
-* http://www.cmake.org/
-* http://www.boost.org/
-* Alternatively, it may be possible to install them using a package manager.
+- https://gcc.gnu.org/
+- https://www.cmake.org/
+- https://www.boost.org/
+- https://www.openssl.org/
 
-To build, change to a directory where this file is located, and run `make`. The resulting executables can be found in `build/release/src`.
+Alternatively, it may be possible to install them using a package manager.
+
+To build, change to a directory where this file is located, and run `make`.
+
+or
+
+Run these commands:
+```
+cd ~
+sudo apt-get install build-essential git cmake libboost-all-dev libssl-dev
+git clone https://github.com/seredat/karbowanec.git
+cd karbowanec
+mkdir build
+cd build
+cmake ..
+cd ..
+make
+```
+
+The resulting executables can be found in `build/release/src`.
 
 **Advanced options:**
 
@@ -224,18 +59,75 @@ To build, change to a directory where this file is located, and run `make`. The 
 * Building with Clang: it may be possible to use Clang instead of GCC, but this may not work everywhere. To build, run `export CC=clang CXX=clang++` before running `make`.
 
 ### On Windows
-Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may download them from:
 
-* http://www.microsoft.com/
-* http://www.cmake.org/
-* http://www.boost.org/
+Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, Boost 1.55 or later, OpenSSL. You may download them from:
 
-To build, change to a directory where this file is located, and run theas commands: 
+* https://www.microsoft.com/
+* https://www.cmake.org/
+* https://www.boost.org/
+* https://www.openssl.org/
+
+To build, change to a directory where this file is located, and run these commands: 
 ```
 mkdir build
 cd build
-cmake -G "Visual Studio 12 Win64" ..
+cmake -G "Visual Studio 15 Win64" ..
 ```
 
 And then do Build.
 Good luck!
+
+
+### Building for macOS
+
+Dependencies: cmake boost and Xcode
+
+Download Xcode from the App store and the Xcode command line tools with `xcode-select --install`
+For the other we recommand you to use [Homebrew](https://brew.sh)
+
+Continue with:
+```
+brew install git cmake boost
+git clone https://github.com/seredat/karbowanec.git
+cd karbowanec
+cd build
+cmake ..
+make
+```
+
+
+### Building for Android on Linux
+
+Set up the 32 bit toolchain
+Download and extract the Android SDK and NDK
+```
+android-ndk-r15c/build/tools/make_standalone_toolchain.py --api 21 --stl=libc++ --arch arm --install-dir /opt/android/tool32
+```
+
+Download and setup the Boost 1.65.1 source
+```
+wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.bz2/download -O boost_1_65_1.tar.bz2
+tar xjf boost_1_65_1.tar.bz2
+cd boost_1_65_1
+./bootstrap.sh
+```
+apply patch from external/boost1_65_1/libs/filesystem/src
+
+Build Boost with the 32 bit toolchain
+```
+export PATH=/opt/android/tool32/arm-linux-androideabi/bin:/opt/android/tool32/bin:$PATH
+./b2 abi=aapcs architecture=arm binary-format=elf address-model=32 link=static runtime-link=static --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-system --with-thread --with-context --with-coroutine --with-atomic --build-dir=android32 --stagedir=android32 toolset=clang threading=multi threadapi=pthread target-os=android --reconfigure stage
+```
+
+Build Karbo for 32 bit Android
+```
+mkdir -p build/release.android32
+cd build/release.android32
+CC=clang CXX=clang++ cmake -D BUILD_TESTS=OFF -D ARCH="armv7-a" -ldl -D STATIC=ON -D BUILD_64=OFF -D CMAKE_BUILD_TYPE=release -D ANDROID=true -D BUILD_TAG="android" -D BOOST_ROOT=/opt/android/boost_1_65_1 -D BOOST_LIBRARYDIR=/opt/android/boost_1_65_1/android32/lib -D CMAKE_POSITION_INDEPENDENT_CODE:BOOL=true -D BOOST_IGNORE_SYSTEM_PATHS_DEFAULT=ON ../..
+make SimpleWallet
+```
+
+### Portable and optimized binaries
+
+By default it will compile portable binary, to build optimized for your CPU, run Cmake with flag `-DARCH=native`.
+
