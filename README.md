@@ -1,6 +1,6 @@
 $NXR NEUROMASTER Binance Token http://neuromaster.io
 
-NEUROMASTER #BSC Binance Smart Chain / $WAVES Migration
+NEUROMASTER #BSC Binance Smart Chain / $WAVES $NXR Migration $SOLANA $MATIC $ETH $BNB
 
 
 # Outdated Development - #NEURODEX for Latest Developments
