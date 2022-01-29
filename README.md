@@ -1,3 +1,11 @@
+$NXR NEUROMASTER Binance Token http://neuromaster.io
+
+NEUROMASTER #BSC Binance Smart Chain / $WAVES Migration
+
+
+# Outdated Development - #NEURODEX for Latest Developments
+
+
 NEUROMASTER Crypto Currency - Beginning of world NEURO Crypt Technology
 
 This is the reference code for [CryptoNote](https://cryptonote.org) cryptocurrency protocol.
