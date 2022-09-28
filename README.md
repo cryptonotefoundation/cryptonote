@@ -1,12 +1,10 @@
+SOLANA Migration $SOL/$NEUROMASTER
+
+#BCN Cryptonote NEUROMASTER Beta 
+
 $NXR NEUROMASTER Binance Token http://neuromaster.io
 
-NEUROMASTER #BSC Binance Smart Chain / $WAVES $NXR Migration $SOLANA $MATIC $ETH $BNB
-
-
-# Outdated Development - #NEURODEX for Latest Developments
-
-
-NEUROMASTER Crypto Currency - Beginning of world NEURO Crypt Technology
+#BSC Binance Smart Chain / $WAVES $NXR $SOLANA $MATIC $ETH $BNB $BCN $AUDIUS $CRYPTOMUSIC
 
 This is the reference code for [CryptoNote](https://cryptonote.org) cryptocurrency protocol.
 
