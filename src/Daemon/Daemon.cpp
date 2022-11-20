@@ -321,3 +321,5 @@ bool command_line_preprocessor(const boost::program_options::variables_map &vm, 
 
   return false;
 }
+print-genesis-tx
+eeffoCoin —print-genesis-tx
