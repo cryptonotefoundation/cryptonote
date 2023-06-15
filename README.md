@@ -24,14 +24,14 @@ Name must be specified twice:
 
 Example: 
 ```
-const char CRYPTONOTE_NAME[] = "furiouscoin";
+const char CRYPTONOTE_NAME[] = "brewnero";
 ```
 
-**2. in src/CMakeList.txt file** - set_property(TARGET daemon PROPERTY OUTPUT_NAME "YOURCOINNAME**d**")
+**2. in src/CMakeList.txt file** - set_property(TARGET daemon PROPERTY OUTPUT_NAME "brew**d**")
 
 Example: 
 ```
-set_property(TARGET daemon PROPERTY OUTPUT_NAME "furiouscoind")
+set_property(TARGET daemon PROPERTY OUTPUT_NAME "brewd")
 ```
 
 **Note:** You should also change a repository name.
@@ -41,7 +41,7 @@ set_property(TARGET daemon PROPERTY OUTPUT_NAME "furiouscoind")
 
 **1. Total money supply** (src/CryptoNoteConfig.h)
 
-Total amount of coins to be emitted. Most of CryptoNote based coins use `(uint64_t)(-1)` (equals to 18446744073709551616). You can define number explicitly (for example `UINT64_C(858986905600000000)`).
+Total amount of coins to be emitted. Most of CryptoNote based coins use `(uint64_t)(-1)` (equals to 18446744073709551616). You can define number explicitly (for example `UINT64_C(694200000000000)`).
 
 Example:
 ```
@@ -56,7 +56,7 @@ Be default CryptoNote provides emission formula with slight decrease of block re
 
 Example:
 ```
-const unsigned EMISSION_SPEED_FACTOR = 18;
+const unsigned EMISSION_SPEED_FACTOR = 21;
 ```
 
 **3. Difficulty target** (src/CryptoNoteConfig.h)
@@ -73,7 +73,7 @@ For most coins difficulty target is 60 or 120 seconds.
 
 Example:
 ```
-const uint64_t DIFFICULTY_TARGET = 120;
+const uint64_t DIFFICULTY_TARGET = 60;
 ```
 
 **4. Block reward formula**
