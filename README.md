@@ -1,22 +1,19 @@
 This is the reference code for [CryptoNote](https://cryptonote.org) cryptocurrency protocol.
 
-* Launch your own CryptoNote currency: [CryptoNote Starter](https://cryptonotestarter.org/)
-* CryptoNote reference implementation: [CryptoNoteCoin](https://cryptonote-coin.org)
-* Discussion board and support: [CryptoNote Forum](https://forum.cryptonote.org)
 
-## CryptoNote forking how-to
+
 
 ### Preparation
 
 1. Create an account on [GitHub.com](github.com)
-2. Fork [CryptoNote repository](https://github.com/cryptonotefoundation/cryptonote)
+2. Fork [Brewnero repository](https://github.com/BobboFuxx/Brewnero)
 3. Buy one or two Ubuntu-based dedicated servers (at least 2Gb of RAM) for seed nodes.
 
 
 
-### First step. Give a name to your coin
+### 
 
-**Good name must be unique.** Check uniqueness with [google](http://google.com) and [Map of Coins](mapofcoins.com) or any other similar service.
+
 
 Name must be specified twice:
 
