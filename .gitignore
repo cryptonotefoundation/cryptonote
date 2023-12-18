@@ -1,8 +1,12 @@
-.DS_Store
-/build
-/tags
-.idea
-.ycm_extra_conf.py
-.ycm_extra_conf.pyc
-Release
-Debug
+# IDE Files
+#-------------------------
+/nbproject/
+.idea/*
+
+## Sublime Text cache files
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
