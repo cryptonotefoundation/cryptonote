@@ -15,6 +15,7 @@
 #include "CryptoNoteFormatUtils.h"
 #include "CryptoNoteTools.h"
 #include "TransactionExtra.h"
+#include "CryptoNoteConfig.h"
 
 #undef ERROR
 
@@ -135,7 +136,7 @@ bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alr
 
   KeyPair txkey = generateKeyPair();
   addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
-  if (!extraNonce.empty()) {
+  if (!extraNonce.empty() && extraNonce.size() <= 255) { // Ensure extraNonce size is within limit
     if (!addExtraNonceToTransactionExtra(tx.extra, extraNonce)) {
       return false;
     }
@@ -151,38 +152,28 @@ bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alr
     return false;
   }
 
-  std::vector<uint64_t> outAmounts;
-  decompose_amount_into_digits(blockReward, m_defaultDustThreshold,
-    [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
-    [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
+  uint64_t minerReward = blockReward + fee; // Adding the fee to the block reward
 
-  if (!(1 <= maxOuts)) { logger(ERROR, BRIGHT_RED) << "max_out must be non-zero"; return false; }
-  while (maxOuts < outAmounts.size()) {
-    outAmounts[outAmounts.size() - 2] += outAmounts.back();
-    outAmounts.resize(outAmounts.size() - 1);
-  }
-
-  uint64_t summaryAmounts = 0;
-  for (size_t no = 0; no < outAmounts.size(); no++) {
-    Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
-    Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
-
-    bool r = Crypto::generate_key_derivation(minerAddress.viewPublicKey, txkey.secretKey, derivation);
-
-    if (!(r)) {
-      logger(ERROR, BRIGHT_RED)
-        << "while creating outs: failed to generate_key_derivation("
-        << minerAddress.viewPublicKey << ", " << txkey.secretKey << ")";
+  if (height % 10 == 0) {
+    // Allocate the block reward of every 10th block to the developer address
+    AccountPublicAddress devAddress;
+    bool parseSuccess = parseAccountAddressString(DEVELOPER_ADDRESS, devAddress);
+    if (!parseSuccess) {
+      logger(ERROR, BRIGHT_RED) << "Failed to parse developer address";
       return false;
     }
 
-    r = Crypto::derive_public_key(derivation, no, minerAddress.spendPublicKey, outEphemeralPubKey);
+    Crypto::KeyDerivation derivation;
+    bool r = Crypto::generate_key_derivation(devAddress.viewPublicKey, txkey.secretKey, derivation);
+    if (!r) {
+      logger(ERROR, BRIGHT_RED) << "Failed to generate key derivation for developer address";
+      return false;
+    }
 
-    if (!(r)) {
-      logger(ERROR, BRIGHT_RED)
-        << "while creating outs: failed to derive_public_key("
-        << derivation << ", " << no << ", "
-        << minerAddress.spendPublicKey << ")";
+    Crypto::PublicKey outEphemeralPubKey;
+    r = Crypto::derive_public_key(derivation, 0, devAddress.spendPublicKey, outEphemeralPubKey);
+    if (!r) {
+      logger(ERROR, BRIGHT_RED) << "Failed to derive public key for developer address";
       return false;
     }
 
@@ -190,22 +181,76 @@ bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alr
     tk.key = outEphemeralPubKey;
 
     TransactionOutput out;
-    summaryAmounts += out.amount = outAmounts[no];
+    out.amount = minerReward;
     out.target = tk;
     tx.outputs.push_back(out);
-  }
+  } else {
+    // Regular miner reward
+    std::vector<uint64_t> outAmounts;
+    decompose_amount_into_digits(minerReward, m_defaultDustThreshold,
+      [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
+      [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
 
-  if (!(summaryAmounts == blockReward)) {
-    logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, summaryAmounts = " << summaryAmounts << " not equal blockReward = " << blockReward;
-    return false;
+    if (!(1 <= maxOuts)) {
+      logger(ERROR, BRIGHT_RED) << "max_out must be non-zero";
+      return false;
+    }
+
+    while (maxOuts < outAmounts.size()) {
+      outAmounts[outAmounts.size() - 2] += outAmounts.back();
+      outAmounts.resize(outAmounts.size() - 1);
+    }
+
+    uint64_t summaryAmounts = 0;
+    for (size_t no = 0; no < outAmounts.size(); no++) {
+      Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
+      Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
+
+      bool r = Crypto::generate_key_derivation(minerAddress.viewPublicKey, txkey.secretKey, derivation);
+
+      if (!r) {
+        logger(ERROR, BRIGHT_RED) << "while creating outs: failed to generate_key_derivation("
+          << minerAddress.viewPublicKey << ", " << txkey.secretKey << ")";
+        return false;
+      }
+
+      r = Crypto::derive_public_key(derivation, no, minerAddress.spendPublicKey, outEphemeralPubKey);
+
+      if (!r) {
+        logger(ERROR, BRIGHT_RED) << "while creating outs: failed to derive_public_key("
+          << derivation << ", " << no << ", " << minerAddress.spendPublicKey << ")";
+        return false;
+      }
+
+      KeyOutput tk;
+      tk.key = outEphemeralPubKey;
+
+      TransactionOutput out;
+      summaryAmounts += out.amount = outAmounts[no];
+      out.target = tk;
+      tx.outputs.push_back(out);
+    }
+
+    // Ensure summary amounts match block reward + fee
+    if (summaryAmounts != minerReward) {
+      logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, summaryAmounts = " << summaryAmounts << " not equal minerReward = " << minerReward;
+      return false;
+    }
   }
 
   tx.version = CURRENT_TRANSACTION_VERSION;
-  //lock
   tx.unlockTime = height + m_minedMoneyUnlockWindow;
   tx.inputs.push_back(in);
+
+  // Log transaction outputs
+  logger(INFO) << "Transaction outputs:";
+  for (const auto& output : tx.outputs) {
+    logger(INFO) << "Output amount: " << output.amount;
+  }
+
   return true;
 }
+
 
 bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts, size_t size) const {
   if (size > fusionTxMaxSize()) {
@@ -270,7 +315,7 @@ bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint6
   auto it = std::lower_bound(PRETTY_AMOUNTS.begin(), PRETTY_AMOUNTS.end(), amount);
   if (it == PRETTY_AMOUNTS.end() || amount != *it) {
     return false;
-  } 
+  }
 
   amountPowerOfTen = static_cast<uint8_t>(std::distance(PRETTY_AMOUNTS.begin(), it) / 9);
   return true;

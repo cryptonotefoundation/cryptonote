@@ -13,6 +13,7 @@
 #endif
 #include <winsock2.h>
 #include "ErrorMessage.h"
+#include <stdexcept>
 
 namespace System {
 
@@ -70,7 +71,7 @@ Dispatcher::Dispatcher() {
     BOOL result2 = ConvertFiberToThread();
     assert(result == TRUE);
   }
-  
+
   DeleteCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(criticalSection));
   throw std::runtime_error("Dispatcher::Dispatcher, " + message);
 }

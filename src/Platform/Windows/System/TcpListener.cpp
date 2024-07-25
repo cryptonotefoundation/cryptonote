@@ -14,6 +14,7 @@
 #include "Dispatcher.h"
 #include "ErrorMessage.h"
 #include "TcpConnection.h"
+#include <stdexcept>
 
 namespace System {
 

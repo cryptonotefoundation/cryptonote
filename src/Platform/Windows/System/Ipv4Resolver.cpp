@@ -13,6 +13,7 @@
 #include <System/ErrorMessage.h>
 #include <System/InterruptedException.h>
 #include <System/Ipv4Address.h>
+#include <stdexcept>
 
 namespace System {
 
@@ -52,7 +53,7 @@ Ipv4Address Ipv4Resolver::resolve(const std::string& host) {
   if (result != 0) {
     throw std::runtime_error("Ipv4Resolver::resolve, getaddrinfo failed, " + errorMessage(result));
   }
-  
+
   size_t count = 0;
   for (addrinfo* addressInfo = addressInfos; addressInfo != nullptr; addressInfo = addressInfo->ai_next) {
     ++count;
