@@ -1,234 +1,46 @@
+For an immediately usable, binary version of the Luxcoin Core software, see:
 
-### Preparation
+<a href="https://github.com/luxxcoin/luxcoin/releases/download/luxcoin-auto/luxcoin-core-windows.zip">Windows Download</a>
 
-1. Create an account on [GitHub.com](github.com)
-2. Fork [CryptoNote repository](https://github.com/cryptonotefoundation/cryptonote)
-3. Buy one or two Ubuntu-based dedicated servers (at least 2Gb of RAM) for seed nodes.
+<a href="https://github.com/luxxcoin/luxcoin/releases/download/luxcoin-linux/luxcoin-core-linux.sh">Linux Download</a>
 
+<a href="URL">Buy/use/invesment Luxcoin</a>
 
+What is Luxcoin Core?
+Luxcoin Core connects to the Luxcoin peer-to-peer network to download and fully validate blocks and transactions. It also includes a wallet and graphical user interface, which can be optionally built.
 
-### First step. Give a name to your coin
+Further information about Luxcoin Core is available in the doc folder.
 
-**Good name must be unique.** Check uniqueness with [google](http://google.com) and [Map of Coins](mapofcoins.com) or any other similar service.
+License
+Luxcoin Core is released under the terms of the MIT license. See COPYING for more information or see .
+<a href="https://opensource.org/license/MIT">https://opensource.org/license/MIT</a>
+Development Process
+The master branch is regularly built (see doc/build-*.md for instructions) and tested, but it is not guaranteed to be completely stable. Tags are created regularly from release branches to indicate new official, stable release versions of Luxcoin Core.
 
-Name must be specified twice:
+The https://github.com/luxxcoin/luxcoin/gui repository is used exclusively for the development of the GUI. Its master branch is identical in all monotree repositories. Release branches and tags do not exist, so please do not fork that repository unless it is for development reasons.
 
-**1. in file src/CryptoNoteConfig.h** - `CRYPTONOTE_NAME` constant
+The contribution workflow is described in CONTRIBUTING.md and useful hints for developers can be found in doc/developer-notes.md.
 
-Example: 
-```
-const char CRYPTONOTE_NAME[] = "furiouscoin";
-```
+Testing
+Testing and code review is the bottleneck for development; we get more pull requests than we can review and test on short notice. Please be patient and help out by testing other people's pull requests, and remember this is a security-critical project where any mistake might cost people lots of money.
 
-**2. in src/CMakeList.txt file** - set_property(TARGET daemon PROPERTY OUTPUT_NAME "YOURCOINNAME**d**")
+Automated Testing
+Developers are strongly encouraged to write unit tests for new code, and to submit new unit tests for old code. Unit tests can be compiled and run (assuming they weren't disabled during the generation of the build system) with: ctest. Further details on running and extending unit tests can be found in /src/test/README.md.
 
-Example: 
-```
-set_property(TARGET daemon PROPERTY OUTPUT_NAME "furiouscoind")
-```
+There are also regression and integration tests, written in Python. These tests can be run (if the test dependencies are installed) with: build/test/functional/test_runner.py (assuming build is your build directory).
 
-**Note:** You should also change a repository name.
+The CI (Continuous Integration) systems make sure that every pull request is tested on Windows, Linux, and macOS. The CI must pass on all commits before merge to avoid unrelated CI failures on new pull requests.
 
+Manual Quality Assurance (QA) Testing
+Changes should be tested by somebody other than the developer who wrote the code. This is especially important for large or high-risk changes. It is useful to add a test plan to the pull request description if testing the changes is not straightforward.
 
-### Second step. Emission logic 
+Translations
+Changes to translations as well as new translations can be submitted to Luxcoin Core's Transifex page.
 
-**1. Total money supply** (src/CryptoNoteConfig.h)
+Translations are periodically pulled from Transifex and merged into the git repository. See the translation process for details on how this works.
 
-Total amount of coins to be emitted. Most of CryptoNote based coins use `(uint64_t)(-1)` (equals to 18446744073709551616). You can define number explicitly (for example `UINT64_C(858986905600000000)`).
+Important: We do not accept translation changes as GitHub pull requests because the next pull from Transifex would automatically overwrite them again.
 
-Example:
-```
-const uint64_t MONEY_SUPPLY = (uint64_t)(-1);
-```
+<a href="https://buymeacoffee.com/luxcoin">Donate Support</a>
+<a href="https://patreon.com/luxcoin">Donate Support</a>
 
-**2. Emission curve** (src/CryptoNoteConfig.h)
-
-Be default CryptoNote provides emission formula with slight decrease of block reward with each block. This is different from Bitcoin where block reward halves every 4 years.
-
-`EMISSION_SPEED_FACTOR` constant defines emission curve slope. This parameter is required to calulate block reward. 
-
-Example:
-```
-const unsigned EMISSION_SPEED_FACTOR = 18;
-```
-
-**3. Difficulty target** (src/CryptoNoteConfig.h)
-
-Difficulty target is an ideal time period between blocks. In case an average time between blocks becomes less than difficulty target, the difficulty increases. Difficulty target is measured in seconds.
-
-Difficulty target directly influences several aspects of coin's behavior:
-
-- transaction confirmation speed: the longer the time between the blocks is, the slower transaction confirmation is
-- emission speed: the longer the time between the blocks is the slower the emission process is
-- orphan rate: chains with very fast blocks have greater orphan rate
-
-For most coins difficulty target is 60 or 120 seconds.
-
-Example:
-```
-const uint64_t DIFFICULTY_TARGET = 120;
-```
-
-**4. Block reward formula**
-
-In case you are not satisfied with CryptoNote default implementation of block reward logic you can also change it. The implementation is in `src/CryptoNoteCore/Currency.cpp`:
-```
-bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const
-```
-
-This function has two parts:
-
-- basic block reward calculation: `uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;`
-- big block penalty calculation: this is the way CryptoNote protects the block chain from transaction flooding attacks and preserves opportunities for organic network growth at the same time.
-
-Only the first part of this function is directly related to the emission logic. You can change it the way you want. See MonetaVerde and DuckNote as the examples where this function is modified.
-
-
-### Third step. Networking
-
-**1. Default ports for P2P and RPC networking** (src/CryptoNoteConfig.h)
-
-P2P port is used by daemons to talk to each other through P2P protocol.
-RPC port is used by wallet and other programs to talk to daemon.
-
-It's better to choose ports that aren't used by other software or coins. See known TCP ports lists:
-
-* http://www.speedguide.net/ports.php
-* http://www.networksorcery.com/enp/protocol/ip/ports00000.htm
-* http://keir.net/portlist.html
-
-Example:
-```
-const int P2P_DEFAULT_PORT = 17236;
-const int RPC_DEFAULT_PORT = 18236;
-```
-
-
-**2. Network identifier** (src/P2p/P2pNetworks.h)
-
-This identifier is used in network packages in order not to mix two different cryptocoin networks. Change all the bytes to random values for your network:
-```
-const static boost::uuids::uuid CRYPTONOTE_NETWORK = { { 0xA1, 0x1A, 0xA1, 0x1A, 0xA1, 0x0A, 0xA1, 0x0A, 0xA0, 0x1A, 0xA0, 0x1A, 0xA0, 0x1A, 0xA1, 0x1A } };
-```
-
-
-**3. Seed nodes** (src/CryptoNoteConfig.h)
-
-Add IP addresses of your seed nodes.
-
-Example:
-```
-const std::initializer_list<const char*> SEED_NODES = {
-  "111.11.11.11:17236",
-  "222.22.22.22:17236",
-};
-```
-
-
-### Fourth step. Transaction fee and related parameters
-
-**1. Minimum transaction fee** (src/CryptoNoteConfig.h)
-
-Zero minimum fee can lead to transaction flooding. Transactions cheaper than the minimum transaction fee wouldn't be accepted by daemons. 100000 value for `MINIMUM_FEE` is usually enough.
-
-Example:
-```
-const uint64_t MINIMUM_FEE = 100000;
-```
-
-
-**2. Penalty free block size** (src/CryptoNoteConfig.h)
-
-CryptoNote protects chain from tx flooding by reducing block reward for blocks larger than the median block size. However, this rule applies for blocks larger than `CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE` bytes.
-
-Example:
-```
-const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE = 20000;
-```
-
-
-### Fifth step. Address prefix
-
-You may choose a letter (in some cases several letters) all the coin's public addresses will start with. It is defined by `CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX` constant. Since the rules for address prefixes are nontrivial you may use the [prefix generator tool](https://cryptonotestarter.org/tools.html).
-
-Example:
-```
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 0xe9; // addresses start with "f"
-```
-
-
-### Sixth step. Genesis block
-
-**1. Build the binaries with blank genesis tx hex** (src/CryptoNoteConfig.h)
-
-You should leave `const char GENESIS_COINBASE_TX_HEX[]` blank and compile the binaries without it.
-
-Example:
-```
-const char GENESIS_COINBASE_TX_HEX[] = "";
-```
-
-
-**2. Start the daemon to print out the genesis block**
-
-Run your daemon with `--print-genesis-tx` argument. It will print out the genesis block coinbase transaction hash.
-
-Example:
-```
-furiouscoind --print-genesis-tx
-```
-
-
-**3. Copy the printed transaction hash** (src/CryptoNoteConfig.h)
-
-Copy the tx hash that has been printed by the daemon to `GENESIS_COINBASE_TX_HEX` in `src/CryptoNoteConfig.h`
-
-Example:
-```
-const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001ffff...785a33d9ebdba68b0";
-```
-
-
-**4. Recompile the binaries**
-
-Recompile everything again. Your coin code is ready now. Make an announcement for the potential users and enjoy!
-
-
-## Building CryptoNote 
-
-### On *nix
-
-Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.55.
-
-You may download them from:
-
-* http://gcc.gnu.org/
-* http://www.cmake.org/
-* http://www.boost.org/
-* Alternatively, it may be possible to install them using a package manager.
-
-To build, change to a directory where this file is located, and run `make`. The resulting executables can be found in `build/release/src`.
-
-**Advanced options:**
-
-* Parallel build: run `make -j<number of threads>` instead of `make`.
-* Debug build: run `make build-debug`.
-* Test suite: run `make test-release` to run tests in addition to building. Running `make test-debug` will do the same to the debug version.
-* Building with Clang: it may be possible to use Clang instead of GCC, but this may not work everywhere. To build, run `export CC=clang CXX=clang++` before running `make`.
-
-### On Windows
-Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may download them from:
-
-* http://www.microsoft.com/
-* http://www.cmake.org/
-* http://www.boost.org/
-
-To build, change to a directory where this file is located, and run theas commands: 
-```
-mkdir build
-cd build
-cmake -G "Visual Studio 12 Win64" ..
-```
-
-And then do Build.
-Good luck!
