@@ -1,40 +1,51 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2026, The Karbo developers
+//
+// This file is part of Karbo.
 
 #pragma once
 
-#include <iostream>
 #include <map>
 #include <string>
+#include <ostream>
 
 namespace CryptoNote {
-  class HttpRequest {
-  public:
-    typedef std::map<std::string, std::string> Headers;
 
-    const std::string& getMethod() const;
-    const std::string& getUrl() const;
-    const Headers& getHeaders() const;
-    const std::string& getBody() const;
+class HttpRequest {
+public:
+  typedef std::map<std::string, std::string> Headers;
 
-    void addHeader(const std::string& name, const std::string& value);
-    void setBody(const std::string& b);
-    void setUrl(const std::string& uri);
+  const std::string& getMethod() const;
+  const std::string& getUrl() const;
+  const Headers& getHeaders() const;
+  const std::string& getBody() const;
 
-  private:
-    friend class HttpParser;
+  void setMethod(const std::string& method);
+  void setUrl(const std::string& url);
+  void addHeader(const std::string& name, const std::string& value);
+  void setBody(const std::string& body);
 
-    std::string method;
-    std::string url;
-    Headers headers;
-    std::string body;
+private:
+  friend std::ostream& operator<<(std::ostream& os, const HttpRequest& resp);
+  
+  std::string method;
+  std::string url;
+  Headers headers;
+  std::string body;
+};
 
-    friend std::ostream& operator<<(std::ostream& os, const HttpRequest& resp);
-    std::ostream& printHttpRequest(std::ostream& os) const;
-  };
-
-  inline std::ostream& operator<<(std::ostream& os, const HttpRequest& resp) {
-    return resp.printHttpRequest(os);
+inline std::ostream& operator<<(std::ostream& os, const HttpRequest& req) {
+  os << req.method << " " << req.url << " HTTP/1.1\r\n";
+  for (const auto& header : req.headers) {
+    os << header.first << ": " << header.second << "\r\n";
   }
+  
+  os << "\r\n";
+  if (!req.body.empty()) {
+    os << req.body;
+  }
+  
+  return os;
 }
+
+} // namespace CryptoNote

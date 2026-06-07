@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "RPCTestNode.h"
 
@@ -12,7 +25,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "NodeRpcProxy/NodeRpcProxy.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
-#include "Rpc/HttpClient.h"
+#include "HTTP/HttpClient.h"
 #include "Rpc/JsonRpc.h"
 
 #include "Logger.h"
@@ -27,16 +40,17 @@ RPCTestNode::RPCTestNode(uint16_t port, System::Dispatcher& d) :
   m_rpcPort(port), m_dispatcher(d), m_httpClient(d, "127.0.0.1", port) {
 }
 
-bool RPCTestNode::startMining(size_t threadsCount, const std::string& address) { 
+bool RPCTestNode::startMining(size_t threadsCount, const CryptoNote::AccountKeys& keys) {
   LOG_DEBUG("startMining()");
 
   try {
     COMMAND_RPC_START_MINING::request req;
     COMMAND_RPC_START_MINING::response resp;
-    req.miner_address = address;
+    req.miner_spend_key = ::Common::podToHex(keys.spendSecretKey);
+    req.miner_view_key = ::Common::podToHex(keys.viewSecretKey);
     req.threads_count = threadsCount;
 
-    invokeJsonCommand(m_httpClient, "/start_mining", req, resp);
+    JsonRpc::invokeJsonCommand(m_httpClient, "/start_mining", req, resp);
     if (resp.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error(resp.status);
     }
@@ -48,13 +62,14 @@ bool RPCTestNode::startMining(size_t threadsCount, const std::string& address) {
   return true;
 }
 
-bool RPCTestNode::getBlockTemplate(const std::string& minerAddress, CryptoNote::Block& blockTemplate, uint64_t& difficulty) {
+bool RPCTestNode::getBlockTemplate(const CryptoNote::AccountKeys& minerKeys, CryptoNote::Block& blockTemplate, uint64_t& difficulty) {
   LOG_DEBUG("getBlockTemplate()");
 
   try {
     COMMAND_RPC_GETBLOCKTEMPLATE::request req;
     COMMAND_RPC_GETBLOCKTEMPLATE::response rsp;
-    req.wallet_address = minerAddress;
+    req.miner_spend_key = ::Common::podToHex(minerKeys.spendSecretKey);
+    req.miner_view_key = ::Common::podToHex(minerKeys.viewSecretKey);
     req.reserve_size = 0;
 
     JsonRpc::invokeJsonRpcCommand(m_httpClient, "getblocktemplate", req, rsp);
@@ -67,7 +82,7 @@ bool RPCTestNode::getBlockTemplate(const std::string& minerAddress, CryptoNote::
     BinaryArray blockBlob = (::Common::fromHex(rsp.blocktemplate_blob));
     return fromBinaryArray(blockTemplate, blockBlob);
   } catch (std::exception& e) {
-    LOG_ERROR("JSON-RPC call startMining() failed: " + std::string(e.what()));
+    LOG_ERROR("JSON-RPC call getBlockTemplate() failed: " + std::string(e.what()));
     return false;
   }
 
@@ -99,7 +114,7 @@ bool RPCTestNode::stopMining() {
   try {
     COMMAND_RPC_STOP_MINING::request req;
     COMMAND_RPC_STOP_MINING::response resp;
-    invokeJsonCommand(m_httpClient, "/stop_mining", req, resp);
+    JsonRpc::invokeJsonCommand(m_httpClient, "/stop_mining", req, resp);
     if (resp.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error(resp.status);
     }
@@ -132,7 +147,7 @@ bool RPCTestNode::getTailBlockId(Crypto::Hash& tailBlockId) {
 }
 
 bool RPCTestNode::makeINode(std::unique_ptr<CryptoNote::INode>& node) {
-  std::unique_ptr<CryptoNote::INode> newNode(new CryptoNote::NodeRpcProxy("127.0.0.1", m_rpcPort));
+  std::unique_ptr<CryptoNote::INode> newNode(new CryptoNote::NodeRpcProxy("127.0.0.1", m_rpcPort, "/", false));
   NodeCallback cb;
   newNode->init(cb.callback());
   auto ec = cb.get();
@@ -152,7 +167,7 @@ bool RPCTestNode::stopDaemon() {
     LOG_DEBUG("stopDaemon()");
     COMMAND_RPC_STOP_DAEMON::request req;
     COMMAND_RPC_STOP_DAEMON::response resp;
-    invokeJsonCommand(m_httpClient, "/stop_daemon", req, resp);
+    JsonRpc::invokeJsonCommand(m_httpClient, "/stop_daemon", req, resp);
     if (resp.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error(resp.status);
     }
@@ -168,7 +183,7 @@ uint64_t RPCTestNode::getLocalHeight() {
   try {
     CryptoNote::COMMAND_RPC_GET_INFO::request req;
     CryptoNote::COMMAND_RPC_GET_INFO::response rsp;
-    invokeJsonCommand(m_httpClient, "/getinfo", req, rsp);
+    JsonRpc::invokeJsonCommand(m_httpClient, "/getinfo", req, rsp);
     if (rsp.status == CORE_RPC_STATUS_OK) {
       return rsp.height;
     }

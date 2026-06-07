@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -137,42 +150,6 @@ TEST_F(TransactionApi, addAndSignInput) {
   EXPECT_NO_FATAL_FAILURE(checkHashChanged());
 }
 
-TEST_F(TransactionApi, addAndSignInputMsig) {
-
-  MultisignatureInput inputMsig;
-
-  inputMsig.amount = 1000;
-  inputMsig.outputIndex = 0;
-  inputMsig.signatureCount = 3;
-
-  auto index = tx->addInput(inputMsig);
-
-  ASSERT_EQ(0, index);
-  ASSERT_EQ(1, tx->getInputCount());
-  ASSERT_EQ(1000, tx->getInputTotalAmount());
-  ASSERT_EQ(TransactionTypes::InputType::Multisignature, tx->getInputType(index));
-  ASSERT_EQ(3, tx->getRequiredSignaturesCount(index));
-
-  KeyPair kp1;
-  Crypto::generate_keys(kp1.publicKey, kp1.secretKey );
-
-  auto srcTxKey = kp1.publicKey;
-  AccountKeys accounts[] = { generateAccountKeys(), generateAccountKeys(), generateAccountKeys() };
-
-  tx->signInputMultisignature(index, srcTxKey, 0, accounts[0]);
-
-  ASSERT_FALSE(tx->validateSignatures());
-
-  tx->signInputMultisignature(index, srcTxKey, 0, accounts[1]);
-  tx->signInputMultisignature(index, srcTxKey, 0, accounts[2]);
-
-  ASSERT_TRUE(tx->validateSignatures());
-
-  auto txBlob = tx->getTransactionData();
-  ASSERT_FALSE(txBlob.empty());
-  EXPECT_NO_FATAL_FAILURE(checkHashChanged());
-}
-
 TEST_F(TransactionApi, addOutputKey) {
   ASSERT_EQ(0, tx->getOutputCount());
   ASSERT_EQ(0, tx->getOutputTotalAmount());
@@ -183,25 +160,6 @@ TEST_F(TransactionApi, addOutputKey) {
   ASSERT_EQ(1, tx->getOutputCount());
   ASSERT_EQ(1000, tx->getOutputTotalAmount());
   ASSERT_EQ(TransactionTypes::OutputType::Key, tx->getOutputType(index));
-  EXPECT_NO_FATAL_FAILURE(checkHashChanged());
-}
-
-TEST_F(TransactionApi, addOutputMsig) {
-  ASSERT_EQ(0, tx->getOutputCount());
-  ASSERT_EQ(0, tx->getOutputTotalAmount());
-
-  AccountKeys accounts[] = { generateAccountKeys(), generateAccountKeys(), generateAccountKeys() };
-  std::vector<AccountPublicAddress> targets;
-
-  for (size_t i = 0; i < sizeof(accounts)/sizeof(accounts[0]); ++i)
-    targets.push_back(accounts[i].address);
-
-  size_t index = tx->addOutput(1000, targets, 2);
-
-  ASSERT_EQ(0, index);
-  ASSERT_EQ(1, tx->getOutputCount());
-  ASSERT_EQ(1000, tx->getOutputTotalAmount());
-  ASSERT_EQ(TransactionTypes::OutputType::Multisignature, tx->getOutputType(index));
   EXPECT_NO_FATAL_FAILURE(checkHashChanged());
 }
 
@@ -321,42 +279,3 @@ TEST_F(TransactionApi, doubleSpendInTransactionKey) {
   ASSERT_FALSE(tx->validateInputs());
 }
 
-TEST_F(TransactionApi, doubleSpendInTransactionMultisignature) {
-  MultisignatureInput inputMsig = { 1000, 0, 2 };
-
-  tx->addInput(inputMsig);
-  ASSERT_TRUE(tx->validateInputs());
-  tx->addInput(inputMsig);
-  ASSERT_FALSE(tx->validateInputs());
-}
-
-
-TEST_F(TransactionApi, unableToModifySignedTransaction) {
-
-  MultisignatureInput inputMsig;
-
-  inputMsig.amount = 1000;
-  inputMsig.outputIndex = 0;
-  inputMsig.signatureCount = 2;
-  auto index = tx->addInput(inputMsig);
-
-  KeyPair kp1;
-  Crypto::generate_keys(kp1.publicKey, kp1.secretKey);
-
-  auto srcTxKey = kp1.publicKey;
-
-  tx->signInputMultisignature(index, srcTxKey, 0, generateAccountKeys());
-
-  // from now on, we cannot modify transaction prefix
-  ASSERT_ANY_THROW(tx->addInput(inputMsig));
-  ASSERT_ANY_THROW(tx->addOutput(500, sender.address));
-
-  Hash paymentId;
-  ASSERT_ANY_THROW(tx->setPaymentId(paymentId));
-  ASSERT_ANY_THROW(tx->setExtraNonce(Common::asBinaryArray("smth")));
-
-  // but can add more signatures
-  tx->signInputMultisignature(index, srcTxKey, 0, generateAccountKeys());
-
-  EXPECT_NO_FATAL_FAILURE(checkHashChanged());
-}

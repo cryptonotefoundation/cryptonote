@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CryptoNoteTools.h"
 #include "CryptoNoteFormatUtils.h"
@@ -35,8 +48,6 @@ uint64_t getInputAmount(const Transaction& transaction) {
   for (auto& input : transaction.inputs) {
     if (input.type() == typeid(KeyInput)) {
       amount += boost::get<KeyInput>(input).amount;
-    } else if (input.type() == typeid(MultisignatureInput)) {
-      amount += boost::get<MultisignatureInput>(input).amount;
     }
   }
 
@@ -50,8 +61,6 @@ std::vector<uint64_t> getInputsAmounts(const Transaction& transaction) {
   for (auto& input: transaction.inputs) {
     if (input.type() == typeid(KeyInput)) {
       inputsAmounts.push_back(boost::get<KeyInput>(input).amount);
-    } else if (input.type() == typeid(MultisignatureInput)) {
-      inputsAmounts.push_back(boost::get<MultisignatureInput>(input).amount);
     }
   }
 

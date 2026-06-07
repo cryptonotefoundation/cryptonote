@@ -1,5 +1,131 @@
-$Id: Changelog.txt,v 1.193 2014/02/05 17:26:45 nanard Exp $
+$Id: Changelog.txt,v 1.235 2018/05/07 11:05:16 nanard Exp $
 miniUPnP client Changelog.
+
+VERSION 2.1 : released 2018/05/07
+
+2018/05/07:
+  CMake Modernize and cleanup CMakeLists.txt
+  Update MS Visual Studio projects
+
+2018/04/30:
+  listdevices: show devices sorted by XML desc URL
+
+2018/04/26:
+  Small fix in miniupnpcmodule.c (python module)
+  Support cross compiling in Makefile.mingw
+
+2018/04/06:
+  Use SOCKET type instead of int (for Win64 compilation)
+  Increments API_VERSION to 17
+
+2018/02/22:
+  Disable usage of MiniSSDPd when using -m option
+
+2017/12/11:
+  Fix buffer over run in minixml.c
+  Fix uninitialized variable access in upnpreplyparse.c
+
+2017/05/05:
+  Fix CVE-2017-8798   Thanks to tin/Team OSTStrom
+
+2016/11/11:
+  check strlen before memcmp in XML parsing portlistingparse.c
+  fix build under SOLARIS and CYGWIN
+
+2016/10/11:
+  Add python 3 compatibility to IGD test
+
+VERSION 2.0 : released 2016/04/19
+
+2016/01/24:
+  change miniwget to return HTTP status code
+  increments API_VERSION to 16
+
+2016/01/22:
+  Improve UPNPIGD_IsConnected() to check if WAN address is not private.
+  parse HTTP response status line in miniwget.c
+
+2015/10/26:
+  snprintf() overflow check. check overflow in simpleUPnPcommand2()
+
+2015/10/25:
+  fix compilation with old macs
+  fix compilation with mingw32 (for Appveyor)
+  fix python module for python <= 2.3
+
+2015/10/08:
+  Change sameport to localport
+    see https://github.com/miniupnp/miniupnp/pull/120
+  increments API_VERSION to 15
+
+2015/09/15:
+  Fix buffer overflow in igd_desc_parse.c/IGDstartelt()
+    Discovered by Aleksandar Nikolic of Cisco Talos
+
+2015/08/28:
+  move ssdpDiscoverDevices() to minissdpc.c
+
+2015/08/27:
+  avoid unix socket leak in getDevicesFromMiniSSDPD()
+
+2015/08/16:
+  Also accept "Up" as ConnectionStatus value
+
+2015/07/23:
+  split getDevicesFromMiniSSDPD
+  add ttl argument to upnpDiscover() functions
+  increments API_VERSION to 14
+
+2015/07/22:
+  Read USN from SSDP messages.
+
+2015/07/15:
+  Check malloc/calloc
+
+2015/06/16:
+  update getDevicesFromMiniSSDPD() to process longer minissdpd
+    responses
+
+2015/05/22:
+  add searchalltypes param to upnpDiscoverDevices()
+  increments API_VERSION to 13
+
+2015/04/30:
+  upnpc: output version on the terminal
+
+2015/04/27:
+  _BSD_SOURCE is deprecated in favor of _DEFAULT_SOURCE
+  fix CMakeLists.txt COMPILE_DEFINITIONS
+  fix getDevicesFromMiniSSDPD() not setting scope_id
+  improve -r command of upnpc command line tool
+
+2014/11/17:
+  search all :
+    upnpDiscoverDevices() / upnpDiscoverAll() functions
+    listdevices executable
+  increment API_VERSION to 12
+  validate igd_desc_parse
+
+2014/11/13:
+  increment API_VERSION to 11
+
+2014/11/05:
+  simplified function GetUPNPUrls()
+
+2014/09/11:
+  use remoteHost arg of DeletePortMapping
+
+2014/09/06:
+  Fix python3 build
+
+2014/07/01:
+  Fix parsing of IGD2 root descriptions
+
+2014/06/10:
+  rename LIBSPEC to MINIUPNP_LIBSPEC
+
+2014/05/15:
+  Add support for IGD2 AddAnyPortMapping and DeletePortMappingRange
 
 2014/02/05:
   handle EINPROGRESS after connect()
@@ -496,7 +622,7 @@ VERSION 1.0 :
   upnpc now displays external ip address with -s or -l
 
 2007/04/11:
-  changed MINIUPNPC_URL_MAXSIZE to 128 to accomodate the "BT Voyager 210"
+  changed MINIUPNPC_URL_MAXSIZE to 128 to accommodate the "BT Voyager 210"
 
 2007/03/19:
   cleanup in miniwget.c

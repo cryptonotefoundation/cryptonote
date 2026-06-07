@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ITransaction.h"
 
@@ -25,6 +38,7 @@ public:
 
   virtual Hash getTransactionHash() const override;
   virtual Hash getTransactionPrefixHash() const override;
+  virtual Hash getTransactionInputsHash() const override;
   virtual PublicKey getTransactionPublicKey() const override;
   virtual uint64_t getUnlockTime() const override;
 
@@ -38,15 +52,14 @@ public:
   virtual uint64_t getInputTotalAmount() const override;
   virtual TransactionTypes::InputType getInputType(size_t index) const override;
   virtual void getInput(size_t index, KeyInput& input) const override;
-  virtual void getInput(size_t index, MultisignatureInput& input) const override;
+    virtual std::vector<TransactionInput> getInputs() const override;
 
   // outputs
   virtual size_t getOutputCount() const override;
   virtual uint64_t getOutputTotalAmount() const override;
   virtual TransactionTypes::OutputType getOutputType(size_t index) const override;
   virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const override;
-  virtual void getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const override;
-
+  
   // signatures
   virtual size_t getRequiredSignaturesCount(size_t inputIndex) const override;
   virtual bool findOutputsToAccount(const AccountPublicAddress& addr, const SecretKey& viewSecretKey, std::vector<uint32_t>& outs, uint64_t& outputAmount) const override;
@@ -58,6 +71,8 @@ public:
 
   // serialized transaction
   virtual BinaryArray getTransactionData() const override;
+
+  virtual TransactionPrefix getTransactionPrefix() const override;
 
   virtual bool getTransactionSecretKey(SecretKey& key) const override;
 
@@ -83,6 +98,10 @@ Hash TransactionPrefixImpl::getTransactionHash() const {
 
 Hash TransactionPrefixImpl::getTransactionPrefixHash() const {
   return getObjectHash(m_txPrefix);
+}
+
+Hash TransactionPrefixImpl::getTransactionInputsHash() const {
+  return getObjectHash(m_txPrefix.inputs);
 }
 
 PublicKey TransactionPrefixImpl::getTransactionPublicKey() const {
@@ -141,8 +160,8 @@ void TransactionPrefixImpl::getInput(size_t index, KeyInput& input) const {
   input = boost::get<KeyInput>(getInputChecked(m_txPrefix, index, TransactionTypes::InputType::Key));
 }
 
-void TransactionPrefixImpl::getInput(size_t index, MultisignatureInput& input) const {
-  input = boost::get<MultisignatureInput>(getInputChecked(m_txPrefix, index, TransactionTypes::InputType::Multisignature));
+std::vector<TransactionInput> TransactionPrefixImpl::getInputs() const {
+  return m_txPrefix.inputs;
 }
 
 size_t TransactionPrefixImpl::getOutputCount() const {
@@ -164,12 +183,6 @@ void TransactionPrefixImpl::getOutput(size_t index, KeyOutput& output, uint64_t&
   amount = out.amount;
 }
 
-void TransactionPrefixImpl::getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const {
-  const auto& out = getOutputChecked(m_txPrefix, index, TransactionTypes::OutputType::Multisignature);
-  output = boost::get<MultisignatureOutput>(out.target);
-  amount = out.amount;
-}
-
 size_t TransactionPrefixImpl::getRequiredSignaturesCount(size_t inputIndex) const {
   return ::CryptoNote::getRequiredSignaturesCount(getInputChecked(m_txPrefix, inputIndex));
 }
@@ -180,14 +193,13 @@ bool TransactionPrefixImpl::findOutputsToAccount(const AccountPublicAddress& add
 
 bool TransactionPrefixImpl::validateInputs() const {
   return check_inputs_types_supported(m_txPrefix) &&
-          check_inputs_overflow(m_txPrefix) &&
-          checkInputsKeyimagesDiff(m_txPrefix) &&
-          checkMultisignatureInputsDiff(m_txPrefix);
+         check_inputs_overflow(m_txPrefix) &&
+         checkInputsKeyimagesDiff(m_txPrefix);
 }
 
 bool TransactionPrefixImpl::validateOutputs() const {
   return check_outs_valid(m_txPrefix) &&
-          check_outs_overflow(m_txPrefix);
+         check_outs_overflow(m_txPrefix);
 }
 
 bool TransactionPrefixImpl::validateSignatures() const {
@@ -196,6 +208,10 @@ bool TransactionPrefixImpl::validateSignatures() const {
 
 BinaryArray TransactionPrefixImpl::getTransactionData() const {
   return toBinaryArray(m_txPrefix);
+}
+
+TransactionPrefix TransactionPrefixImpl::getTransactionPrefix() const {
+   return m_txPrefix;
 }
 
 bool TransactionPrefixImpl::getTransactionSecretKey(SecretKey& key) const {

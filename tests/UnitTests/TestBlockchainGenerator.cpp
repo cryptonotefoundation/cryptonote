@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TestBlockchainGenerator.h"
 
@@ -8,12 +21,26 @@
 #include <unordered_set>
 
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
 
 #include "../PerformanceTests/MultiTransactionTestBase.h"
 
 using namespace CryptoNote;
+
+namespace {
+
+uint64_t getGeneratedTransactionDelta(const Block& block) {
+  // BlockchainExplorer/INode block details expect this field to be a cumulative tx count.
+  return 1 + static_cast<uint64_t>(block.transactionHashes.size());
+}
+
+uint32_t getBlockHeight(const Block& block) {
+  return boost::get<BaseInput>(block.baseTransaction.inputs.front()).blockIndex;
+}
+
+} // namespace
 
 class TransactionForAddressCreator : public multi_tx_test_base<5>
 {
@@ -28,26 +55,37 @@ public:
 
   void generate(const AccountPublicAddress& address, Transaction& tx, uint64_t unlockTime = 0)
   {
-    std::vector<CryptoNote::TransactionDestinationEntry> destinations;
+    std::vector<CryptoNote::TxBuildOutput> destinations;
 
     CryptoNote::decompose_amount_into_digits(this->m_source_amount, 0,
-      [&](uint64_t chunk) { destinations.push_back(CryptoNote::TransactionDestinationEntry(chunk, address)); },
-      [&](uint64_t a_dust) { destinations.push_back(CryptoNote::TransactionDestinationEntry(a_dust, address)); });
+      [&](uint64_t chunk) { destinations.push_back(CryptoNote::TxBuildOutput{address, chunk}); },
+      [&](uint64_t a_dust) { destinations.push_back(CryptoNote::TxBuildOutput{address, a_dust}); });
 
-    CryptoNote::constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), tx, unlockTime, m_logger);
+    Crypto::SecretKey txkey;
+    try {
+      auto itx = CryptoNote::buildTransaction(this->m_sources, destinations,
+          this->m_miners[this->real_source_idx].getAccountKeys().viewSecretKey, "", unlockTime, 0, txkey);
+      CryptoNote::fromBinaryArray(tx, itx->getTransactionData());
+    } catch (...) {}
   }
 
   void generateSingleOutputTx(const AccountPublicAddress& address, uint64_t amount, Transaction& tx) {
-    std::vector<TransactionDestinationEntry> destinations;
-    destinations.push_back(TransactionDestinationEntry(amount, address));
-    constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), tx, 0, m_logger);
+    std::vector<CryptoNote::TxBuildOutput> destinations;
+    destinations.push_back(CryptoNote::TxBuildOutput{address, amount});
+    Crypto::SecretKey txkey;
+    try {
+      auto itx = CryptoNote::buildTransaction(this->m_sources, destinations,
+          this->m_miners[this->real_source_idx].getAccountKeys().viewSecretKey, "", 0, 0, txkey);
+      CryptoNote::fromBinaryArray(tx, itx->getTransactionData());
+    } catch (...) {}
   }
 };
 
 TestBlockchainGenerator::TestBlockchainGenerator(const CryptoNote::Currency& currency) :
   m_currency(currency),
-  generator(currency)
-{
+  generator(currency),
+  m_paymentIdIndex(true),
+  m_timestampIndex(true) {
   std::unique_lock<std::mutex> lock(m_mutex);
 
   miner_acc.generate();
@@ -99,7 +137,7 @@ void TestBlockchainGenerator::addGenesisBlock() {
   addTx(m_currency.genesisBlock().baseTransaction);
 
   m_timestampIndex.add(m_currency.genesisBlock().timestamp, CryptoNote::get_block_hash(m_currency.genesisBlock()));
-  m_generatedTransactionsIndex.add(m_currency.genesisBlock());
+  m_generatedTransactionsByHeight[getBlockHeight(m_currency.genesisBlock())] = getGeneratedTransactionDelta(m_currency.genesisBlock());
 }
 
 void TestBlockchainGenerator::addMiningBlock() {
@@ -118,7 +156,13 @@ void TestBlockchainGenerator::addMiningBlock() {
   addTx(block.baseTransaction);
 
   m_timestampIndex.add(block.timestamp, CryptoNote::get_block_hash(block));
-  m_generatedTransactionsIndex.add(block);
+  uint64_t previousGenerated = 0;
+  auto previousIt = m_generatedTransactionsByHeight.find(height - 1);
+  if (previousIt != m_generatedTransactionsByHeight.end()) {
+    previousGenerated = previousIt->second;
+  }
+
+  m_generatedTransactionsByHeight[height] = previousGenerated + getGeneratedTransactionDelta(block);
 }
 
 void TestBlockchainGenerator::generateEmptyBlocks(size_t count)
@@ -134,7 +178,14 @@ void TestBlockchainGenerator::generateEmptyBlocks(size_t count)
     addTx(block.baseTransaction);
 
     m_timestampIndex.add(block.timestamp, CryptoNote::get_block_hash(block));
-    m_generatedTransactionsIndex.add(block);
+    const uint32_t height = getBlockHeight(block);
+    uint64_t previousGenerated = 0;
+    auto previousIt = m_generatedTransactionsByHeight.find(height - 1);
+    if (previousIt != m_generatedTransactionsByHeight.end()) {
+      previousGenerated = previousIt->second;
+    }
+
+    m_generatedTransactionsByHeight[height] = previousGenerated + getGeneratedTransactionDelta(block);
   }
 }
 
@@ -218,7 +269,14 @@ void TestBlockchainGenerator::addToBlockchain(const std::vector<CryptoNote::Tran
   addTx(block.baseTransaction);
 
   m_timestampIndex.add(block.timestamp, CryptoNote::get_block_hash(block));
-  m_generatedTransactionsIndex.add(block);
+  const uint32_t height = getBlockHeight(block);
+  uint64_t previousGenerated = 0;
+  auto previousIt = m_generatedTransactionsByHeight.find(height - 1);
+  if (previousIt != m_generatedTransactionsByHeight.end()) {
+    previousGenerated = previousIt->second;
+  }
+
+  m_generatedTransactionsByHeight[height] = previousGenerated + getGeneratedTransactionDelta(block);
 }
 
 void TestBlockchainGenerator::getPoolSymmetricDifference(std::vector<Crypto::Hash>&& known_pool_tx_ids, Crypto::Hash known_block_id, bool& is_bc_actual,
@@ -293,10 +351,8 @@ void TestBlockchainGenerator::cutBlockchain(uint32_t height) {
 }
 
 bool TestBlockchainGenerator::addOrphan(const Crypto::Hash& hash, uint32_t height) {
-  CryptoNote::Block block;
-  uint64_t timestamp = time(NULL);
-  generator.constructBlock(block, miner_acc, timestamp);
-  return m_orthanBlocksIndex.add(block);
+  m_orphanBlockIdsByHeight[height].push_back(hash);
+  return true;
 }
 
 void TestBlockchainGenerator::setMinerAccount(const CryptoNote::AccountBase& account) {
@@ -304,11 +360,23 @@ void TestBlockchainGenerator::setMinerAccount(const CryptoNote::AccountBase& acc
 }
 
 bool TestBlockchainGenerator::getGeneratedTransactionsNumber(uint32_t height, uint64_t& generatedTransactions) {
-  return m_generatedTransactionsIndex.find(height, generatedTransactions);
+  auto it = m_generatedTransactionsByHeight.find(height);
+  if (it == m_generatedTransactionsByHeight.end()) {
+    return false;
+  }
+
+  generatedTransactions = it->second;
+  return true;
 }
 
 bool TestBlockchainGenerator::getOrphanBlockIdsByHeight(uint32_t height, std::vector<Crypto::Hash>& blockHashes) {
-  return m_orthanBlocksIndex.find(height, blockHashes);
+  auto it = m_orphanBlockIdsByHeight.find(height);
+  if (it == m_orphanBlockIdsByHeight.end()) {
+    return false;
+  }
+
+  blockHashes = it->second;
+  return true;
 }
 
 bool TestBlockchainGenerator::getBlockIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<Crypto::Hash>& hashes, uint32_t& blocksNumberWithinTimestamps) {
@@ -352,10 +420,6 @@ void TestBlockchainGenerator::addTx(const CryptoNote::Transaction& tx) {
       auto& keyOutsContainer = keyOutsIndex[out.amount];
       globalIndexes.push_back(static_cast<uint32_t>(keyOutsContainer.size()));
       keyOutsContainer.push_back({ txHash, outIndex });
-    } else if (out.target.type() == typeid(MultisignatureOutput)) {
-      auto& msigOutsContainer = multisignatureOutsIndex[out.amount];
-      globalIndexes.push_back(static_cast<uint32_t>(msigOutsContainer.size()));
-      msigOutsContainer.push_back({ txHash, outIndex });
     }
   }
 }
@@ -367,24 +431,6 @@ bool TestBlockchainGenerator::getTransactionGlobalIndexesByHash(const Crypto::Ha
   }
 
   globalIndexes = globalIndexesIt->second;
-  return true;
-}
-
-bool TestBlockchainGenerator::getMultisignatureOutputByGlobalIndex(uint64_t amount, uint32_t globalIndex, MultisignatureOutput& out) {
-  auto it = multisignatureOutsIndex.find(amount);
-  if (it == multisignatureOutsIndex.end()) {
-    return false;
-  }
-
-  if (it->second.size() <= globalIndex) {
-    return false;
-  }
-
-  MultisignatureOutEntry entry = it->second[globalIndex];
-  const auto& tx = m_txs[entry.transactionHash];
-  assert(tx.outputs.size() > entry.indexOut);
-  assert(tx.outputs[entry.indexOut].target.type() == typeid(MultisignatureOutput));
-  out = boost::get<MultisignatureOutput>(tx.outputs[entry.indexOut].target);
   return true;
 }
 

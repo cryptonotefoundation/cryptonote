@@ -59,19 +59,19 @@ typedef void OAES_CTX;
 
 typedef enum
 {
-	OAES_RET_FIRST = 0,
-	OAES_RET_SUCCESS = 0,
-	OAES_RET_UNKNOWN,
-	OAES_RET_ARG1,
-	OAES_RET_ARG2,
-	OAES_RET_ARG3,
-	OAES_RET_ARG4,
-	OAES_RET_ARG5,
-	OAES_RET_NOKEY,
-	OAES_RET_MEM,
-	OAES_RET_BUF,
-	OAES_RET_HEADER,
-	OAES_RET_COUNT
+  OAES_RET_FIRST = 0,
+  OAES_RET_SUCCESS = 0,
+  OAES_RET_UNKNOWN,
+  OAES_RET_ARG1,
+  OAES_RET_ARG2,
+  OAES_RET_ARG3,
+  OAES_RET_ARG4,
+  OAES_RET_ARG5,
+  OAES_RET_NOKEY,
+  OAES_RET_MEM,
+  OAES_RET_BUF,
+  OAES_RET_HEADER,
+  OAES_RET_COUNT
 } OAES_RET;
 
 /*
@@ -89,10 +89,10 @@ typedef enum
 
 #ifdef OAES_DEBUG
 typedef int ( * oaes_step_cb ) (
-		const uint8_t state[OAES_BLOCK_SIZE],
-		const char * step_name,
-		int step_count,
-		void * user_data );
+    const uint8_t state[OAES_BLOCK_SIZE],
+    const char * step_name,
+    int step_count,
+    void * user_data );
 // enable state stepping mode
 // value is required, must pass oaes_step_cb to receive the state at each step
 #define OAES_OPTION_STEP_ON 4
@@ -166,7 +166,7 @@ OAES_API OAES_CTX * oaes_alloc(void);
 OAES_API OAES_RET oaes_free( OAES_CTX ** ctx );
 
 OAES_API OAES_RET oaes_set_option( OAES_CTX * ctx,
-		OAES_OPTION option, const void * value );
+    OAES_OPTION option, const void * value );
 
 OAES_API OAES_RET oaes_key_gen_128( OAES_CTX * ctx );
 
@@ -177,32 +177,32 @@ OAES_API OAES_RET oaes_key_gen_256( OAES_CTX * ctx );
 // export key with header information
 // set data == NULL to get the required data_len
 OAES_API OAES_RET oaes_key_export( OAES_CTX * ctx,
-		uint8_t * data, size_t * data_len );
+    uint8_t * data, size_t * data_len );
 
 // directly export the data from key
 // set data == NULL to get the required data_len
 OAES_API OAES_RET oaes_key_export_data( OAES_CTX * ctx,
-		uint8_t * data, size_t * data_len );
+    uint8_t * data, size_t * data_len );
 
 // import key with header information
 OAES_API OAES_RET oaes_key_import( OAES_CTX * ctx,
-		const uint8_t * data, size_t data_len );
+    const uint8_t * data, size_t data_len );
 
 // directly import data into key
 OAES_API OAES_RET oaes_key_import_data( OAES_CTX * ctx,
-		const uint8_t * data, size_t data_len );
+    const uint8_t * data, size_t data_len );
 
 // set c == NULL to get the required c_len
 OAES_API OAES_RET oaes_encrypt( OAES_CTX * ctx,
-		const uint8_t * m, size_t m_len, uint8_t * c, size_t * c_len );
+    const uint8_t * m, size_t m_len, uint8_t * c, size_t * c_len );
 
 // set m == NULL to get the required m_len
 OAES_API OAES_RET oaes_decrypt( OAES_CTX * ctx,
-		const uint8_t * c, size_t c_len, uint8_t * m, size_t * m_len );
+    const uint8_t * c, size_t c_len, uint8_t * m, size_t * m_len );
 
 // set buf == NULL to get the required buf_len
 OAES_API OAES_RET oaes_sprintf(
-		char * buf, size_t * buf_len, const uint8_t * data, size_t data_len );
+    char * buf, size_t * buf_len, const uint8_t * data, size_t data_len );
 
 OAES_API OAES_RET oaes_encryption_round( const uint8_t * key, uint8_t * c );
 

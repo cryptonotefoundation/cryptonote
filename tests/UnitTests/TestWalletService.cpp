@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -10,6 +23,7 @@
 
 #include <IWallet.h>
 
+#include "CryptoNoteCore/Account.h"
 #include "CryptoNoteCore/Currency.h"
 #include "Logging/LoggerGroup.h"
 #include "Logging/ConsoleLogger.h"
@@ -38,22 +52,40 @@ struct IWalletBaseStub : public CryptoNote::IWallet {
   IWalletBaseStub(System::Dispatcher& dispatcher) : m_eventOccurred(dispatcher) {}
   virtual ~IWalletBaseStub() {}
 
-  virtual void initialize(const std::string& password) override { }
-  virtual void initializeWithViewKey(const Crypto::SecretKey& viewSecretKey, const std::string& password) override { }
-  virtual void load(std::istream& source, const std::string& password) override { }
+  virtual void initialize(const std::string& path, const std::string& password) override { }
+  virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) override { }
+  virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey, const uint64_t& creationTimestamp) override { }
+  virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight) override { }
+  virtual void load(const std::string& path, const std::string& password, std::string& extra) override { }
+  virtual void load(const std::string& path, const std::string& password) override { }
   virtual void shutdown() override { }
 
   virtual void changePassword(const std::string& oldPassword, const std::string& newPassword) override { }
-  virtual void save(std::ostream& destination, bool saveDetails = true, bool saveCache = true) override { }
+  virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override { }
+  virtual void reset(const uint64_t scanHeight) override { }
+  virtual void exportWallet(const std::string& path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override { }
 
   virtual size_t getAddressCount() const override { return 0; }
   virtual std::string getAddress(size_t index) const override { return ""; }
+  virtual bool isMyAddress(const std::string& address) const override { return false; }
+  virtual AccountPublicAddress getAccountPublicAddress(size_t index) const override { return AccountPublicAddress(); }
   virtual KeyPair getAddressSpendKey(size_t index) const override { return KeyPair(); }
   virtual KeyPair getAddressSpendKey(const std::string& address) const override { return KeyPair(); }
   virtual KeyPair getViewKey() const override { return KeyPair(); }
+  virtual AddressGenerationMode getAddressGenerationMode() const override { return AddressGenerationMode::INDEPENDENT_SPEND_KEYS; }
+  virtual Crypto::SecretKey getDeterministicSeed() const override { return Crypto::SecretKey(); }
+  virtual void setAddressGenerationMode(AddressGenerationMode mode, const Crypto::SecretKey& deterministicSeed) override { }
   virtual std::string createAddress() override { return ""; }
-  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey) override { return ""; }
-  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey) override { return ""; }
+  virtual std::string createAddress(uint32_t scanHeight) override { return ""; }
+  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, bool reset) override { return ""; }
+  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, bool reset) override { return ""; }
+  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const uint64_t& creationTimestamp) override { return ""; }
+  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const uint64_t& creationTimestamp) override { return ""; }
+  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight) override { return ""; }
+  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const uint32_t scanHeight) override { return ""; }
+  virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, bool reset) override { return std::vector<std::string>(); }
+  virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, const std::vector<uint64_t>& creationTimestamps) override { return std::vector<std::string>(); }
+  virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, const std::vector<uint32_t>& scanHeights) override { return std::vector<std::string>(); }
   virtual void deleteAddress(const std::string& address) override { }
 
   virtual uint64_t getActualBalance() const override { return 0; }
@@ -63,6 +95,9 @@ struct IWalletBaseStub : public CryptoNote::IWallet {
 
   virtual size_t getTransactionCount() const override { return 0; }
   virtual WalletTransaction getTransaction(size_t transactionIndex) const override { return WalletTransaction(); }
+  virtual Crypto::SecretKey getTransactionSecretKey(size_t transactionIndex) const override { return Crypto::SecretKey(); }
+  virtual Crypto::SecretKey getTransactionSecretKey(Crypto::Hash& transactionHash) const override { return Crypto::SecretKey(); }
+  virtual bool getTransactionProof(const Crypto::Hash& transactionHash, const CryptoNote::AccountPublicAddress& destinationAddress, const Crypto::SecretKey& txKey, std::string& transactionProof) override { return false; }
   virtual size_t getTransactionTransferCount(size_t transactionIndex) const override { return 0; }
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const override { return WalletTransfer(); }
 
@@ -73,8 +108,13 @@ struct IWalletBaseStub : public CryptoNote::IWallet {
   virtual uint32_t getBlockCount() const override { return 0; }
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const override { return {}; }
   virtual std::vector<size_t> getDelayedTransactionIds() const override { return {}; }
+  virtual std::vector<TransactionOutputInformation> getTransfers(size_t index, uint32_t flags) const override { return {}; }
 
-  virtual size_t transfer(const TransactionParameters& sendingTransaction) override { return 0; }
+  virtual std::string getReserveProof(const uint64_t &reserve, const std::string& address, const std::string &message) override { return ""; }
+  virtual std::string signMessage(const std::string &message, const std::string& address) override { return ""; }
+  virtual bool verifyMessage(const std::string &message, const std::string& address, const std::string &signature) override { return false; }
+
+  virtual size_t transfer(const TransactionParameters& sendingTransaction, Crypto::SecretKey& txSecretKey) override { return 0; }
 
   virtual size_t makeTransaction(const TransactionParameters& sendingTransaction) override { return 0; }
   virtual void commitTransaction(size_t transactionId) override { }
@@ -119,6 +159,7 @@ protected:
 class WalletServiceTest: public ::testing::Test {
 public:
   WalletServiceTest() :
+    logger(Logging::ERROR),
     currency(CryptoNote::CurrencyBuilder(logger).currency()),
     generator(currency),
     nodeStub(generator),
@@ -148,7 +189,7 @@ void WalletServiceTest::SetUp() {
 }
 
 std::unique_ptr<WalletService> WalletServiceTest::createWalletService(CryptoNote::IWallet& wallet) {
-  return std::unique_ptr<WalletService> (new WalletService(currency, dispatcher, nodeStub, wallet, walletConfig, logger));
+  return std::unique_ptr<WalletService>(new WalletService(currency, dispatcher, nodeStub, wallet, walletConfig, logger));
 }
 
 std::unique_ptr<WalletService> WalletServiceTest::createWalletService() {
@@ -168,8 +209,11 @@ struct WalletCreateAddressStub: public IWalletBaseStub {
   WalletCreateAddressStub(System::Dispatcher& d) : IWalletBaseStub(d) {}
 
   virtual std::string createAddress() override { return address; }
-  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey) override { return address; }
-  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey) override { return address; }
+  virtual std::string createAddress(uint32_t scanHeight) override { return address; }
+  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, bool reset) override { return address; }
+  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, bool reset) override { return address; }
+  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight) override { return address; }
+  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const uint32_t scanHeight) override { return address; }
 
   std::string address = "correctAddress";
 };
@@ -189,7 +233,7 @@ TEST_F(WalletServiceTest_createAddress, invalidSecretKey) {
   std::unique_ptr<WalletService> service = createWalletService();
 
   std::string address;
-  std::error_code ec = service->createAddress("wrong key", address);
+  std::error_code ec = service->createAddress("wrong key", true, address);
   ASSERT_EQ(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_KEY_FORMAT), ec);
 }
 
@@ -210,7 +254,7 @@ TEST_F(WalletServiceTest_createAddress, correctSecretKey) {
   std::unique_ptr<WalletService> service = createWalletService(wallet);
 
   std::string address;
-  std::error_code ec = service->createAddress(Common::podToHex(sec), address);
+  std::error_code ec = service->createAddress(Common::podToHex(sec), true, address);
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(wallet.address, address);
@@ -479,17 +523,27 @@ private:
 };
 
 class WalletServiceTest_getTransactions : public WalletServiceTest {
-  virtual void SetUp() override;
 protected:
+  virtual void SetUp() override;
   std::vector<TransactionsInBlockInfo> testTransactions;
-  const std::string RANDOM_ADDRESS1 = "288DiQfYSxDNQoWpR6cy94i2AWyGnxo1L1MF2ZiXg58h9P52o576CSDcJp7ZceSXSUQ7u8aTF1MigQXzAtqRZ3Uq58Sne8x";
-  const std::string RANDOM_ADDRESS2 = "29PQ8VbzPi163kG59w5V8PR9A6watydfYAvwFcDS74KhDEyU9CGgqsDH719oeLbpAa4xtPsgfQ6Bv9RmKs1XZWudV6q6cmU";
-  const std::string RANDOM_ADDRESS3 = "23E4CVgzJok9zXnrKzvHgbKvMXZnAgsB9FA1pkAppR6d42dWMEuJjsfcJp7ZceSXSUQ7u8aTF1MigQXzAtqRZ3Uq5AHHbzZ";
+  std::string RANDOM_ADDRESS1;
+  std::string RANDOM_ADDRESS2;
+  std::string RANDOM_ADDRESS3;
   const std::string TRANSACTION_EXTRA = "022100dededededededededededededededededededededededededededededededede";
   const std::string PAYMENT_ID = "dededededededededededededededededededededededededededededededede";
 };
 
 void WalletServiceTest_getTransactions::SetUp() {
+  auto makeAddress = [this]() {
+    CryptoNote::AccountBase account;
+    account.generate();
+    return currency.accountAddressAsString(account);
+  };
+
+  RANDOM_ADDRESS1 = makeAddress();
+  RANDOM_ADDRESS2 = makeAddress();
+  RANDOM_ADDRESS3 = makeAddress();
+
   TransactionsInBlockInfo block;
   block.blockHash = generateRandomHash();
   block.transactions.push_back(
@@ -727,10 +781,11 @@ protected:
 };
 
 void WalletServiceTest_sendTransaction::SetUp() {
+  WalletServiceTest_getTransactions::SetUp();
   request.sourceAddresses.insert(request.sourceAddresses.end(), {RANDOM_ADDRESS1, RANDOM_ADDRESS2});
   request.transfers.push_back(WalletRpcOrder {RANDOM_ADDRESS3, 11111});
   request.fee = 2021;
-  request.anonymity = 4;
+  request.anonymity = currency.minMixin();
   request.unlockTime = 848309;
 }
 
@@ -738,7 +793,11 @@ struct WalletTransferStub : public IWalletBaseStub {
   WalletTransferStub(System::Dispatcher& dispatcher, const Crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
   }
 
-  virtual size_t transfer(const TransactionParameters& sendingTransaction) override {
+  virtual bool isMyAddress(const std::string& address) const override {
+    return true;
+  }
+
+  virtual size_t transfer(const TransactionParameters& sendingTransaction, Crypto::SecretKey& txSecretKey) override {
     params = sendingTransaction;
     return 0;
   }
@@ -774,7 +833,8 @@ TEST_F(WalletServiceTest_sendTransaction, passesCorrectParameters) {
   auto service = createWalletService(wallet);
 
   std::string hash;
-  auto ec = service->sendTransaction(request, hash);
+  std::string txSecretKey;
+  auto ec = service->sendTransaction(request, hash, txSecretKey);
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(Common::podToHex(wallet.hash), hash);
@@ -786,7 +846,8 @@ TEST_F(WalletServiceTest_sendTransaction, incorrectSourceAddress) {
   request.sourceAddresses.push_back("wrong address");
 
   std::string hash;
-  auto ec = service->sendTransaction(request, hash);
+  std::string txSecretKey;
+  auto ec = service->sendTransaction(request, hash, txSecretKey);
   ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
 }
 
@@ -795,7 +856,8 @@ TEST_F(WalletServiceTest_sendTransaction, incorrectTransferAddress) {
   request.transfers.push_back(WalletRpcOrder{"wrong address", 12131});
 
   std::string hash;
-  auto ec = service->sendTransaction(request, hash);
+  std::string txSecretKey;
+  auto ec = service->sendTransaction(request, hash, txSecretKey);
   ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
 }
 
@@ -806,15 +868,20 @@ protected:
 };
 
 void WalletServiceTest_createDelayedTransaction::SetUp() {
+  WalletServiceTest_getTransactions::SetUp();
   request.addresses.insert(request.addresses.end(), {RANDOM_ADDRESS1, RANDOM_ADDRESS2});
   request.transfers.push_back(WalletRpcOrder {RANDOM_ADDRESS3, 11111});
   request.fee = 2021;
-  request.anonymity = 4;
+  request.anonymity = currency.minMixin();
   request.unlockTime = 848309;
 }
 
 struct WalletMakeTransactionStub : public IWalletBaseStub {
   WalletMakeTransactionStub(System::Dispatcher& dispatcher, const Crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
+  }
+
+  virtual bool isMyAddress(const std::string& address) const override {
+    return true;
   }
 
   virtual size_t makeTransaction(const TransactionParameters& sendingTransaction) override {
@@ -916,6 +983,7 @@ protected:
 };
 
 void WalletServiceTest_getUnconfirmedTransactionHashes::SetUp() {
+  WalletServiceTest_getTransactions::SetUp();
   transactions = { WalletTransactionWithTransfersBuilder().transaction(
                     WalletTransactionBuilder().hash(generateRandomHash()).build()
                    ).addTransfer(RANDOM_ADDRESS1, 100).addTransfer(RANDOM_ADDRESS2, 333).build()
@@ -928,6 +996,10 @@ void WalletServiceTest_getUnconfirmedTransactionHashes::SetUp() {
 
 struct WalletGetUnconfirmedTransactionsStub : public IWalletBaseStub {
   WalletGetUnconfirmedTransactionsStub(System::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
+  }
+
+  virtual bool isMyAddress(const std::string& address) const override {
+    return true;
   }
 
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const override {
@@ -986,3 +1058,4 @@ TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, wrongAddressFilter) {
 
   ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
 }
+

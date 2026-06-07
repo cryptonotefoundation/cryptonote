@@ -1,16 +1,32 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <cstdint>
 #include <unordered_map>
 
+#include "Common/ObserverManager.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/ICore.h"
 #include "CryptoNoteCore/ICoreObserver.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"
+#include "crypto/hash.h"
+#include "CryptoNoteCore/Difficulty.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 
 class ICoreStub: public CryptoNote::ICore {
@@ -46,11 +62,11 @@ public:
   virtual bool get_stat_info(CryptoNote::core_stat_info& st_inf) override { return false; }
   virtual bool on_idle() override { return false; }
   virtual void pause_mining() override {}
+  virtual void stop_mining_for_no_peers() override {}
   virtual void update_block_template_and_resume_mining() override {}
   virtual bool handle_incoming_block_blob(const CryptoNote::BinaryArray& block_blob, CryptoNote::block_verification_context& bvc, bool control_miner, bool relay_block) override { return false; }
   virtual bool handle_get_objects(CryptoNote::NOTIFY_REQUEST_GET_OBJECTS::request& arg, CryptoNote::NOTIFY_RESPONSE_GET_OBJECTS::request& rsp) override { return false; }
   virtual void on_synchronized() override {}
-  virtual bool getOutByMSigGIndex(uint64_t amount, uint64_t gindex, CryptoNote::MultisignatureOutput& out) override { return true; }
   virtual size_t addChain(const std::vector<const CryptoNote::IBlock*>& chain) override;
 
   virtual Crypto::Hash getBlockIdByHeight(uint32_t height) override;
@@ -60,25 +76,54 @@ public:
   virtual bool getBackwardBlocksSizes(uint32_t fromHeight, std::vector<size_t>& sizes, size_t count) override;
   virtual bool getBlockSize(const Crypto::Hash& hash, size_t& size) override;
   virtual bool getAlreadyGeneratedCoins(const Crypto::Hash& hash, uint64_t& generatedCoins) override;
-  virtual bool getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
-      uint64_t& reward, int64_t& emissionChange) override;
+  virtual bool getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
+    uint64_t& reward, int64_t& emissionChange) override;
   virtual bool scanOutputkeysForIndices(const CryptoNote::KeyInput& txInToKey, std::list<std::pair<Crypto::Hash, size_t>>& outputReferences) override;
   virtual bool getBlockDifficulty(uint32_t height, CryptoNote::difficulty_type& difficulty) override;
   virtual bool getBlockContainingTx(const Crypto::Hash& txId, Crypto::Hash& blockId, uint32_t& blockHeight) override;
-  virtual bool getMultisigOutputReference(const CryptoNote::MultisignatureInput& txInMultisig, std::pair<Crypto::Hash, size_t>& outputReference) override;
-
   virtual bool getGeneratedTransactionsNumber(uint32_t height, uint64_t& generatedTransactions) override;
   virtual bool getOrphanBlocksByHeight(uint32_t height, std::vector<CryptoNote::Block>& blocks) override;
   virtual bool getBlocksByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<CryptoNote::Block>& blocks, uint32_t& blocksNumberWithinTimestamps) override;
   virtual bool getPoolTransactionsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<CryptoNote::Transaction>& transactions, uint64_t& transactionsNumberWithinTimestamps) override;
   virtual bool getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<CryptoNote::Transaction>& transactions) override;
   virtual std::unique_ptr<CryptoNote::IBlock> getBlock(const Crypto::Hash& blockId) override;
-  virtual bool handleIncomingTransaction(const CryptoNote::Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, CryptoNote::tx_verification_context& tvc, bool keptByBlock) override;
+  virtual bool handleIncomingTransaction(const CryptoNote::Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, CryptoNote::tx_verification_context& tvc, bool keptByBlock, uint32_t height) override;
   virtual std::error_code executeLocked(const std::function<std::error_code()>& func) override;
 
   virtual bool addMessageQueue(CryptoNote::MessageQueue<CryptoNote::BlockchainMessage>& messageQueuePtr) override;
   virtual bool removeMessageQueue(CryptoNote::MessageQueue<CryptoNote::BlockchainMessage>& messageQueuePtr) override;
-
+  
+  virtual bool haveTransaction(const Crypto::Hash& id) override;
+  virtual bool handle_incoming_block(const CryptoNote::Block& b, CryptoNote::block_verification_context& bvc, bool control_miner, bool relay_block) override;
+  virtual bool getPoolTransaction(const Crypto::Hash& tx_hash, CryptoNote::Transaction& transaction) override;
+  virtual bool getTransactionHeight(const Crypto::Hash &txId, uint32_t& blockHeight) override;
+  virtual bool getTransactionsWithOutputGlobalIndexes(const std::vector<Crypto::Hash>& txs_ids, std::list<Crypto::Hash>& missed_txs, std::vector<std::pair<CryptoNote::Transaction, std::vector<uint32_t>>>& txs) override;
+  virtual bool getTransaction(const Crypto::Hash& id, CryptoNote::Transaction& tx, bool checkTxPool = false) override;
+  virtual bool getBlockCumulativeDifficulty(uint32_t height, CryptoNote::difficulty_type& difficulty) override;
+  virtual bool getBlockTimestamp(uint32_t height, uint64_t& timestamp) override;
+  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) override;
+  virtual uint64_t getMinimalFee(uint32_t height) override;
+  virtual uint64_t getMinimalFee() override;
+  virtual uint64_t getNextBlockDifficulty() override;
+  virtual uint64_t getTotalGeneratedAmount() override;
+  virtual bool check_tx_fee(const CryptoNote::Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, CryptoNote::tx_verification_context& tvc, uint32_t height) override;
+  virtual size_t getPoolTransactionsCount() override;
+  virtual size_t getBlockchainTotalTransactions() override;
+  virtual uint32_t getCurrentBlockchainHeight() override;
+  virtual uint8_t getBlockMajorVersionForHeight(uint32_t height) override;
+  virtual uint8_t getCurrentBlockMajorVersion() override;
+  virtual size_t getAlternativeBlocksCount() override;
+  virtual bool getblockEntry(uint32_t height, uint64_t& block_cumulative_size, CryptoNote::difficulty_type& difficulty, uint64_t& already_generated_coins, uint64_t& reward, uint64_t& transactions_count, uint64_t& timestamp) override;
+  virtual bool getBlockStats(uint32_t startHeight, uint32_t endHeight, std::vector<CryptoNote::BlockStatsEntry>& stats) override;
+  virtual bool getBlockStats(const std::vector<uint32_t>& heights, std::vector<CryptoNote::BlockStatsEntry>& stats) override;
+  virtual void rollbackBlockchain(const uint32_t height) override;
+  virtual bool getBlockLongHash(Crypto::cn_context &context, const CryptoNote::Block& b, Crypto::Hash& res) override;
+  virtual bool getMixin(const CryptoNote::Transaction& transaction, uint64_t& mixin) override;
+  virtual bool isInCheckpointZone(uint32_t height) const override;
+  virtual uint32_t getRejectDeepReorgDepth() const override { return 0; }
+  virtual bool resolveAccountNumber(uint32_t blockHeight, uint32_t txIndex, CryptoNote::AccountPublicAddress& address) override;
+  virtual bool getAccountNumber(const CryptoNote::AccountPublicAddress& address, uint32_t& blockHeight, uint32_t& txIndex) override;
+  virtual bool getCanonicalAccountRegistrationsCount(uint64_t& count) override;
 
   void set_blockchain_top(uint32_t height, const Crypto::Hash& top_id);
   void set_outputs_gindexs(const std::vector<uint32_t>& indexs, bool result);
@@ -108,4 +153,5 @@ private:
   std::unordered_map<Crypto::Hash, CryptoNote::Transaction> transactionPool;
   bool poolTxVerificationResult;
   bool poolChangesResult;
+  Tools::ObserverManager<CryptoNote::ICoreObserver> m_observerManager;
 };

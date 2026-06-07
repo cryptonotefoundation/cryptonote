@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
 #include <memory>
@@ -11,7 +24,7 @@
 #include "PaymentGateService.h"
 #include "version.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #include <winsvc.h>
 #else
@@ -27,7 +40,7 @@
 
 PaymentGateService* ppg;
 
-#ifdef WIN32
+#ifdef _WIN32
 SERVICE_STATUS_HANDLE serviceStatusHandle;
 
 std::string GetLastErrorMessage(DWORD errorMessageID)
@@ -118,7 +131,7 @@ int daemonize() {
 #endif
 
 int runDaemon() {
-#ifdef WIN32
+#ifdef _WIN32
 
   SERVICE_TABLE_ENTRY serviceTable[] {
     { "Payment Gate", serviceMain },
@@ -154,7 +167,7 @@ int runDaemon() {
 }
 
 int registerService() {
-#ifdef WIN32
+#ifdef _WIN32
   Logging::LoggerRef logRef(ppg->getLogger(), "ServiceRegistrator");
 
   char pathBuff[MAX_PATH];
@@ -211,7 +224,7 @@ int registerService() {
 }
 
 int unregisterService() {
-#ifdef WIN32
+#ifdef _WIN32
   Logging::LoggerRef logRef(ppg->getLogger(), "ServiceDeregistrator");
 
   SC_HANDLE scManager = NULL;
@@ -288,15 +301,9 @@ int main(int argc, char** argv) {
       return 0; //help message requested or so
     }
 
-    Logging::LoggerRef(pg.getLogger(), "main")(Logging::INFO) << "PaymentService " << " v" << PROJECT_VERSION_LONG;
+    Logging::LoggerRef(pg.getLogger(), "main")(Logging::INFO) << "walletd v" << PROJECT_VERSION_LONG;
 
     const auto& config = pg.getConfig();
-
-    if (config.gateConfiguration.generateNewContainer) {
-      System::Dispatcher d;
-      generateNewWallet(pg.getCurrency(), pg.getWalletConfig(), pg.getLogger(), d);
-      return 0;
-    }
 
     if (config.gateConfiguration.registerService) {
       return registerService();

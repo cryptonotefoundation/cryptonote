@@ -40,4 +40,9 @@ void hmac_blake224_final(hmac_state *, uint8_t *);
 void hmac_blake256_hash(uint8_t *, const uint8_t *, uint64_t, const uint8_t *, uint64_t);
 void hmac_blake224_hash(uint8_t *, const uint8_t *, uint64_t, const uint8_t *, uint64_t);
 
+/* PBKDF2 */
+
+void pbkdf2_blake256(const uint8_t * passwd, size_t passwdlen, const uint8_t * salt,
+  size_t saltlen, uint64_t c, uint8_t * buf, size_t dkLen);
+
 #endif /* _BLAKE256_H_ */

@@ -1,9 +1,21 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
-#include <Logging/LoggerRef.h>
 
 #include "../IntegrationTestLib/BaseFunctionalTests.h"
 #include "../IntegrationTestLib/NodeObserver.h"
@@ -59,7 +71,7 @@ public:
 
   void makeWallets() {
     for (auto& n: inodes) {
-      std::unique_ptr<CryptoNote::IWalletLegacy> wallet(new CryptoNote::WalletLegacy(m_currency, *n));
+      std::unique_ptr<CryptoNote::IWalletLegacy> wallet(new CryptoNote::WalletLegacy(m_currency, *n, log));
       std::unique_ptr<WalletLegacyObserver> observer(new WalletLegacyObserver());
 
       wallet->initAndGenerate(walletPassword);
@@ -70,9 +82,9 @@ public:
     }
   }
 
-  void mineBlocksFor(size_t node, const std::string& address, size_t blockCount) {
+  void mineBlocksFor(size_t node, const CryptoNote::AccountKeys& minerKeys, size_t blockCount) {
     auto prevHeight = nodeDaemons[node]->getLocalHeight();
-    nodeDaemons[node]->startMining(1, address);
+    nodeDaemons[node]->startMining(1, minerKeys);
 
     do {
       std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -95,7 +107,7 @@ public:
     auto& wallet = *wallets[walletNum];
     auto& node = *nodeDaemons[nodeNum];
 
-    node.startMining(1, wallet.getAddress());
+    node.startMining(1, Tests::accountKeysFromWallet(wallet));
     walletObservers[walletNum]->waitActualBalanceChange();
     node.stopMining();
 
@@ -202,7 +214,7 @@ TEST_F(IntegrationTest, BlockPropagationSpeed) {
 
     const size_t BLOCKS_COUNT = 10;
 
-    nodeDaemons.front()->startMining(1, wallet->getAddress());
+    nodeDaemons.front()->startMining(1, Tests::accountKeysFromWallet(*wallet));
 
     for (size_t blockNumber = 0; blockNumber < BLOCKS_COUNT; ++blockNumber) {
       uint32_t localHeight = localObserver.waitLastKnownBlockHeightUpdated();

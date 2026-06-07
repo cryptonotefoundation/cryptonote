@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -17,12 +30,36 @@
 
 #include "../TestGenerator/TestGenerator.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/CryptoNoteSerialization.h"
+#include "Wallet/TransactionBuilder.h"
 
 #include "BoostSerializationHelper.h"
 #include "AccountBoostSerialization.h"
 
 #include <Logging/LoggerGroup.h>
 #include <Logging/ConsoleLogger.h>
+
+namespace CryptoNote {
+  class core : public Core {
+  public:
+    core(const Currency& currency, i_cryptonote_protocol* protocol, Logging::ILogger& logger,
+      System::Dispatcher& dispatcher, uint32_t rejectDeepReorgDepth = 0, bool noBlobs = false)
+      : Core(currency, protocol, logger, dispatcher, rejectDeepReorgDepth, noBlobs) {
+    }
+
+    size_t get_pool_transactions_count() { return getPoolTransactionsCount(); }
+    uint32_t get_current_blockchain_height() { return getCurrentBlockchainHeight(); }
+    size_t get_blockchain_total_transactions() { return getBlockchainTotalTransactions(); }
+    size_t get_alternative_blocks_count() { return getAlternativeBlocksCount(); }
+
+    bool get_block_template(Block& b, const AccountPublicAddress& address, difficulty_type& difficulty,
+      uint32_t& height, const BinaryArray& extraNonce) {
+      AccountKeys keys{};
+      keys.address = address;
+      return Core::get_block_template(b, keys, difficulty, height, extraNonce);
+    }
+  };
+}
 
 
 namespace concolor
@@ -187,8 +224,8 @@ bool find_block_chain(const std::vector<test_event_entry>& events, std::vector<C
 void fill_tx_sources_and_destinations(const std::vector<test_event_entry>& events, const CryptoNote::Block& blk_head,
                                       const CryptoNote::AccountBase& from, const CryptoNote::AccountBase& to,
                                       uint64_t amount, uint64_t fee, size_t nmix,
-                                      std::vector<CryptoNote::TransactionSourceEntry>& sources,
-                                      std::vector<CryptoNote::TransactionDestinationEntry>& destinations);
+                                      std::vector<CryptoNote::TxBuildInput>& sources,
+                                      std::vector<CryptoNote::TxBuildOutput>& destinations);
 uint64_t get_balance(const CryptoNote::AccountBase& addr, const std::vector<CryptoNote::Block>& blockchain, const map_hash2tx_t& mtx);
 
 //--------------------------------------------------------------------------
@@ -203,7 +240,7 @@ template<class t_test_class>
 bool do_check_tx_verification_context(const CryptoNote::tx_verification_context& tvc, bool tx_added, size_t /*event_index*/, const CryptoNote::Transaction& /*tx*/, t_test_class&, long)
 {
   // Default block verification context check
-  if (tvc.m_verifivation_failed)
+  if (tvc.m_verification_failed)
     throw std::runtime_error("Transaction verification failed");
   return true;
 }
@@ -226,7 +263,7 @@ template<class t_test_class>
 bool do_check_block_verification_context(const CryptoNote::block_verification_context& bvc, size_t /*event_index*/, const CryptoNote::Block& /*blk*/, t_test_class&, long)
 {
   // Default block verification context check
-  if (bvc.m_verifivation_failed)
+  if (bvc.m_verification_failed)
     throw std::runtime_error("Block verification failed");
   return true;
 }
@@ -364,7 +401,10 @@ inline bool replay_events_through_core(CryptoNote::core& cr, const std::vector<t
 {
   try {
     CHECK_AND_ASSERT_MES(typeid(CryptoNote::Block) == events[0].type(), false, "First event must be genesis block creation");
-    cr.set_genesis_block(boost::get<CryptoNote::Block>(events[0]));
+    const CryptoNote::Block& genesis = boost::get<CryptoNote::Block>(events[0]);
+    if (cr.getBlockIdByHeight(0) != CryptoNote::get_block_hash(genesis)) {
+      cr.set_genesis_block(genesis);
+    }
 
     bool r = true;
     push_core_event_visitor<t_test_class> visitor(cr, events, validator);
@@ -402,7 +442,8 @@ inline bool do_replay_events(std::vector<test_event_entry>& events, t_test_class
   coreConfig.init(vm);
   CryptoNote::MinerConfig emptyMinerConfig;
   CryptoNote::cryptonote_protocol_stub pr; //TODO: stub only for this kind of test, make real validation of relayed objects
-  CryptoNote::core c(validator.currency(), &pr, logger);
+  System::Dispatcher dispatcher;
+  CryptoNote::core c(validator.currency(), &pr, logger, dispatcher, 0, false);
   if (!c.init(coreConfig, emptyMinerConfig, false))
   {
     std::cout << concolor::magenta << "Failed to init core" << concolor::normal << std::endl;
@@ -508,10 +549,10 @@ inline bool do_replay_file(const std::string& filename)
     std::list<CryptoNote::Transaction> SET_NAME; \
     MAKE_TX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, HEAD);
 
-#define MAKE_MINER_TX_AND_KEY_MANUALLY(TX, BLK, KEY)                                                                  \
-  Transaction TX;                                                                                                     \
-  if (!constructMinerTxManually(this->m_currency, get_block_height(BLK) + 1, generator.getAlreadyGeneratedCoins(BLK), \
-    miner_account.getAccountKeys().address, TX, 0, KEY))                                                          \
+#define MAKE_MINER_TX_AND_KEY_MANUALLY(TX, BLK, KEY)                                                                                    \
+  Transaction TX;                                                                                                                       \
+  if (!constructMinerTxManually(this->m_currency, BLK.majorVersion, get_block_height(BLK) + 1, generator.getAlreadyGeneratedCoins(BLK), \
+    miner_account.getAccountKeys().address, TX, 0, KEY))                                                                                \
     return false;
 
 #define MAKE_MINER_TX_MANUALLY(TX, BLK) MAKE_MINER_TX_AND_KEY_MANUALLY(TX, BLK, 0)

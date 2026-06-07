@@ -1,6 +1,20 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2018, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2020, The Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -36,6 +50,32 @@ void toHex(const std::vector<uint8_t>& data, std::string& text); // Appends hex 
 template<class T>
 std::string podToHex(const T& s) {
   return toHex(&s, sizeof(s));
+}
+
+bool starts_with(const std::string &str1, const std::string &str2);
+bool ends_with(const std::string &str1, const std::string &str2);
+
+inline bool split_string_helper(const std::string &str, size_t pos, const std::string &, std::string &head) {
+  head = str.substr(pos);
+  return true;
+}
+
+template<class... Parts>
+inline bool split_string_helper(const std::string &str,
+  size_t pos,
+  const std::string &separator,
+  std::string &head,
+  Parts &... parts) {
+  size_t pos2 = str.find(separator, pos);
+  if (pos2 == std::string::npos)
+    return false;
+  head = str.substr(pos, pos2 - pos);
+  return split_string_helper(str, pos2 + 1, separator, parts...);
+}
+
+template<class... Parts>
+inline bool split_string(const std::string &str, const std::string &separator, Parts &... parts) {
+  return split_string_helper(str, 0, separator, parts...);
 }
 
 std::string extract(std::string& text, char delimiter); // Does not throw
@@ -99,6 +139,7 @@ bool saveStringToFile(const std::string& filepath, const std::string& buf);
 std::string base64Decode(std::string const& encoded_string);
 
 std::string ipAddressToString(uint32_t ip);
+uint32_t stringToIpAddress(std::string addr);
 bool parseIpAddressAndPort(uint32_t& ip, uint32_t& port, const std::string& addr);
 
 std::string timeIntervalToString(uint64_t intervalInSeconds);

@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -9,8 +22,10 @@
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/TransactionExtra.h"
+#include "Wallet/TransactionBuilder.h"
 
 #include "crypto/crypto.h"
 
@@ -31,28 +46,30 @@ public:
 
     Currency currency = CurrencyBuilder(m_logger).currency();
 
-    std::vector<TransactionSourceEntry::OutputEntry> output_entries;
+    std::vector<CryptoNote::TransactionTypes::GlobalOutput> output_entries;
     for (uint32_t i = 0; i < ring_size; ++i)
     {
       m_miners[i].generate();
 
-      if (!currency.constructMinerTx(0, 0, 0, 2, 0, m_miners[i].getAccountKeys().address, m_miner_txs[i]))
+      Crypto::SecretKey minerTxKey;
+      if (!currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 0, 0, 0, 2, 0, m_miners[i].getAccountKeys().address, m_miner_txs[i], minerTxKey))
         return false;
 
       KeyOutput tx_out = boost::get<KeyOutput>(m_miner_txs[i].outputs[0].target);
-      output_entries.push_back(std::make_pair(i, tx_out.key));
+      output_entries.push_back({tx_out.key, i});
       m_public_keys[i] = tx_out.key;
       m_public_key_ptrs[i] = &m_public_keys[i];
     }
 
     m_source_amount = m_miner_txs[0].outputs[0].amount;
 
-    TransactionSourceEntry source_entry;
-    source_entry.amount = m_source_amount;
-    source_entry.realTransactionPublicKey = getTransactionPublicKeyFromExtra(m_miner_txs[real_source_idx].extra);
-    source_entry.realOutputIndexInTransaction = 0;
-    source_entry.outputs.swap(output_entries);
-    source_entry.realOutput = real_source_idx;
+    CryptoNote::TxBuildInput source_entry;
+    source_entry.keyInfo.amount = m_source_amount;
+    source_entry.keyInfo.realOutput.transactionPublicKey = getTransactionPublicKeyFromExtra(m_miner_txs[real_source_idx].extra);
+    source_entry.keyInfo.realOutput.outputInTransaction = 0;
+    source_entry.keyInfo.outputs.swap(output_entries);
+    source_entry.keyInfo.realOutput.transactionIndex = real_source_idx;
+    source_entry.senderKeys = m_miners[real_source_idx].getAccountKeys();
 
     m_sources.push_back(source_entry);
 
@@ -65,7 +82,7 @@ protected:
   uint64_t m_source_amount;
   Logging::ConsoleLogger m_logger;
 
-  std::vector<CryptoNote::TransactionSourceEntry> m_sources;
+  std::vector<CryptoNote::TxBuildInput> m_sources;
   Crypto::PublicKey m_public_keys[ring_size];
   const Crypto::PublicKey* m_public_key_ptrs[ring_size];
 };

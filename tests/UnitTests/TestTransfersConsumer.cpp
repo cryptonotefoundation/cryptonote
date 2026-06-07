@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -83,7 +96,7 @@ TransfersConsumerTest::TransfersConsumerTest() :
   m_generator(m_currency),
   m_node(m_generator, true),
   m_accountKeys(generateAccountKeys()),
-  m_consumer(m_currency, m_node, m_accountKeys.viewSecretKey)
+  m_consumer(m_currency, m_node, m_logger, m_accountKeys.viewSecretKey)
 {
 }
 
@@ -410,7 +423,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesError) 
 
   INodeGlobalIndicesStub node;
 
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   auto subscription = getAccountSubscriptionWithSyncStart(m_accountKeys, 1234, 10);
 
@@ -450,9 +463,11 @@ TEST_F(TransfersConsumerTest, onNewBlocks_updateHeight) {
   std::unique_ptr<CompleteBlock[]> blocks(new CompleteBlock[subscription.transactionSpendableAge]);
   for (uint32_t i = 0; i < subscription.transactionSpendableAge; ++i) {
     blocks[i].block = CryptoNote::Block();
+    blocks[i].block->timestamp = subscription.syncStart.timestamp + i + 1;
     auto tr = createTransaction();
     addTestInput(*tr, 1000);
     addTestKeyOutput(*tr, 100, i + 1, generateAccountKeys());
+    blocks[i].transactions.push_back(std::shared_ptr<ITransactionReader>(tr.release()));
   }
 
   ASSERT_TRUE(m_consumer.onNewBlocks(blocks.get(), static_cast<uint32_t>(subscription.syncStart.height + 1), static_cast<uint32_t>(subscription.transactionSpendableAge)));
@@ -489,32 +504,6 @@ TEST_F(TransfersConsumerTest, onNewBlocks_DifferentSubscribers) {
   ASSERT_EQ(amount2, outs2[0].amount);
 }
 
-TEST_F(TransfersConsumerTest, onNewBlocks_MultisignatureTransaction) {
-  auto& container1 = addSubscription().getContainer();
-
-  auto keys = generateAccount();
-
-  auto keys2 = generateAccount();
-  auto keys3 = generateAccount();
-
-  uint64_t amount = 900;
-
-  std::shared_ptr<ITransaction> tx(createTransaction());
-  addTestInput(*tx, 10000);
-  tx->addOutput(amount, { m_accountKeys.address, keys.address, keys2.address } , 3);
-  tx->addOutput(800, { keys.address, keys2.address, keys3.address }, 3);
-
-  CompleteBlock block;
-  block.block = CryptoNote::Block();
-  block.block->timestamp = 0;
-  block.transactions.push_back(tx);
-
-  ASSERT_TRUE(m_consumer.onNewBlocks(&block, 0, 1));
-  auto outs1 = container1.getTransactionOutputs(tx->getTransactionHash(), ITransfersContainer::IncludeAll);
-  ASSERT_EQ(1, outs1.size());
-  ASSERT_EQ(amount, outs1[0].amount);
-}
-
 TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsProperlyCalled) {
   class INodeGlobalIndicesStub: public INodeDummyStub {
   public:
@@ -529,7 +518,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsPrope
   };
 
   INodeGlobalIndicesStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   AccountSubscription subscription = getAccountSubscription(m_accountKeys);
   subscription.syncStart.height = 0;
@@ -567,7 +556,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsNotCa
   };
 
   INodeGlobalIndicesStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   AccountSubscription subscription = getAccountSubscription(m_accountKeys);
   subscription.syncStart.height = 0;
@@ -637,7 +626,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformation) {
   const uint64_t index = 2;
 
   INodeGlobalIndexStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   node.globalIndex = index;
 
@@ -664,46 +653,6 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformation) {
   ASSERT_EQ(out.globalOutputIndex, o.globalOutputIndex);
   ASSERT_EQ(out.outputInTransaction, o.outputInTransaction);
   ASSERT_EQ(out.transactionPublicKey, o.transactionPublicKey);
-}
-
-TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformationMultisignature) {
-  const uint64_t index = 2;
-
-  INodeGlobalIndexStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
-
-  node.globalIndex = index;
-
-  auto& container = addSubscription(consumer).getContainer();
-
-  std::shared_ptr<ITransaction> tx(createTransaction());
-  addTestInput(*tx, 10000);
-  size_t txIndex = tx->addOutput(300, { m_accountKeys.address, generateAccountKeys().address}, 2);
-
-  TransactionOutputInformation expectedOut;
-  expectedOut.type = TransactionTypes::OutputType::Multisignature;
-  expectedOut.amount = 300;
-  expectedOut.globalOutputIndex = index;
-  expectedOut.outputInTransaction = static_cast<uint32_t>(txIndex);
-  expectedOut.transactionPublicKey = tx->getTransactionPublicKey();
-  expectedOut.requiredSignatures = 2;
-
-  CompleteBlock block;
-  block.block = CryptoNote::Block();
-  block.block->timestamp = 0;
-  block.transactions.push_back(tx);
-  ASSERT_TRUE(consumer.onNewBlocks(&block, 0, 1));
-
-  auto outs = container.getTransactionOutputs(tx->getTransactionHash(), ITransfersContainer::IncludeAll);
-  ASSERT_EQ(1, outs.size());
-
-  auto& o = outs[0];
-  ASSERT_EQ(expectedOut.type, o.type);
-  ASSERT_EQ(expectedOut.amount, o.amount);
-  ASSERT_EQ(expectedOut.requiredSignatures, o.requiredSignatures);
-  ASSERT_EQ(expectedOut.globalOutputIndex, o.globalOutputIndex);
-  ASSERT_EQ(expectedOut.outputInTransaction, o.outputInTransaction);
-  ASSERT_EQ(expectedOut.transactionPublicKey, o.transactionPublicKey);
 }
 
 TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionInformation) {
@@ -758,6 +707,11 @@ TEST_F(TransfersConsumerTest, onNewBlocks_manyBlocks) {
  for (auto& b : blocks) {
    b.block = Block();
    b.block->timestamp = timestamp++;
+
+   auto fillerTx = createTransaction();
+   addTestInput(*fillerTx, 10000);
+   addTestKeyOutput(*fillerTx, 100, ++globalOut, generateAccountKeys());
+   b.transactions.push_back(std::shared_ptr<ITransactionReader>(fillerTx.release()));
    
    if (++blockIdx % 10 == 0) {
      for (size_t i = 0; i < txPerBlock; ++i) {
@@ -811,40 +765,6 @@ TEST_F(TransfersConsumerTest, onPoolUpdated_addTransaction) {
   ASSERT_EQ(out.outputKey, o.outputKey);
   ASSERT_EQ(UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX, o.globalOutputIndex);
 }
-
-TEST_F(TransfersConsumerTest, onPoolUpdated_addTransactionMultisignature) {
-  auto& sub = addSubscription();
-
-  // construct tx with multisignature output
-  TestTransactionBuilder b1;
-  auto unknownSender = generateAccountKeys();
-  b1.addTestInput(10000, unknownSender);
-  auto addresses = std::vector<AccountPublicAddress>{ m_accountKeys.address, generateAccountKeys().address };
-  b1.addTestMultisignatureOutput(10000, addresses, 1);
-
-  auto tx = std::shared_ptr<ITransactionReader>(b1.build().release());
-
-  std::unique_ptr<ITransactionReader> prefix = createTransactionPrefix(convertTx(*tx));
-  std::vector<std::unique_ptr<ITransactionReader>> v;
-  v.push_back(std::move(prefix));
-  m_consumer.onPoolUpdated(v, {});
-
-  auto outputs = sub.getContainer().getTransactionOutputs(tx->getTransactionHash(), ITransfersContainer::IncludeAll);
-
-  ASSERT_EQ(1, outputs.size());
-
-  auto& o = outputs[0];
-
-  uint64_t amount_;
-  MultisignatureOutput out;
-  tx->getOutput(0, out, amount_);
-
-  ASSERT_EQ(TransactionTypes::OutputType::Multisignature, o.type);
-  ASSERT_EQ(amount_, o.amount);
-  ASSERT_EQ(out.requiredSignatureCount, o.requiredSignatures);
-  ASSERT_EQ(UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX, o.globalOutputIndex);
-}
-
 
 TEST_F(TransfersConsumerTest, onPoolUpdated_addTransactionDoesNotGetsGlobalIndices) {
   addSubscription();

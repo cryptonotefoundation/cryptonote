@@ -1,9 +1,14 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2026, The Karbo developers
+//
+// This file is part of Karbo.
 
 #include "JsonRpc.h"
-#include "Rpc/HttpClient.h"
+#include <HTTP/HttpClient.h>
+#include <HTTP/HttpRequest.h>
+#include <HTTP/HttpResponse.h>
+#include <Common/base64.hpp>
+#include "CryptoNoteCore/TransactionPool.h"
 
 namespace CryptoNote {
 
@@ -25,11 +30,20 @@ JsonRpcError::JsonRpcError(int c) : code(c) {
 JsonRpcError::JsonRpcError(int c, const std::string& msg) : code(c), message(msg) {
 }
 
-void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpcResponse& jsRes) {
+void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpcResponse& jsRes,
+  const std::string& user, const std::string& password) {
   HttpRequest httpReq;
   HttpResponse httpRes;
 
+  httpReq.setMethod("POST");
   httpReq.setUrl("/json_rpc");
+  httpReq.addHeader("Content-Type", "application/json");
+  httpReq.addHeader("User-Agent", "NodeRpcProxy");
+
+  if (!user.empty() || !password.empty()) {
+    httpReq.addHeader("Authorization", "Basic " + base64::encode(Common::asBinaryArray(user + ":" + password)));
+  }
+
   httpReq.setBody(jsReq.getBody());
 
   httpClient.request(httpReq, httpRes);
@@ -45,7 +59,6 @@ void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpc
     throw err;
   }
 }
-
 
 }
 }

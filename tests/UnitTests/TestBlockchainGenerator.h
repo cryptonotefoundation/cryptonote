@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <map>
 #include <vector>
 #include <unordered_map>
 
@@ -48,15 +62,9 @@ public:
   bool getTransactionIdsByPaymentId(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionHashes);
 
   bool getTransactionGlobalIndexesByHash(const Crypto::Hash& transactionHash, std::vector<uint32_t>& globalIndexes);
-  bool getMultisignatureOutputByGlobalIndex(uint64_t amount, uint32_t globalIndex, CryptoNote::MultisignatureOutput& out);
   void setMinerAccount(const CryptoNote::AccountBase& account);
 
 private:
-  struct MultisignatureOutEntry {
-    Crypto::Hash transactionHash;
-    uint16_t indexOut;
-  };
-
   struct KeyOutEntry {
     Crypto::Hash transactionHash;
     uint16_t indexOut;
@@ -71,7 +79,6 @@ private:
   std::vector<CryptoNote::Block> m_blockchain;
   std::unordered_map<Crypto::Hash, CryptoNote::Transaction> m_txs;
   std::unordered_map<Crypto::Hash, std::vector<uint32_t>> transactionGlobalOuts;
-  std::unordered_map<uint64_t, std::vector<MultisignatureOutEntry>> multisignatureOutsIndex;
   std::unordered_map<uint64_t, std::vector<KeyOutEntry>> keyOutsIndex;
 
   std::unordered_map<Crypto::Hash, CryptoNote::Transaction> m_txPool;
@@ -79,8 +86,8 @@ private:
 
   CryptoNote::PaymentIdIndex m_paymentIdIndex;
   CryptoNote::TimestampTransactionsIndex m_timestampIndex;
-  CryptoNote::GeneratedTransactionsIndex m_generatedTransactionsIndex;
-  CryptoNote::OrphanBlocksIndex m_orthanBlocksIndex;
+  std::map<uint32_t, uint64_t> m_generatedTransactionsByHeight;
+  std::map<uint32_t, std::vector<Crypto::Hash>> m_orphanBlockIdsByHeight;
 
   void addToBlockchain(const CryptoNote::Transaction& tx);
   void addToBlockchain(const std::vector<CryptoNote::Transaction>& txs);

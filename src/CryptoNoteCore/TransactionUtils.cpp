@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TransactionUtils.h"
 
@@ -32,9 +45,6 @@ size_t getRequiredSignaturesCount(const TransactionInput& in) {
   if (in.type() == typeid(KeyInput)) {
     return boost::get<KeyInput>(in).outputIndexes.size();
   }
-  if (in.type() == typeid(MultisignatureInput)) {
-    return boost::get<MultisignatureInput>(in).signatureCount;
-  }
   return 0;
 }
 
@@ -42,18 +52,12 @@ uint64_t getTransactionInputAmount(const TransactionInput& in) {
   if (in.type() == typeid(KeyInput)) {
     return boost::get<KeyInput>(in).amount;
   }
-  if (in.type() == typeid(MultisignatureInput)) {
-    return boost::get<MultisignatureInput>(in).amount;
-  }
   return 0;
 }
 
 TransactionTypes::InputType getTransactionInputType(const TransactionInput& in) {
   if (in.type() == typeid(KeyInput)) {
     return TransactionTypes::InputType::Key;
-  }
-  if (in.type() == typeid(MultisignatureInput)) {
-    return TransactionTypes::InputType::Multisignature;
   }
   if (in.type() == typeid(BaseInput)) {
     return TransactionTypes::InputType::Generating;
@@ -81,9 +85,6 @@ const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& tra
 TransactionTypes::OutputType getTransactionOutputType(const TransactionOutputTarget& out) {
   if (out.type() == typeid(KeyOutput)) {
     return TransactionTypes::OutputType::Key;
-  }
-  if (out.type() == typeid(MultisignatureOutput)) {
-    return TransactionTypes::OutputType::Multisignature;
   }
   return TransactionTypes::OutputType::Invalid;
 }
@@ -126,21 +127,13 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
   generate_key_derivation(txPubKey, keys.viewSecretKey, derivation);
 
   for (const TransactionOutput& o : transaction.outputs) {
-    assert(o.target.type() == typeid(KeyOutput) || o.target.type() == typeid(MultisignatureOutput));
+    assert(o.target.type() == typeid(KeyOutput));
     if (o.target.type() == typeid(KeyOutput)) {
       if (is_out_to_acc(keys, boost::get<KeyOutput>(o.target), derivation, keyIndex)) {
         out.push_back(outputIndex);
         amount += o.amount;
       }
       ++keyIndex;
-    } else if (o.target.type() == typeid(MultisignatureOutput)) {
-      const auto& target = boost::get<MultisignatureOutput>(o.target);
-      for (const auto& key : target.keys) {
-        if (isOutToKey(keys.address.spendPublicKey, key, derivation, static_cast<size_t>(outputIndex))) {
-          out.push_back(outputIndex);
-        }
-        ++keyIndex;
-      }
     }
     ++outputIndex;
   }

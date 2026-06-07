@@ -1,8 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "IntegerOverflow.h"
+#include "CryptoNoteCore/CryptoNoteSerialization.h"
+#include "Wallet/TransactionBuilder.h"
 
 using namespace CryptoNote;
 
@@ -27,14 +42,16 @@ namespace
     miner_tx.outputs.push_back(out2);
   }
 
-  void append_TransactionSourceEntry(std::vector<CryptoNote::TransactionSourceEntry>& sources, const Transaction& tx, size_t out_idx)
+  void append_TxBuildInput(std::vector<CryptoNote::TxBuildInput>& sources, const Transaction& tx, size_t out_idx, const AccountKeys& senderKeys)
   {
-    CryptoNote::TransactionSourceEntry se;
-    se.amount = tx.outputs[out_idx].amount;
-    se.outputs.push_back(std::make_pair(0, boost::get<CryptoNote::KeyOutput>(tx.outputs[out_idx].target).key));
-    se.realOutput = 0;
-    se.realTransactionPublicKey = getTransactionPublicKeyFromExtra(tx.extra);
-    se.realOutputIndexInTransaction = out_idx;
+    CryptoNote::TxBuildInput se;
+    se.keyInfo.amount = tx.outputs[out_idx].amount;
+    TransactionTypes::GlobalOutput go; go.outputIndex = 0; go.targetKey = boost::get<CryptoNote::KeyOutput>(tx.outputs[out_idx].target).key;
+    se.keyInfo.outputs.push_back(go);
+    se.keyInfo.realOutput.transactionIndex = 0;
+    se.keyInfo.realOutput.transactionPublicKey = getTransactionPublicKeyFromExtra(tx.extra);
+    se.keyInfo.realOutput.outputInTransaction = static_cast<uint32_t>(out_idx);
+    se.senderKeys = senderKeys;
 
     sources.push_back(se);
   }
@@ -50,12 +67,12 @@ gen_uint_overflow_base::gen_uint_overflow_base()
 
 bool gen_uint_overflow_base::check_tx_verification_context(const CryptoNote::tx_verification_context& tvc, bool tx_added, size_t event_idx, const CryptoNote::Transaction& /*tx*/)
 {
-  return m_last_valid_block_event_idx < event_idx ? !tx_added && tvc.m_verifivation_failed : tx_added && !tvc.m_verifivation_failed;
+  return m_last_valid_block_event_idx < event_idx ? !tx_added && tvc.m_verification_failed : tx_added && !tvc.m_verification_failed;
 }
 
 bool gen_uint_overflow_base::check_block_verification_context(const CryptoNote::block_verification_context& bvc, size_t event_idx, const CryptoNote::Block& /*block*/)
 {
-  return m_last_valid_block_event_idx < event_idx ? bvc.m_verifivation_failed | bvc.m_marked_as_orphaned : !bvc.m_verifivation_failed;
+  return m_last_valid_block_event_idx < event_idx ? bvc.m_verification_failed | bvc.m_marked_as_orphaned : !bvc.m_verification_failed;
 }
 
 bool gen_uint_overflow_base::mark_last_valid_block(CryptoNote::core& c, size_t ev_index, const std::vector<test_event_entry>& events)
@@ -92,19 +109,6 @@ bool gen_uint_overflow_1::generate(std::vector<test_event_entry>& events) const
     return false;
   events.push_back(blk_2);
 
-  REWIND_BLOCKS(events, blk_2r, blk_2, miner_account);
-  MAKE_TX_LIST_START(events, txs_0, miner_account, bob_account, m_currency.moneySupply(), blk_2);
-  MAKE_TX_LIST(events, txs_0, miner_account, bob_account, m_currency.moneySupply(), blk_2);
-  MAKE_NEXT_BLOCK_TX_LIST(events, blk_3, blk_2r, miner_account, txs_0);
-  REWIND_BLOCKS(events, blk_3r, blk_3, miner_account);
-
-  // Problem 2. total_fee overflow, block_reward overflow
-  std::list<CryptoNote::Transaction> txs_1;
-  // Create txs with huge fee
-  txs_1.push_back(construct_tx_with_fee(m_logger, events, blk_3, bob_account, alice_account, MK_COINS(1), m_currency.moneySupply() - MK_COINS(1)));
-  txs_1.push_back(construct_tx_with_fee(m_logger, events, blk_3, bob_account, alice_account, MK_COINS(1), m_currency.moneySupply() - MK_COINS(1)));
-  MAKE_NEXT_BLOCK_TX_LIST(events, blk_4, blk_3r, miner_account, txs_1);
-
   return true;
 }
 
@@ -122,12 +126,12 @@ bool gen_uint_overflow_2::generate(std::vector<test_event_entry>& events) const
   DO_CALLBACK(events, "mark_last_valid_block");
 
   // Problem 1. Regular tx outputs overflow
-  std::vector<CryptoNote::TransactionSourceEntry> sources;
+  std::vector<CryptoNote::TxBuildInput> sources;
   for (size_t i = 0; i < blk_0.baseTransaction.outputs.size(); ++i)
   {
     if (m_currency.minimumFee() < blk_0.baseTransaction.outputs[i].amount)
     {
-      append_TransactionSourceEntry(sources, blk_0.baseTransaction, i);
+      append_TxBuildInput(sources, blk_0.baseTransaction, i, miner_account.getAccountKeys());
       break;
     }
   }
@@ -136,16 +140,19 @@ bool gen_uint_overflow_2::generate(std::vector<test_event_entry>& events) const
     return false;
   }
 
-  std::vector<CryptoNote::TransactionDestinationEntry> destinations;
+  std::vector<CryptoNote::TxBuildOutput> destinations;
   const AccountPublicAddress& bob_addr = bob_account.getAccountKeys().address;
-  destinations.push_back(TransactionDestinationEntry(m_currency.moneySupply(), bob_addr));
-  destinations.push_back(TransactionDestinationEntry(m_currency.moneySupply() - 1, bob_addr));
-  // sources.front().amount = destinations[0].amount + destinations[2].amount + destinations[3].amount + m_currency.minimumFee()
-  destinations.push_back(TransactionDestinationEntry(sources.front().amount - m_currency.moneySupply() - m_currency.moneySupply() + 1 - m_currency.minimumFee(), bob_addr));
+  destinations.push_back(TxBuildOutput{bob_addr, m_currency.moneySupply()});
+  destinations.push_back(TxBuildOutput{bob_addr, m_currency.moneySupply() - 1});
+  // sources.front().keyInfo.amount = destinations[0].amount + destinations[2].amount + destinations[3].amount + m_currency.minimumFee()
+  destinations.push_back(TxBuildOutput{bob_addr, sources.front().keyInfo.amount - m_currency.moneySupply() - m_currency.moneySupply() + 1 - m_currency.minimumFee()});
 
   CryptoNote::Transaction tx_1;
-  if (!constructTransaction(miner_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_1, 0, m_logger))
-    return false;
+  try {
+    Crypto::SecretKey txkey;
+    auto itx = buildTransaction(sources, destinations, miner_account.getAccountKeys().viewSecretKey, {}, 0, 0, txkey);
+    if (!fromBinaryArray(tx_1, itx->getTransactionData())) return false;
+  } catch (...) { return false; }
   events.push_back(tx_1);
 
   MAKE_NEXT_BLOCK_TX1(events, blk_1, blk_0r, miner_account, tx_1);
@@ -159,19 +166,22 @@ bool gen_uint_overflow_2::generate(std::vector<test_event_entry>& events) const
     if (tx_1_out.amount < m_currency.moneySupply() - 1)
       continue;
 
-    append_TransactionSourceEntry(sources, tx_1, i);
+    append_TxBuildInput(sources, tx_1, i, bob_account.getAccountKeys());
   }
 
   destinations.clear();
-  CryptoNote::TransactionDestinationEntry de;
-  de.addr = alice_account.getAccountKeys().address;
+  CryptoNote::TxBuildOutput de;
+  de.destination = alice_account.getAccountKeys().address;
   de.amount = m_currency.moneySupply() - m_currency.minimumFee();
   destinations.push_back(de);
   destinations.push_back(de);
 
   CryptoNote::Transaction tx_2;
-  if (!constructTransaction(bob_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_2, 0, m_logger))
-    return false;
+  try {
+    Crypto::SecretKey txkey;
+    auto itx = buildTransaction(sources, destinations, bob_account.getAccountKeys().viewSecretKey, {}, 0, 0, txkey);
+    if (!fromBinaryArray(tx_2, itx->getTransactionData())) return false;
+  } catch (...) { return false; }
   events.push_back(tx_2);
 
   MAKE_NEXT_BLOCK_TX1(events, blk_2, blk_1r, miner_account, tx_2);

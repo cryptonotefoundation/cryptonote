@@ -1,7 +1,8 @@
-/* $Id: testminiwget.c,v 1.4 2012/06/23 22:35:59 nanard Exp $ */
-/* Project : miniupnp
+/* $Id: testminiwget.c,v 1.6 2017/11/02 16:52:37 nanard Exp $ */
+/* vim: tabstop=4 shiftwidth=4 noexpandtab
+ * Project : miniupnp
  * Author : Thomas Bernard
- * Copyright (c) 2005-2012 Thomas Bernard
+ * Copyright (c) 2005-2018 Thomas Bernard
  * This software is subject to the conditions detailed in the
  * LICENCE file provided in this distribution.
  * */
@@ -11,7 +12,7 @@
 
 /**
  * This program uses the miniwget / miniwget_getaddr function
- * from miniwget.c in order to retreive a web ressource using
+ * from miniwget.c in order to retrieve a web ressource using
  * a GET HTTP method, and store it in a file.
  */
 int main(int argc, char * * argv)
@@ -20,15 +21,17 @@ int main(int argc, char * * argv)
 	int size, writtensize;
 	FILE *f;
 	char addr[64];
+	int status_code = -1;
 
 	if(argc < 3) {
 		fprintf(stderr, "Usage:\t%s url file\n", argv[0]);
 		fprintf(stderr, "Example:\t%s http://www.google.com/ out.html\n", argv[0]);
 		return 1;
 	}
-	data = miniwget_getaddr(argv[1], &size, addr, sizeof(addr), 0);
-	if(!data) {
-		fprintf(stderr, "Error fetching %s\n", argv[1]);
+	data = miniwget_getaddr(argv[1], &size, addr, sizeof(addr), 0, &status_code);
+	if(!data || (status_code != 200)) {
+		if(data) free(data);
+		fprintf(stderr, "Error %d fetching %s\n", status_code, argv[1]);
 		return 1;
 	}
 	printf("local address : %s\n", addr);

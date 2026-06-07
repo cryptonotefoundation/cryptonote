@@ -1,0 +1,17 @@
+[Unit]
+Description=Karbowanec KRB service
+After=network.target
+
+[Service]
+Type=oneshot
+User=karbo
+Group=karbo
+PermissionsStartOnly=true
+RemainAfterExit=yes
+ExecStartPre=-/bin/mkdir -p /var/run/karbo
+ExecStartPre=/bin/chown -R karbo:karbo /var/run/karbo/
+ExecStart=/usr/lib/karbo/krbd.sh --start
+ExecStop=/usr/lib/karbo/krbd.sh --stop
+
+[Install]
+WantedBy=multi-user.target

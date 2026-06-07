@@ -1,0 +1,342 @@
+name: Build check
+
+on:
+  push:
+    branches:
+      - '**'
+      - '!android'     # excludes android
+    tags-ignore:
+      - '*'            # We don't want this to run on release
+  pull_request:
+
+jobs:
+  build-windows:
+    name: Windows
+    runs-on: windows-2022
+    env:
+      BOOST_ROOT: C:\thirdparties\boost-1.86.0
+
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Install curl
+        run: |
+          choco install curl -y
+
+      - name: Download and Install Boost 1.86
+        run: |
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.86.0/boost_1_86_0-msvc-14.3-64.exe"
+          $OutputPath = "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\boost-installer.exe"
+          curl -L $Url -o $OutputPath
+          Start-Process -Wait -FilePath $OutputPath "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\\thirdparties\\boost-1.86.0"
+
+      - name: Build
+        shell: powershell
+        id: build
+        run: |
+          $build_folder = "build"
+          $sha = "${{ github.sha }}"
+          $krb_ver = $sha.SubString(0,7)
+          $release_name = "karbo-cli-win64-$krb_ver"
+          mkdir "$build_folder"
+          cd "$build_folder"
+          cmake -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded `
+            -DBOOST_ROOT="$env:BOOST_ROOT" `
+            -DBOOST_INCLUDE_DIRS="$env:BOOST_ROOT/include" `
+            ..
+          msbuild Karbowanec.sln /p:Configuration=Release /m /v:detailed
+          cd src\Release
+          Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
+          $sha256 = (Get-FileHash "$release_name.zip").Hash
+          $asset_path = "./$build_folder/src/Release/$release_name.zip"
+          mkdir "$release_name"
+          cp *.exe "$release_name/"
+          echo "sha256=${sha256}" >> $env:GITHUB_OUTPUT
+          echo "release_name=${release_name}.zip" >> $env:GITHUB_OUTPUT
+          echo "asset_path=${asset_path}" >> $env:GITHUB_OUTPUT
+          echo "krb_ver=${krb_ver}" >> $env:GITHUB_OUTPUT
+          echo "artifact_path=$build_folder/src/Release/$release_name" >> $env:GITHUB_OUTPUT
+
+      - name: Upload To GH Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.release_name }}
+          path: ${{ steps.build.outputs.artifact_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-mingw:
+    name: MinGW
+    #if: false  # skip the job for now
+    runs-on: windows-2022
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            git
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-openssl
+
+      - name: Install dependencies
+        shell: msys2 {0}
+        run: |
+          pacman -U --noconfirm https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-boost-1.85.0-4-any.pkg.tar.zst
+
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Prepare version
+        shell: powershell
+        id: setup
+        run: |
+          $krb_ver="${{ github.sha }}".SubString(0,7)
+          $release_name="karbo-cli-win64-mingw-$krb_ver"
+          echo "release_name=${release_name}" >> $env:GITHUB_OUTPUT
+
+      - name: Build
+        shell: msys2 {0}
+        id: build
+        run: |
+          ls
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DSTATIC=ON
+          cmake --build . --config Release
+
+      - name: Prepare release
+        shell: msys2 {0}
+        run: |
+          mkdir build/karbo
+          mv build/src/karbowanecd.exe build/karbo
+          mv build/src/simplewallet.exe build/karbo
+          mv build/src/greenwallet.exe build/karbo
+          mv build/src/walletd.exe build/karbo
+          mv build/src/vanitygen.exe build/karbo
+
+      - name: Upload To GH Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.setup.outputs.release_name }}
+          path: build/karbo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos-arm64:
+    name: macOS 15 (ARM64)
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Install Boost (ARM64)
+        uses: MarkusJx/install-boost@v2
+        id: install-boost
+        with:
+          boost_version: 1.86.0
+          platform: macos
+          platform_version: 15
+          toolset: clang
+          arch: aarch64
+
+      - name: Build
+        id: build
+        run: |
+          set -e
+
+          BOOST_ROOT="${{ steps.install-boost.outputs.BOOST_ROOT }}"
+          Boost_INCLUDE_DIR="$BOOST_ROOT/include"
+          Boost_LIBRARY_DIR="$BOOST_ROOT/lib"
+
+          build_folder="build"
+          krb_ver="${GITHUB_SHA::7}"
+          release_name="Karbo-cli-macOS-ARM64-$krb_ver"
+
+          brew install openssl@3
+          brew link openssl@3 --force
+
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
+            -DOPENSSL_USE_STATIC_LIBS=ON \
+            -DBOOST_ROOT="$BOOST_ROOT" \
+            -DBoost_INCLUDE_DIR="$Boost_INCLUDE_DIR" \
+            -DBoost_LIBRARY_DIR="$Boost_LIBRARY_DIR" \
+            -DBoost_NO_SYSTEM_PATHS=ON \
+            -DBoost_USE_STATIC_LIBS=ON \
+            -DBoost_COMPILER=-clang \
+            -DBoost_ARCHITECTURE=-a64 \
+            -DBoost_THREADAPI=pthread
+
+          make -j$(sysctl -n hw.ncpu)
+
+          mkdir "$release_name"
+          exeFiles=()
+          for f in src/*; do
+            [[ -x $f && -f $f ]] && strip "$f" && exeFiles+=( "$f" )
+          done
+
+          cp "${exeFiles[@]}" "$release_name/"
+          zip -r "$release_name.zip" "$release_name"
+
+          sha256=$(shasum -a 256 "$release_name.zip" | awk '{print toupper($1)}')
+
+          echo "sha256=$sha256" >> $GITHUB_OUTPUT
+          echo "release_name=$release_name.zip" >> $GITHUB_OUTPUT
+          echo "artifact_path=$build_folder/$release_name" >> $GITHUB_OUTPUT
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.release_name }}
+          path: ${{ steps.build.outputs.artifact_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-ubuntu24:
+    name: Ubuntu 24.04
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Build
+        id: build
+        run: |
+          sudo apt-get update && sudo apt-get install -y libboost-all-dev
+          build_folder="build/release"
+          krb_ver=${GITHUB_SHA::7}
+          release_name=Karbo-cli-ubuntu24.04-"$krb_ver"
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+          cmake -D ARCH=default -D CMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+            -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG" \
+            -D CMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
+            -D BOOST_IGNORE_SYSTEM_PATHS_DEFAULT=ON \
+            -D BOOST_ROOT=/usr ../..
+          make
+          mkdir -p "$release_name"
+          exeFiles=()
+          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
+          strip "${exeFiles[@]}"
+          cp "${exeFiles[@]}" "$release_name/"
+          echo "release_name=${release_name}" >> $GITHUB_OUTPUT
+          echo "artifact_path=$build_folder/$release_name" >> $GITHUB_OUTPUT
+
+      - name: Upload To GH Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.release_name }}
+          path: ${{ steps.build.outputs.artifact_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux-static:
+    name: Linux universal static
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:3.19
+      options: --platform linux/amd64
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apk add --no-cache \
+            git \
+            build-base \
+            cmake \
+            boost-dev boost-static \
+            openssl-dev openssl-libs-static \
+            lmdb-dev \
+            linux-headers \
+            binutils \
+            file
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Mark git repo as safe
+        run: git config --global --add safe.directory '*'
+
+      - name: Build static
+        id: build
+        run: |
+          build_folder="build/release"
+          krb_ver=$(echo $GITHUB_SHA | cut -c1-7)
+          release_name="Karbo-cli-linux-universal-$krb_ver"
+
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+
+          export CFLAGS="-O3 -static"
+          export CXXFLAGS="-O3 -static -static-libstdc++ -static-libgcc"
+          export LDFLAGS="-static"
+
+          cmake ../.. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DBoost_USE_STATIC_LIBS=ON \
+            -DOPENSSL_USE_STATIC_LIBS=ON \
+            -DCMAKE_EXE_LINKER_FLAGS="-static"
+
+          make -j$(nproc)
+
+          mkdir -p "$release_name"
+          for f in src/*; do
+            if [ -x "$f" ] && [ -f "$f" ]; then
+              strip "$f"
+              cp "$f" "$release_name/"
+            fi
+          done
+
+          echo "release_name=$release_name" >> $GITHUB_OUTPUT
+          echo "artifact_path=$build_folder/$release_name" >> $GITHUB_OUTPUT
+
+      - name: Verify static linkage
+        run: |
+          FAILED=0
+          for f in build/release/src/*; do
+            if [ -x "$f" ] && [ -f "$f" ]; then
+              echo "=== $f ==="
+              file "$f"
+              if readelf -d "$f" | grep NEEDED; then
+                echo "FAIL: dynamic dependency found"
+                FAILED=1
+              else
+                echo "OK: fully static"
+              fi
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.release_name }}
+          path: ${{ steps.build.outputs.artifact_path }}

@@ -1,6 +1,21 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018, The BBSCoin Developers
+// Copyright (c) 2016-2026, The Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -10,6 +25,7 @@
 #include "TypeHelpers.h"
 
 #include "crypto/crypto.h"
+#include "Logging/LoggerRef.h"
 
 #include "IObservableImpl.h"
 
@@ -19,10 +35,11 @@ namespace CryptoNote {
 
 class INode;
 
-class TransfersConsumer: public IObservableImpl<IBlockchainConsumerObserver, IBlockchainConsumer> {
+class TransfersConsumer : public IObservableImpl<IBlockchainConsumerObserver, IBlockchainConsumer> {
 public:
 
-  TransfersConsumer(const CryptoNote::Currency& currency, INode& node, const Crypto::SecretKey& viewSecret);
+  TransfersConsumer(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& logger,
+                    const Crypto::SecretKey& viewSecret);
 
   ITransfersSubscription& addSubscription(const AccountSubscription& subscription);
   // returns true if no subscribers left
@@ -31,11 +48,12 @@ public:
   void getSubscriptions(std::vector<AccountPublicAddress>& subscriptions);
 
   void initTransactionPool(const std::unordered_set<Crypto::Hash>& uncommitedTransactions);
-  
+  void addPublicKeysSeen(const Crypto::Hash& transactionHash, const Crypto::PublicKey& outputKey);
+
   // IBlockchainConsumer
   virtual SynchronizationStart getSyncStart() override;
   virtual void onBlockchainDetach(uint32_t height) override;
-  virtual bool onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) override;
+  virtual uint32_t onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) override;
   virtual std::error_code onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions, const std::vector<Crypto::Hash>& deletedTransactions) override;
   virtual const std::unordered_set<Crypto::Hash>& getKnownPoolTxIds() const override;
 
@@ -54,13 +72,15 @@ private:
   struct PreprocessInfo {
     std::unordered_map<Crypto::PublicKey, std::vector<TransactionOutputInformationIn>> outputs;
     std::vector<uint32_t> globalIdxs;
+    bool isOutgoing = false;  // true if viewSecretKey identifies this as our outgoing transaction
   };
 
   std::error_code preprocessOutputs(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx, PreprocessInfo& info);
   std::error_code processTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx);
   void processTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx, const PreprocessInfo& info);
   void processOutputs(const TransactionBlockInfo& blockInfo, TransfersSubscription& sub, const ITransactionReader& tx,
-    const std::vector<TransactionOutputInformationIn>& outputs, const std::vector<uint32_t>& globalIdxs, bool& contains, bool& updated);
+    const std::vector<TransactionOutputInformationIn>& outputs, const std::vector<uint32_t>& globalIdxs, bool& contains, bool& updated,
+    bool isOutgoing = false);
 
   std::error_code getGlobalIndices(const Crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices);
 
@@ -68,6 +88,9 @@ private:
 
   SynchronizationStart m_syncStart;
   const Crypto::SecretKey m_viewSecret;
+  // True once any subscription with a non-null spend secret key has been added.
+  // Used to skip isOurOutgoingTransaction() for full wallets (key-image matching suffices).
+  bool m_hasSpendKeys = false;
   // map { spend public key -> subscription }
   std::unordered_map<Crypto::PublicKey, std::unique_ptr<TransfersSubscription>> m_subscriptions;
   std::unordered_set<Crypto::PublicKey> m_spendKeys;
@@ -75,6 +98,7 @@ private:
 
   INode& m_node;
   const CryptoNote::Currency& m_currency;
+  Logging::LoggerRef m_logger;
 };
 
 }

@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
+#include "CryptoNoteConfig.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/Currency.h"
 #include <Logging/LoggerGroup.h>
@@ -12,7 +26,7 @@ using namespace CryptoNote;
 
 namespace
 {
-  const size_t TEST_NUMBER_OF_DECIMAL_PLACES = 8;
+  const size_t TEST_NUMBER_OF_DECIMAL_PLACES = CryptoNote::parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT;
 
   void do_pos_test(uint64_t expected, const std::string& str)
   {
@@ -87,22 +101,24 @@ TEST_pos(0, 00_00000000);
 TEST_pos(0, 00_000000000);
 TEST_pos(0, 00_00000000000000000000000000000000);
 
-TEST_pos(1, 0_00000001);
-TEST_pos(1, 0_000000010);
-TEST_pos(1, 0_000000010000000000000000000000000);
-TEST_pos(9, 0_00000009);
-TEST_pos(9, 0_000000090);
-TEST_pos(9, 0_000000090000000000000000000000000);
+TEST_pos(10000, 0_00000001);
+TEST_pos(10000, 0_000000010);
+TEST_pos(10000, 0_000000010000000000000000000000000);
+TEST_pos(90000, 0_00000009);
+TEST_pos(90000, 0_000000090);
+TEST_pos(90000, 0_000000090000000000000000000000000);
 
-TEST_pos(           100000000,            1);
-TEST_pos(       6553500000000,        65535);
-TEST_pos(  429496729500000000,   4294967295);
-TEST_pos(18446744073700000000, 184467440737_);
-TEST_pos(18446744073700000000, 184467440737_0);
-TEST_pos(18446744073700000000, 184467440737_00000000);
-TEST_pos(18446744073700000000, 184467440737_000000000);
-TEST_pos(18446744073700000000, 184467440737_0000000000000000000);
-TEST_pos(18446744073709551615, 184467440737_09551615);
+TEST_pos(           1000000000000,                 1);
+TEST_pos(       65535000000000000,             65535);
+TEST_pos(18446744073709551615, 18446744_073709551615);
+
+TEST_neg(4294967295);
+TEST_neg(184467440737_);
+TEST_neg(184467440737_0);
+TEST_neg(184467440737_00000000);
+TEST_neg(184467440737_000000000);
+TEST_neg(184467440737_0000000000000000000);
+TEST_neg(184467440737_09551615);
 
 // Invalid numbers
 TEST_neg_n(~, empty_string);
@@ -113,8 +129,8 @@ TEST_neg_n(+1, plus_1);
 TEST_neg_n(_, only_point);
 
 // A lot of fraction digits
-TEST_neg(0_000000001);
-TEST_neg(0_000000009);
+TEST_pos(1000, 0_000000001);
+TEST_pos(9000, 0_000000009);
 TEST_neg(184467440737_000000001);
 
 // Overflow

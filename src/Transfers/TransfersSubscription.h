@@ -1,6 +1,20 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2026, The Karbo developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -8,11 +22,13 @@
 #include "TransfersContainer.h"
 #include "IObservableImpl.h"
 
+#include "Logging/LoggerRef.h"
+
 namespace CryptoNote {
 
 class TransfersSubscription : public IObservableImpl < ITransfersObserver, ITransfersSubscription > {
 public:
-  TransfersSubscription(const CryptoNote::Currency& currency, const AccountSubscription& sub);
+  TransfersSubscription(const CryptoNote::Currency& currency, Logging::ILogger& logger, const AccountSubscription& sub);
 
   SynchronizationStart getSyncStart();
   void onBlockchainDetach(uint32_t height);
@@ -20,7 +36,8 @@ public:
   bool advanceHeight(uint32_t height);
   const AccountKeys& getKeys() const;
   bool addTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx,
-                      const std::vector<TransactionOutputInformationIn>& transfers);
+                      const std::vector<TransactionOutputInformationIn>& transfers,
+                      bool isOutgoing = false);
 
   void deleteUnconfirmedTransaction(const Crypto::Hash& transactionHash);
   void markTransactionConfirmed(const TransactionBlockInfo& block, const Crypto::Hash& transactionHash, const std::vector<uint32_t>& globalIndices);
@@ -30,6 +47,7 @@ public:
   virtual ITransfersContainer& getContainer() override;
 
 private:
+  Logging::LoggerRef logger;
   TransfersContainer transfers;
   AccountSubscription subscription;
 };

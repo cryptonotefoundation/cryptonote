@@ -35,8 +35,6 @@
 
 #include "gtest/gtest.h"
 
-#if GTEST_HAS_PARAM_TEST
-
 # include <algorithm>
 # include <iostream>
 # include <list>
@@ -44,11 +42,7 @@
 # include <string>
 # include <vector>
 
-// To include gtest-internal-inl.h.
-# define GTEST_IMPLEMENTATION_ 1
 # include "src/gtest-internal-inl.h"  // for UnitTestOptions
-# undef GTEST_IMPLEMENTATION_
-
 # include "test/gtest-param-test_test.h"
 
 using ::std::vector;
@@ -64,9 +58,9 @@ using ::testing::ValuesIn;
 
 # if GTEST_HAS_COMBINE
 using ::testing::Combine;
-using ::std::tr1::get;
-using ::std::tr1::make_tuple;
-using ::std::tr1::tuple;
+using ::testing::get;
+using ::testing::make_tuple;
+using ::testing::tuple;
 # endif  // GTEST_HAS_COMBINE
 
 using ::testing::internal::ParamGenerator;
@@ -141,7 +135,7 @@ void VerifyGenerator(const ParamGenerator<T>& generator,
         << ", expected_values[i] is " << PrintValue(expected_values[i])
         << ", *it is " << PrintValue(*it)
         << ", and 'it' is an iterator created with the copy constructor.\n";
-    it++;
+    ++it;
   }
   EXPECT_TRUE(it == generator.end())
         << "At the presumed end of sequence when accessing via an iterator "
@@ -161,7 +155,7 @@ void VerifyGenerator(const ParamGenerator<T>& generator,
         << ", expected_values[i] is " << PrintValue(expected_values[i])
         << ", *it is " << PrintValue(*it)
         << ", and 'it' is an iterator created with the copy constructor.\n";
-    it++;
+    ++it;
   }
   EXPECT_TRUE(it == generator.end())
         << "At the presumed end of sequence when accessing via an iterator "
@@ -196,7 +190,7 @@ TEST(IteratorTest, ParamIteratorConformsToForwardIteratorConcept) {
                            << "element same as its source points to";
 
   // Verifies that iterator assignment works as expected.
-  it++;
+  ++it;
   EXPECT_FALSE(*it == *it2);
   it2 = it;
   EXPECT_TRUE(*it == *it2) << "Assigned iterators must point to the "
@@ -215,7 +209,7 @@ TEST(IteratorTest, ParamIteratorConformsToForwardIteratorConcept) {
   // Verifies that prefix and postfix operator++() advance an iterator
   // all the same.
   it2 = it;
-  it++;
+  ++it;
   ++it2;
   EXPECT_TRUE(*it == *it2);
 }
@@ -542,6 +536,51 @@ TEST(CombineTest, CombineWithMaxNumberOfParameters) {
   VerifyGenerator(gen, expected_values);
 }
 
+#if GTEST_LANG_CXX11
+
+class NonDefaultConstructAssignString {
+ public:
+  NonDefaultConstructAssignString(const std::string& s) : str_(s) {}
+
+  const std::string& str() const { return str_; }
+
+ private:
+  std::string str_;
+
+  // Not default constructible
+  NonDefaultConstructAssignString();
+  // Not assignable
+  void operator=(const NonDefaultConstructAssignString&);
+};
+
+TEST(CombineTest, NonDefaultConstructAssign) {
+  const ParamGenerator<tuple<int, NonDefaultConstructAssignString> > gen =
+      Combine(Values(0, 1), Values(NonDefaultConstructAssignString("A"),
+                                   NonDefaultConstructAssignString("B")));
+
+  ParamGenerator<tuple<int, NonDefaultConstructAssignString> >::iterator it =
+      gen.begin();
+
+  EXPECT_EQ(0, std::get<0>(*it));
+  EXPECT_EQ("A", std::get<1>(*it).str());
+  ++it;
+
+  EXPECT_EQ(0, std::get<0>(*it));
+  EXPECT_EQ("B", std::get<1>(*it).str());
+  ++it;
+
+  EXPECT_EQ(1, std::get<0>(*it));
+  EXPECT_EQ("A", std::get<1>(*it).str());
+  ++it;
+
+  EXPECT_EQ(1, std::get<0>(*it));
+  EXPECT_EQ("B", std::get<1>(*it).str());
+  ++it;
+
+  EXPECT_TRUE(it == gen.end());
+}
+
+#endif   // GTEST_LANG_CXX11
 # endif  // GTEST_HAS_COMBINE
 
 // Tests that an generator produces correct sequence after being
@@ -809,6 +848,184 @@ TEST_P(NamingTest, TestsReportCorrectNamesAndParameters) {
 
 INSTANTIATE_TEST_CASE_P(ZeroToFiveSequence, NamingTest, Range(0, 5));
 
+// Tests that macros in test names are expanded correctly.
+class MacroNamingTest : public TestWithParam<int> {};
+
+#define PREFIX_WITH_FOO(test_name) Foo##test_name
+#define PREFIX_WITH_MACRO(test_name) Macro##test_name
+
+TEST_P(PREFIX_WITH_MACRO(NamingTest), PREFIX_WITH_FOO(SomeTestName)) {
+  const ::testing::TestInfo* const test_info =
+     ::testing::UnitTest::GetInstance()->current_test_info();
+
+  EXPECT_STREQ("FortyTwo/MacroNamingTest", test_info->test_case_name());
+  EXPECT_STREQ("FooSomeTestName", test_info->name());
+}
+
+INSTANTIATE_TEST_CASE_P(FortyTwo, MacroNamingTest, Values(42));
+
+// Tests the same thing for non-parametrized tests.
+class MacroNamingTestNonParametrized : public ::testing::Test {};
+
+TEST_F(PREFIX_WITH_MACRO(NamingTestNonParametrized),
+       PREFIX_WITH_FOO(SomeTestName)) {
+  const ::testing::TestInfo* const test_info =
+     ::testing::UnitTest::GetInstance()->current_test_info();
+
+  EXPECT_STREQ("MacroNamingTestNonParametrized", test_info->test_case_name());
+  EXPECT_STREQ("FooSomeTestName", test_info->name());
+}
+
+// Tests that user supplied custom parameter names are working correctly.
+// Runs the test with a builtin helper method which uses PrintToString,
+// as well as a custom function and custom functor to ensure all possible
+// uses work correctly.
+class CustomFunctorNamingTest : public TestWithParam<std::string> {};
+TEST_P(CustomFunctorNamingTest, CustomTestNames) {}
+
+struct CustomParamNameFunctor {
+  std::string operator()(const ::testing::TestParamInfo<std::string>& inf) {
+    return inf.param;
+  }
+};
+
+INSTANTIATE_TEST_CASE_P(CustomParamNameFunctor,
+                        CustomFunctorNamingTest,
+                        Values(std::string("FunctorName")),
+                        CustomParamNameFunctor());
+
+INSTANTIATE_TEST_CASE_P(AllAllowedCharacters,
+                        CustomFunctorNamingTest,
+                        Values("abcdefghijklmnopqrstuvwxyz",
+                               "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                               "01234567890_"),
+                        CustomParamNameFunctor());
+
+inline std::string CustomParamNameFunction(
+    const ::testing::TestParamInfo<std::string>& inf) {
+  return inf.param;
+}
+
+class CustomFunctionNamingTest : public TestWithParam<std::string> {};
+TEST_P(CustomFunctionNamingTest, CustomTestNames) {}
+
+INSTANTIATE_TEST_CASE_P(CustomParamNameFunction,
+                        CustomFunctionNamingTest,
+                        Values(std::string("FunctionName")),
+                        CustomParamNameFunction);
+
+#if GTEST_LANG_CXX11
+
+// Test custom naming with a lambda
+
+class CustomLambdaNamingTest : public TestWithParam<std::string> {};
+TEST_P(CustomLambdaNamingTest, CustomTestNames) {}
+
+INSTANTIATE_TEST_CASE_P(CustomParamNameLambda, CustomLambdaNamingTest,
+                        Values(std::string("LambdaName")),
+                        [](const ::testing::TestParamInfo<std::string>& inf) {
+                          return inf.param;
+                        });
+
+#endif  // GTEST_LANG_CXX11
+
+TEST(CustomNamingTest, CheckNameRegistry) {
+  ::testing::UnitTest* unit_test = ::testing::UnitTest::GetInstance();
+  std::set<std::string> test_names;
+  for (int case_num = 0;
+       case_num < unit_test->total_test_case_count();
+       ++case_num) {
+    const ::testing::TestCase* test_case = unit_test->GetTestCase(case_num);
+    for (int test_num = 0;
+         test_num < test_case->total_test_count();
+         ++test_num) {
+      const ::testing::TestInfo* test_info = test_case->GetTestInfo(test_num);
+      test_names.insert(std::string(test_info->name()));
+    }
+  }
+  EXPECT_EQ(1u, test_names.count("CustomTestNames/FunctorName"));
+  EXPECT_EQ(1u, test_names.count("CustomTestNames/FunctionName"));
+#if GTEST_LANG_CXX11
+  EXPECT_EQ(1u, test_names.count("CustomTestNames/LambdaName"));
+#endif  // GTEST_LANG_CXX11
+}
+
+// Test a numeric name to ensure PrintToStringParamName works correctly.
+
+class CustomIntegerNamingTest : public TestWithParam<int> {};
+
+TEST_P(CustomIntegerNamingTest, TestsReportCorrectNames) {
+  const ::testing::TestInfo* const test_info =
+     ::testing::UnitTest::GetInstance()->current_test_info();
+  Message test_name_stream;
+  test_name_stream << "TestsReportCorrectNames/" << GetParam();
+  EXPECT_STREQ(test_name_stream.GetString().c_str(), test_info->name());
+}
+
+INSTANTIATE_TEST_CASE_P(PrintToString,
+                        CustomIntegerNamingTest,
+                        Range(0, 5),
+                        ::testing::PrintToStringParamName());
+
+// Test a custom struct with PrintToString.
+
+struct CustomStruct {
+  explicit CustomStruct(int value) : x(value) {}
+  int x;
+};
+
+std::ostream& operator<<(std::ostream& stream, const CustomStruct& val) {
+  stream << val.x;
+  return stream;
+}
+
+class CustomStructNamingTest : public TestWithParam<CustomStruct> {};
+
+TEST_P(CustomStructNamingTest, TestsReportCorrectNames) {
+  const ::testing::TestInfo* const test_info =
+     ::testing::UnitTest::GetInstance()->current_test_info();
+  Message test_name_stream;
+  test_name_stream << "TestsReportCorrectNames/" << GetParam();
+  EXPECT_STREQ(test_name_stream.GetString().c_str(), test_info->name());
+}
+
+INSTANTIATE_TEST_CASE_P(PrintToString,
+                        CustomStructNamingTest,
+                        Values(CustomStruct(0), CustomStruct(1)),
+                        ::testing::PrintToStringParamName());
+
+// Test that using a stateful parameter naming function works as expected.
+
+struct StatefulNamingFunctor {
+  StatefulNamingFunctor() : sum(0) {}
+  std::string operator()(const ::testing::TestParamInfo<int>& info) {
+    int value = info.param + sum;
+    sum += info.param;
+    return ::testing::PrintToString(value);
+  }
+  int sum;
+};
+
+class StatefulNamingTest : public ::testing::TestWithParam<int> {
+ protected:
+  StatefulNamingTest() : sum_(0) {}
+  int sum_;
+};
+
+TEST_P(StatefulNamingTest, TestsReportCorrectNames) {
+  const ::testing::TestInfo* const test_info =
+     ::testing::UnitTest::GetInstance()->current_test_info();
+  sum_ += GetParam();
+  Message test_name_stream;
+  test_name_stream << "TestsReportCorrectNames/" << sum_;
+  EXPECT_STREQ(test_name_stream.GetString().c_str(), test_info->name());
+}
+
+INSTANTIATE_TEST_CASE_P(StatefulNamingFunctor,
+                        StatefulNamingTest,
+                        Range(0, 5),
+                        StatefulNamingFunctor());
+
 // Class that cannot be streamed into an ostream.  It needs to be copyable
 // (and, in case of MSVC, also assignable) in order to be a test parameter
 // type.  Its default copy constructor and assignment operator do exactly
@@ -874,31 +1091,20 @@ TEST_F(ParameterizedDeathTest, GetParamDiesFromTestF) {
 
 INSTANTIATE_TEST_CASE_P(RangeZeroToFive, ParameterizedDerivedTest, Range(0, 5));
 
-#endif  // GTEST_HAS_PARAM_TEST
-
-TEST(CompileTest, CombineIsDefinedOnlyWhenGtestHasParamTestIsDefined) {
-#if GTEST_HAS_COMBINE && !GTEST_HAS_PARAM_TEST
-  FAIL() << "GTEST_HAS_COMBINE is defined while GTEST_HAS_PARAM_TEST is not\n"
-#endif
-}
 
 int main(int argc, char **argv) {
-#if GTEST_HAS_PARAM_TEST
   // Used in TestGenerationTest test case.
   AddGlobalTestEnvironment(TestGenerationTest::Environment::Instance());
   // Used in GeneratorEvaluationTest test case. Tests that the updated value
   // will be picked up for instantiating tests in GeneratorEvaluationTest.
   GeneratorEvaluationTest::set_param_value(1);
-#endif  // GTEST_HAS_PARAM_TEST
 
   ::testing::InitGoogleTest(&argc, argv);
 
-#if GTEST_HAS_PARAM_TEST
   // Used in GeneratorEvaluationTest test case. Tests that value updated
   // here will NOT be used for instantiating tests in
   // GeneratorEvaluationTest.
   GeneratorEvaluationTest::set_param_value(2);
-#endif  // GTEST_HAS_PARAM_TEST
 
   return RUN_ALL_TESTS();
 }

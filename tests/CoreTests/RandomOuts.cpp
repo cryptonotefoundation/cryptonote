@@ -1,10 +1,25 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "RandomOuts.h"
 #include "TestGenerator.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
+
+#include <algorithm>
 
 GetRandomOutputs::GetRandomOutputs() {
   REGISTER_CALLBACK_METHOD(GetRandomOutputs, checkHalfUnlocked);
@@ -13,20 +28,26 @@ GetRandomOutputs::GetRandomOutputs() {
 
 bool GetRandomOutputs::generate(std::vector<test_event_entry>& events) const {
   TestGenerator generator(m_currency, events);
+  CryptoNote::AccountBase recipient;
+  recipient.generate();
 
-  generator.generateBlocks();
+  generator.generateBlocks(2 * m_currency.minedMoneyUnlockWindow());
 
   uint64_t sendAmount = MK_COINS(1);
+  const size_t outputCount = 10;
+  std::vector<CryptoNote::Transaction> txs;
+  txs.reserve(outputCount);
 
-  auto builder = generator.createTxBuilder(
-    generator.minerAccount, generator.minerAccount, sendAmount, m_currency.minimumFee());
-
-  for (int i = 0; i < 10; ++i) {
+  for (size_t i = 0; i < outputCount; ++i) {
     auto builder = generator.createTxBuilder(
-      generator.minerAccount, generator.minerAccount, sendAmount, m_currency.minimumFee());
+      generator.minerAccount, recipient, sendAmount, m_currency.minimumFee());
 
     auto tx = builder.build();
+    txs.push_back(tx);
     generator.addEvent(tx);
+  }
+
+  for (const auto& tx : txs) {
     generator.makeNextBlock(tx);
   }
 
@@ -59,6 +80,7 @@ bool GetRandomOutputs::checkHalfUnlocked(CryptoNote::core& c, size_t ev_index, c
 
   auto amount = MK_COINS(1);
   auto unlocked = m_currency.minedMoneyUnlockWindow() / 2 + 1;
+  const size_t expectedOutputs = std::min<size_t>(10, unlocked);
 
   CHECK(request(c, amount, 0, resp));
   CHECK(resp.outs.size() == 1);
@@ -68,12 +90,12 @@ bool GetRandomOutputs::checkHalfUnlocked(CryptoNote::core& c, size_t ev_index, c
   CHECK(request(c, amount, unlocked, resp));
   CHECK(resp.outs.size() == 1);
   CHECK(resp.outs[0].amount == amount);
-  CHECK(resp.outs[0].outs.size() == unlocked);
+  CHECK(resp.outs[0].outs.size() == expectedOutputs);
 
   CHECK(request(c, amount, unlocked * 2, resp));
   CHECK(resp.outs.size() == 1);
   CHECK(resp.outs[0].amount == amount);
-  CHECK(resp.outs[0].outs.size() == unlocked);
+  CHECK(resp.outs[0].outs.size() == expectedOutputs);
 
   return true;
 }
@@ -83,16 +105,17 @@ bool GetRandomOutputs::checkFullyUnlocked(CryptoNote::core& c, size_t ev_index, 
 
   auto amount = MK_COINS(1);
   auto unlocked = m_currency.minedMoneyUnlockWindow() + 1;
+  const size_t expectedOutputs = 10;
 
   CHECK(request(c, amount, unlocked, resp));
   CHECK(resp.outs.size() == 1);
   CHECK(resp.outs[0].amount == amount);
-  CHECK(resp.outs[0].outs.size() == unlocked);
+  CHECK(resp.outs[0].outs.size() == expectedOutputs);
 
   CHECK(request(c, amount, unlocked * 2, resp));
   CHECK(resp.outs.size() == 1);
   CHECK(resp.outs[0].amount == amount);
-  CHECK(resp.outs[0].outs.size() == unlocked);
+  CHECK(resp.outs[0].outs.size() == expectedOutputs);
 
   return true;
 }

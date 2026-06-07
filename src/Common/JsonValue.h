@@ -1,4 +1,7 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2016-2017 BXC developers
+// Copyright (c) 2017 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +22,7 @@ public:
   typedef std::vector<JsonValue> Array;
   typedef bool Bool;
   typedef int64_t Integer;
-  typedef std::nullptr_t Nil;
+  typedef std::nullptr_t Nile;
   typedef std::map<Key, JsonValue> Object;
   typedef double Real;
   typedef std::string String;
@@ -42,7 +45,7 @@ public:
   JsonValue(Array&& value);
   explicit JsonValue(Bool value);
   JsonValue(Integer value);
-  JsonValue(Nil value);
+  JsonValue(Nile value);
   JsonValue(const Object& value);
   JsonValue(Object&& value);
   JsonValue(Real value);
@@ -61,7 +64,7 @@ public:
   JsonValue& operator=(Array&& value);
   //JsonValue& operator=(Bool value);
   JsonValue& operator=(Integer value);
-  JsonValue& operator=(Nil value);
+  JsonValue& operator=(Nile value);
   JsonValue& operator=(const Object& value);
   JsonValue& operator=(Object&& value);
   JsonValue& operator=(Real value);
@@ -119,6 +122,7 @@ public:
   size_t erase(const Key& key);
 
   static JsonValue fromString(const std::string& source);
+  static JsonValue fromStringWithWhiteSpaces(const std::string& source);
   std::string toString() const;
 
   friend std::ostream& operator<<(std::ostream& out, const JsonValue& jsonValue);

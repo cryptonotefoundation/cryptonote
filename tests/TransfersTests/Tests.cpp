@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Globals.h"
 #include "CryptoNoteCore/Account.h"
@@ -62,7 +75,7 @@ public:
     m_transactions.erase(it, m_transactions.end());
   }
 
-  virtual bool onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) override {
+  virtual uint32_t onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) override {
     std::lock_guard<std::mutex> lk(m_mutex);
     for(size_t i = 0; i < count; ++i) {
       for (const auto& tx : blocks[i].transactions) {
@@ -70,7 +83,7 @@ public:
       }
     }
     m_cv.notify_all();
-    return true;
+    return count;
   }
 
   bool waitForTransaction(const Hash& txHash) {
@@ -235,14 +248,6 @@ public:
   std::unique_ptr<TransfersObserver[]> m_observers;
 };
 
-class MultisignatureTest : public TransfersTest {
-public:
-
-  virtual void SetUp() override {
-    launchTestnet(2);
-  }
-};
-
 template <typename R>
 class FutureGuard {
 public:
@@ -303,8 +308,8 @@ TEST_F(TransfersTest, base) {
 
   AccountKeys dstKeys = reinterpret_cast<const AccountKeys&>(dstAcc.getAccountKeys());
 
-  BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
-  TransfersSyncronizer transferSync(currency, blockSync, *node2.get());
+  BlockchainSynchronizer blockSync(*node2.get(), logger, currency.genesisBlockHash());
+  TransfersSyncronizer transferSync(currency, logger, blockSync, *node2.get());
   TransfersObserver transferObserver;
   WalletLegacyObserver walletObserver;
 
@@ -321,8 +326,8 @@ TEST_F(TransfersTest, base) {
   Tests::Common::TestWalletLegacy wallet1(m_dispatcher, m_currency, *node1);
   ASSERT_FALSE(static_cast<bool>(wallet1.init()));
   wallet1.wallet()->addObserver(&walletObserver);
-  ASSERT_TRUE(mineBlocks(*nodeDaemons[0], wallet1.address(), 1));
-  ASSERT_TRUE(mineBlocks(*nodeDaemons[0], wallet1.address(), currency.minedMoneyUnlockWindow()));
+  ASSERT_TRUE(mineBlocks(*nodeDaemons[0], wallet1.accountKeys(), 1));
+  ASSERT_TRUE(mineBlocks(*nodeDaemons[0], wallet1.accountKeys(), currency.minedMoneyUnlockWindow()));
   wallet1.waitForSynchronizationToHeight(static_cast<uint32_t>(2 + currency.minedMoneyUnlockWindow()));
 
   // start syncing and wait for a transfer
@@ -332,7 +337,7 @@ TEST_F(TransfersTest, base) {
 
   Hash txId;
   ASSERT_FALSE(static_cast<bool>(wallet1.sendTransaction(currency.accountAddressAsString(dstAcc), TRANSFER_AMOUNT, txId)));
-  ASSERT_TRUE(mineBlocks(*nodeDaemons[0], wallet1.address(), 1));
+  ASSERT_TRUE(mineBlocks(*nodeDaemons[0], wallet1.accountKeys(), 1));
 
   ASSERT_TRUE(waitFuture.get());
   transferObserverInterrupter.cancel();
@@ -344,65 +349,6 @@ TEST_F(TransfersTest, base) {
   blockSync.stop();
 }
 
-
-std::unique_ptr<ITransaction> createTransferToMultisignature(
-  ITransfersContainer& tc, // money source
-  uint64_t amount,
-  uint64_t fee,
-  const AccountKeys& senderKeys,
-  const std::vector<AccountPublicAddress>& recipients,
-  uint32_t requiredSignatures) {
-
-  std::vector<TransactionOutputInformation> transfers;
-  tc.getOutputs(transfers, ITransfersContainer::IncludeAllUnlocked | ITransfersContainer::IncludeStateSoftLocked);
-
-  auto tx = createTransaction();
-
-  std::vector<std::pair<TransactionTypes::InputKeyInfo, KeyPair>> inputs;
-
-  uint64_t foundMoney = 0;
-
-  for (const auto& t : transfers) {
-    TransactionTypes::InputKeyInfo info;
-
-    info.amount = t.amount;
-
-    TransactionTypes::GlobalOutput globalOut;
-    globalOut.outputIndex = t.globalOutputIndex;
-    globalOut.targetKey = t.outputKey;
-    info.outputs.push_back(globalOut);
-
-    info.realOutput.outputInTransaction = t.outputInTransaction;
-    info.realOutput.transactionIndex = 0;
-    info.realOutput.transactionPublicKey = t.transactionPublicKey;
-
-    KeyPair kp;
-    tx->addInput(senderKeys, info, kp);
-
-    inputs.push_back(std::make_pair(info, kp));
-
-    foundMoney += info.amount;
-
-    if (foundMoney >= amount + fee) {
-      break;
-    }
-  }
-
-  // output to receiver
-  tx->addOutput(amount, recipients, requiredSignatures);
-
-  // change
-  uint64_t change = foundMoney - amount - fee;
-  if (change) {
-    tx->addOutput(change, senderKeys.address);
-  }
-
-  for (size_t inputIdx = 0; inputIdx < inputs.size(); ++inputIdx) {
-    tx->signInputKey(inputIdx, inputs[inputIdx].first, inputs[inputIdx].second);
-  }
-
-  return tx;
-}
 
 std::error_code submitTransaction(INode& node, ITransactionReader& tx) {
   auto data = tx.getTransactionData();
@@ -427,158 +373,3 @@ std::error_code submitTransaction(INode& node, ITransactionReader& tx) {
 }
 
 
-std::unique_ptr<ITransaction> createTransferFromMultisignature(
-  AccountGroup& consilium, const AccountPublicAddress& receiver, const Hash& txHash, uint64_t amount, uint64_t fee) {
-
-  auto& tc = consilium.getTransfers(0);
-
-  std::vector<TransactionOutputInformation> transfers = tc.getTransactionOutputs(txHash,
-    ITransfersContainer::IncludeTypeMultisignature |
-    ITransfersContainer::IncludeStateSoftLocked |
-    ITransfersContainer::IncludeStateUnlocked);
-  EXPECT_FALSE(transfers.empty());
-
-  const TransactionOutputInformation& out = transfers[0];
-
-  auto tx = createTransaction();
-
-  MultisignatureInput msigInput;
-
-  msigInput.amount = out.amount;
-  msigInput.outputIndex = out.globalOutputIndex;
-  msigInput.signatureCount = out.requiredSignatures;
-
-  tx->addInput(msigInput);
-  tx->addOutput(amount, receiver);
-
-  uint64_t change = out.amount - amount - fee;
-
-  tx->addOutput(change, consilium.getAddresses(), out.requiredSignatures);
-
-  for (size_t i = 0; i < out.requiredSignatures; ++i) {
-    tx->signInputMultisignature(0, out.transactionPublicKey, out.outputInTransaction, consilium.m_accounts[i].keys);
-  }
-
-  return tx;
-}
-
-TEST_F(MultisignatureTest, createMulitisignatureTransaction) {
-
-  std::unique_ptr<CryptoNote::INode> node1;
-  std::unique_ptr<CryptoNote::INode> node2;
-
-  nodeDaemons[0]->makeINode(node1);
-  nodeDaemons[1]->makeINode(node2);
-
-  BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
-  TransfersSyncronizer transferSync(currency, blockSync, *node2.get());
-  
-  // add transaction collector
-  TransactionConsumer txConsumer;
-  blockSync.addConsumer(&txConsumer);
-
-  AccountGroup sender(transferSync);
-  AccountGroup consilium(transferSync);
-
-  sender.generateAccounts(1);
-  sender.subscribeAll();
-
-  consilium.generateAccounts(3);
-  consilium.subscribeAll();
-
-  auto senderSubscription = transferSync.getSubscription(sender.m_accounts[0].keys.address);
-  auto& senderContainer = senderSubscription->getContainer();
-
-  blockSync.start();
-
-  AccountPublicAddress senderAddress;
-  ASSERT_TRUE(currency.parseAccountAddressString(sender.m_addresses[0], senderAddress));
-  ASSERT_TRUE(mineBlocks(*nodeDaemons[0], senderAddress, 1 + currency.minedMoneyUnlockWindow()));
-
-  // wait for incoming transfer
-  while (senderContainer.balance() == 0) {
-    sender.m_observers[0].waitTransfer();
-
-    auto unlockedBalance = senderContainer.balance(ITransfersContainer::IncludeAllUnlocked | ITransfersContainer::IncludeStateSoftLocked);
-    auto totalBalance = senderContainer.balance(ITransfersContainer::IncludeAll);
-
-    LOG_DEBUG("Balance: " + currency.formatAmount(unlockedBalance) + " (" + currency.formatAmount(totalBalance) + ")");
-  }
-
-  uint64_t fundBalance = 0;
-
-  for (int iteration = 1; iteration <= 3; ++iteration) {
-    LOG_DEBUG("***** Iteration " + std::to_string(iteration) + " ******");
-
-    auto sendAmount = senderContainer.balance() / 2;
-
-    LOG_DEBUG("Creating transaction with amount = " + currency.formatAmount(sendAmount));
-
-    auto tx2msig = createTransferToMultisignature(
-      senderContainer, sendAmount, currency.minimumFee(), sender.m_accounts[0].keys, consilium.getAddresses(), 3);
-
-    auto txHash = tx2msig->getTransactionHash();
-    // Use node1, in order to tx will be in its pool when next block is being created
-    auto err = submitTransaction(*node1, *tx2msig);
-    ASSERT_EQ(std::error_code(), err);
-
-    ASSERT_TRUE(mineBlocks(*nodeDaemons[0], senderAddress, 1));
-
-    LOG_DEBUG("Waiting for transaction to be included in block...");
-    txConsumer.waitForTransaction(txHash);
-
-    LOG_DEBUG("Transaction in blockchain, waiting for observers to receive transaction...");
-
-    uint64_t expectedFundBalance = fundBalance + sendAmount;
-
-    // wait for consilium to receive the transfer
-    for (size_t i = 0; i < consilium.m_accounts.size(); ++i) {
-      auto& observer = consilium.m_observers[i];
-      auto sub = transferSync.getSubscription(consilium.m_accounts[i].keys.address);
-      ASSERT_TRUE(sub != nullptr);
-
-      while (true) {
-        observer.waitTransactionTransfer(txHash);
-
-        uint64_t unlockedBalance = sub->getContainer().balance(ITransfersContainer::IncludeTypeMultisignature |
-          ITransfersContainer::IncludeStateSoftLocked | ITransfersContainer::IncludeStateUnlocked);
-        if (unlockedBalance == expectedFundBalance) {
-          break;
-        }
-      }
-    }
-
-    LOG_DEBUG("Creating transaction to spend multisignature output");
-
-    uint64_t returnAmount = sendAmount / 2;
-
-    auto spendMsigTx = createTransferFromMultisignature(
-      consilium, sender.m_accounts[0].keys.address, txHash, returnAmount, currency.minimumFee());
-
-    auto spendMsigTxHash = spendMsigTx->getTransactionHash();
-
-    err = submitTransaction(*node1, *spendMsigTx);
-    ASSERT_EQ(std::error_code(), err);
-
-    ASSERT_TRUE(mineBlocks(*nodeDaemons[0], senderAddress, 1));
-
-    LOG_DEBUG("Waiting for transaction to be included in block...");
-    txConsumer.waitForTransaction(spendMsigTxHash);
-
-    LOG_DEBUG("Checking left balances");
-    uint64_t leftAmount = expectedFundBalance - returnAmount - currency.minimumFee();
-    for (size_t i = 0; i < consilium.m_accounts.size(); ++i) {
-      auto& observer = consilium.m_observers[i];
-      for (uint64_t unlockedBalance = leftAmount + 1; unlockedBalance != leftAmount;) {
-        observer.waitTransactionTransfer(spendMsigTxHash);
-        unlockedBalance = consilium.getTransfers(i).balance(ITransfersContainer::IncludeTypeMultisignature |
-          ITransfersContainer::IncludeStateSoftLocked | ITransfersContainer::IncludeStateUnlocked);
-      }
-    }
-
-    fundBalance = leftAmount;
-  }
-
-  blockSync.stop();
-  LOG_DEBUG("Success!!!");
-}

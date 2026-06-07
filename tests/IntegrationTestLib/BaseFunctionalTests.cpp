@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "BaseFunctionalTests.h"
 
@@ -32,12 +45,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <errno.h>
-#endif
-
-#ifdef _WIN32
-const std::string DAEMON_FILENAME = std::string(CRYPTONOTE_NAME) + "d.exe";
-#else
-const std::string DAEMON_FILENAME = std::string(CRYPTONOTE_NAME) + "d";
 #endif
 
 using namespace Tests::Common;
@@ -154,7 +161,7 @@ void BaseFunctionalTests::startNode(size_t index) {
     << "rpc-bind-port=" << rpcPort << std::endl
     << "p2p-bind-port=" << p2pPort << std::endl
     << "log-level=4" << std::endl
-    << "log-file=test_" << CRYPTONOTE_NAME << "d_" << index << ".log" << std::endl;
+    << "log-file=test_bytecoind_" << index << ".log" << std::endl;
 
   switch (m_topology) {
   case Line:
@@ -181,15 +188,16 @@ void BaseFunctionalTests::startNode(size_t index) {
 
   config.close();
 
-  boost::filesystem::path daemonPath = index < m_config.daemons.size() ?
-    boost::filesystem::path(m_config.daemons[index]) : (boost::filesystem::path(m_daemonDir) / DAEMON_FILENAME);
+  boost::filesystem::path configuredDaemonPath = index < m_config.daemons.size() ?
+    boost::filesystem::path(m_config.daemons[index]) : (boost::filesystem::path(m_daemonDir) / getTestDaemonFilename());
+  boost::filesystem::path daemonPath = resolveTestDaemonPath(configuredDaemonPath.string());
   boost::system::error_code ignoredEc;
   if (!boost::filesystem::exists(daemonPath, ignoredEc)) {
-    throw std::runtime_error("daemon binary wasn't found");
+    throw std::runtime_error("daemon binary wasn't found: " + daemonPath.string());
   }
 
 #if defined WIN32
-  std::string commandLine = "start /MIN \"" + std::string(CRYPTONOTE_NAME) + "d" + std::to_string(index) + "\" \"" + daemonPath.string() +
+  std::string commandLine = "start /MIN \"bytecoind" + std::to_string(index) + "\" \"" + daemonPath.string() +
     "\" --testnet --data-dir=\"" + dataDirPath + "\" --config-file=daemon.conf";
   LOG_DEBUG(commandLine);
   system(commandLine.c_str());
@@ -201,7 +209,7 @@ void BaseFunctionalTests::startNode(size_t index) {
     close(2);
     std::string dataDir = "--data-dir=" + dataDirPath + "";
     LOG_TRACE(pathToDaemon);
-    if (execl(pathToDaemon.c_str(), (std::string(CRYPTONOTE_NAME) + "d").c_str(), "--testnet", dataDir.c_str(), "--config-file=daemon.conf", NULL) == -1) {
+    if (execl(pathToDaemon.c_str(), "bytecoind", "--testnet", dataDir.c_str(), "--config-file=daemon.conf", NULL) == -1) {
       LOG_ERROR(TO_STRING(errno));
     }
     abort();
@@ -294,12 +302,12 @@ namespace {
   };
 }
 
-bool BaseFunctionalTests::mineBlocks(TestNode& node, const CryptoNote::AccountPublicAddress& address, size_t blockCount) {
+bool BaseFunctionalTests::mineBlocks(TestNode& node, const CryptoNote::AccountKeys& minerKeys, size_t blockCount) {
   for (size_t i = 0; i < blockCount; ++i) {
     Block blockTemplate;
     uint64_t difficulty;
 
-    if (!node.getBlockTemplate(m_currency.accountAddressAsString(address), blockTemplate, difficulty)) {
+    if (!node.getBlockTemplate(minerKeys, blockTemplate, difficulty)) {
       return false;
     }
 
@@ -319,6 +327,23 @@ bool BaseFunctionalTests::prepareAndSubmitBlock(TestNode& node, CryptoNote::Bloc
   blockTemplate.timestamp = m_nextTimestamp;
   m_nextTimestamp += 2 * m_currency.difficultyTarget();
 
+  if (blockTemplate.majorVersion >= BLOCK_MAJOR_VERSION_2) {
+    blockTemplate.parentBlock.majorVersion = BLOCK_MAJOR_VERSION_1;
+    blockTemplate.parentBlock.minorVersion = BLOCK_MINOR_VERSION_0;
+    blockTemplate.parentBlock.transactionCount = 1;
+
+    CryptoNote::TransactionExtraMergeMiningTag mmTag;
+    mmTag.depth = 0;
+    if (!CryptoNote::get_aux_block_header_hash(blockTemplate, mmTag.merkleRoot)) {
+      return false;
+    }
+
+    blockTemplate.parentBlock.baseTransaction.extra.clear();
+    if (!CryptoNote::appendMergeMiningTagToExtra(blockTemplate.parentBlock.baseTransaction.extra, mmTag)) {
+      return false;
+    }
+  }
+
   BinaryArray blockBlob = CryptoNote::toBinaryArray(blockTemplate);
   return node.submitBlock(::Common::toHex(blockBlob.data(), blockBlob.size()));
 }
@@ -332,7 +357,9 @@ bool BaseFunctionalTests::mineBlock(std::unique_ptr<CryptoNote::IWalletLegacy> &
   Semaphore gotReward;
   WaitForCoinBaseObserver cbo(gotReward, *wallet.get());
   wallet->addObserver(&cbo);
-  if (!nodeDaemons.front()->startMining(1, wallet->getAddress()))
+  CryptoNote::AccountKeys minerKeys;
+  wallet->getAccountKeys(minerKeys);
+  if (!nodeDaemons.front()->startMining(1, minerKeys))
     return false;
   gotReward.wait();
   if (!nodeDaemons.front()->stopMining())
@@ -348,7 +375,9 @@ bool BaseFunctionalTests::mineBlock() {
 bool BaseFunctionalTests::startMining(size_t threads) {
   if (nodeDaemons.empty() || !workingWallet) return false;
   if(!stopMining()) return false;
-  return nodeDaemons.front()->startMining(threads, workingWallet->getAddress());
+  CryptoNote::AccountKeys minerKeys;
+  workingWallet->getAccountKeys(minerKeys);
+  return nodeDaemons.front()->startMining(threads, minerKeys);
 }
 
 bool BaseFunctionalTests::stopMining() {
@@ -358,7 +387,7 @@ bool BaseFunctionalTests::stopMining() {
 
 bool BaseFunctionalTests::makeWallet(std::unique_ptr<CryptoNote::IWalletLegacy> & wallet, std::unique_ptr<CryptoNote::INode>& node, const std::string& password) {
   if (!node) return false;
-  wallet = std::unique_ptr<CryptoNote::IWalletLegacy>(new CryptoNote::WalletLegacy(m_currency, *node));
+  wallet = std::unique_ptr<CryptoNote::IWalletLegacy>(new CryptoNote::WalletLegacy(m_currency, *node, m_logger));
   wallet->initAndGenerate(password);
   return true;
 }

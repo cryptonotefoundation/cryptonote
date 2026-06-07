@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Chaingen.h"
 
@@ -16,9 +29,12 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Core.h"
+#include "Wallet/TransactionBuilder.h"
 #include "CryptoNoteCore/Currency.h"
+#include "CryptoNoteCore/UpgradeDetector.h"
 
 //#include "AccountBoostSerialization.h"
 //#include "cryptonote_boost_serialization.h"
@@ -70,12 +86,12 @@ typedef pair<uint64_t, size_t>  outloc_t;
 
 namespace
 {
-  uint64_t get_inputs_amount(const vector<TransactionSourceEntry> &s)
+  uint64_t get_inputs_amount(const vector<CryptoNote::TxBuildInput> &s)
   {
     uint64_t r = 0;
-    BOOST_FOREACH(const TransactionSourceEntry &e, s)
+    BOOST_FOREACH(const CryptoNote::TxBuildInput &e, s)
     {
-      r += e.amount;
+      r += e.keyInfo.amount;
     }
 
     return r;
@@ -115,8 +131,6 @@ bool init_output_indices(map_output_idx_t& outs, std::map<uint64_t, std::vector<
                 }
 
                 ++keyIndex;
-              } else if (out.target.type() == typeid(MultisignatureOutput)) {
-                keyIndex += boost::get<MultisignatureOutput>(out.target).keys.size();
               }
             }
         }
@@ -154,7 +168,7 @@ bool init_spent_output_indices(map_output_idx_t& outs, map_output_t& outs_mine, 
     return true;
 }
 
-bool fill_output_entries(std::vector<output_index>& out_indices, size_t sender_out, size_t nmix, size_t& real_entry_idx, std::vector<TransactionSourceEntry::OutputEntry>& output_entries)
+bool fill_output_entries(std::vector<output_index>& out_indices, size_t sender_out, size_t nmix, size_t& real_entry_idx, std::vector<CryptoNote::TransactionTypes::GlobalOutput>& output_entries)
 {
   if (out_indices.size() <= nmix)
     return false;
@@ -183,14 +197,14 @@ bool fill_output_entries(std::vector<output_index>& out_indices, size_t sender_o
     if (append)
     {
       const KeyOutput& otk = boost::get<KeyOutput>(oi.out);
-      output_entries.push_back(TransactionSourceEntry::OutputEntry(oi.idx, otk.key));
+      output_entries.push_back({otk.key, oi.idx});
     }
   }
 
   return 0 == rest && sender_out_found;
 }
 
-bool fill_tx_sources(std::vector<TransactionSourceEntry>& sources, const std::vector<test_event_entry>& events,
+bool fill_tx_sources(std::vector<CryptoNote::TxBuildInput>& sources, const std::vector<test_event_entry>& events,
                      const Block& blk_head, const CryptoNote::AccountBase& from, uint64_t amount, size_t nmix)
 {
     map_output_idx_t outs;
@@ -219,19 +233,20 @@ bool fill_tx_sources(std::vector<TransactionSourceEntry>& sources, const std::ve
             if (oi.spent)
                 continue;
 
-            CryptoNote::TransactionSourceEntry ts;
-            ts.amount = oi.amount;
-            ts.realOutputIndexInTransaction = oi.out_no;
-            ts.realTransactionPublicKey = getTransactionPublicKeyFromExtra(oi.p_tx->extra); // incoming tx public key
+            CryptoNote::TxBuildInput ts;
+            ts.keyInfo.amount = oi.amount;
+            ts.keyInfo.realOutput.outputInTransaction = oi.out_no;
+            ts.keyInfo.realOutput.transactionPublicKey = getTransactionPublicKeyFromExtra(oi.p_tx->extra);
+            ts.senderKeys = from.getAccountKeys();
             size_t realOutput;
-            if (!fill_output_entries(outs[o.first], sender_out, nmix, realOutput, ts.outputs))
+            if (!fill_output_entries(outs[o.first], sender_out, nmix, realOutput, ts.keyInfo.outputs))
               continue;
 
-            ts.realOutput = realOutput;
+            ts.keyInfo.realOutput.transactionIndex = realOutput;
 
             sources.push_back(ts);
 
-            sources_amount += ts.amount;
+            sources_amount += ts.keyInfo.amount;
             sources_found = amount <= sources_amount;
         }
 
@@ -242,16 +257,16 @@ bool fill_tx_sources(std::vector<TransactionSourceEntry>& sources, const std::ve
     return sources_found;
 }
 
-bool fill_tx_destination(TransactionDestinationEntry &de, const CryptoNote::AccountBase &to, uint64_t amount) {
-    de.addr = to.getAccountKeys().address;
+bool fill_tx_destination(CryptoNote::TxBuildOutput &de, const CryptoNote::AccountBase &to, uint64_t amount) {
+    de.destination = to.getAccountKeys().address;
     de.amount = amount;
     return true;
 }
 
 void fill_tx_sources_and_destinations(const std::vector<test_event_entry>& events, const Block& blk_head,
                                       const CryptoNote::AccountBase& from, const CryptoNote::AccountBase& to,
-                                      uint64_t amount, uint64_t fee, size_t nmix, std::vector<TransactionSourceEntry>& sources,
-                                      std::vector<TransactionDestinationEntry>& destinations)
+                                      uint64_t amount, uint64_t fee, size_t nmix, std::vector<CryptoNote::TxBuildInput>& sources,
+                                      std::vector<CryptoNote::TxBuildOutput>& destinations)
 {
   sources.clear();
   destinations.clear();
@@ -259,12 +274,12 @@ void fill_tx_sources_and_destinations(const std::vector<test_event_entry>& event
   if (!fill_tx_sources(sources, events, blk_head, from, amount + fee, nmix))
     throw std::runtime_error("couldn't fill transaction sources");
 
-  TransactionDestinationEntry de;
+  CryptoNote::TxBuildOutput de;
   if (!fill_tx_destination(de, to, amount))
     throw std::runtime_error("couldn't fill transaction destination");
   destinations.push_back(de);
 
-  TransactionDestinationEntry de_change;
+  CryptoNote::TxBuildOutput de_change;
   uint64_t cache_back = get_inputs_amount(sources) - (amount + fee);
   if (0 < cache_back)
   {
@@ -278,11 +293,17 @@ bool construct_tx_to_key(Logging::ILogger& logger, const std::vector<test_event_
                          const CryptoNote::AccountBase& from, const CryptoNote::AccountBase& to, uint64_t amount,
                          uint64_t fee, size_t nmix)
 {
-  vector<TransactionSourceEntry> sources;
-  vector<TransactionDestinationEntry> destinations;
+  vector<CryptoNote::TxBuildInput> sources;
+  vector<CryptoNote::TxBuildOutput> destinations;
   fill_tx_sources_and_destinations(events, blk_head, from, to, amount, fee, nmix, sources, destinations);
 
-  return constructTransaction(from.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx, 0, logger);
+  Crypto::SecretKey txkey;
+  try {
+    auto itx = CryptoNote::buildTransaction(sources, destinations, from.getAccountKeys().viewSecretKey, "", 0, 0, txkey);
+    return CryptoNote::fromBinaryArray(tx, itx->getTransactionData());
+  } catch (...) {
+    return false;
+  }
 }
 
 Transaction construct_tx_with_fee(Logging::ILogger& logger, std::vector<test_event_entry>& events, const Block& blk_head,

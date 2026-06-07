@@ -1,9 +1,13 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2016-2017 BXC developers
+// Copyright (c) 2017 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "JsonValue.h"
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 namespace Common {
@@ -105,7 +109,7 @@ JsonValue::JsonValue(Bool value) : type(BOOL), valueBool(value) {
 JsonValue::JsonValue(Integer value) : type(INTEGER), valueInteger(value) {
 }
 
-JsonValue::JsonValue(Nil) : type(NIL) {
+JsonValue::JsonValue(Nile) : type(NIL) {
 }
 
 JsonValue::JsonValue(const Object& value) {
@@ -304,7 +308,7 @@ JsonValue& JsonValue::operator=(Integer value) {
   return *this;
 }
 
-JsonValue& JsonValue::operator=(Nil) {
+JsonValue& JsonValue::operator=(Nile) {
   if (type != NIL) {
     destructValue();
     type = NIL;
@@ -569,6 +573,17 @@ JsonValue JsonValue::fromString(const std::string& source) {
   return jsonValue;
 }
 
+JsonValue JsonValue::fromStringWithWhiteSpaces(const std::string& source) {
+  JsonValue jsonValue;
+  std::istringstream stream(source);
+  stream >> std::noskipws >> jsonValue;
+  if (stream.fail()) {
+    throw std::runtime_error("Unable to parse JsonValue");
+  }
+
+  return jsonValue;
+}
+
 std::string JsonValue::toString() const {
   std::ostringstream stream;
   stream << *this;
@@ -637,9 +652,8 @@ std::ostream& operator<<(std::ostream& out, const JsonValue& jsonValue) {
 namespace {
 
 char readChar(std::istream& in) {
-  char c;
-
-  if (!(in >> c)) {
+  char c = static_cast<char>(in.get());
+  if (!in) {
     throw std::runtime_error("Unable to parse: unexpected end of stream");
   }
 

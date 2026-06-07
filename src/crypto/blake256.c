@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "sysendian.h"
 #include "blake256.h"
 
 #define U8TO32(p) \
@@ -323,4 +324,58 @@ void hmac_blake224_hash(uint8_t *out, const uint8_t *key, uint64_t keylen, const
     hmac_blake224_init(&S, key, keylen);
     hmac_blake224_update(&S, in, inlen * 8);
     hmac_blake224_final(&S, out);
+}
+
+void pbkdf2_blake256(const uint8_t * passwd, size_t passwdlen, const uint8_t * salt,
+  size_t saltlen, uint64_t c, uint8_t * buf, size_t dkLen)
+{
+  hmac_state PShctx, hctx;
+  size_t i;
+  uint8_t ivec[4];
+  uint8_t U[32];
+  uint8_t T[32];
+  uint64_t j;
+  int k;
+  size_t clen;
+
+  /* Compute HMAC state after processing P and S. */
+  hmac_blake256_init(&PShctx, passwd, passwdlen);
+  hmac_blake256_update(&PShctx, salt, saltlen);
+
+  /* Iterate through the blocks. */
+  for (i = 0; i * 32 < dkLen; i++) {
+    /* Generate INT(i + 1). */
+    be32enc(ivec, (uint32_t)(i + 1));
+
+    /* Compute U_1 = PRF(P, S || INT(i)). */
+    memcpy(&hctx, &PShctx, sizeof(hmac_state));
+    hmac_blake256_update(&hctx, ivec, 4);
+    hmac_blake256_final(&hctx, U);
+
+    /* T_i = U_1 ... */
+    memcpy(T, U, 32);
+
+    for (j = 2; j <= c; j++) {
+      /* Compute U_j. */
+      hmac_blake256_init(&hctx, passwd, passwdlen);
+      hmac_blake256_update(&hctx, U, 32);
+      hmac_blake256_final(&hctx, U);
+
+      /* ... xor U_j ... */
+      for (k = 0; k < 32; k++) {
+        T[k] ^= U[k];
+      }
+    }
+
+    /* Copy as many bytes as necessary into buf. */
+    clen = dkLen - i * 32;
+    if (clen > 32) {
+      clen = 32;
+    }
+
+    memcpy(&buf[i * 32], T, clen);
+  }
+
+  /* Clean PShctx, since we never called _Final on it. */
+  memset(&PShctx, 0, sizeof(hmac_state));
 }

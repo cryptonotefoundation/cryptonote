@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -10,8 +23,23 @@
 
 #include <boost/program_options.hpp>
 #include "P2pProtocolTypes.h"
+#include "Common/CommandLine.h"
+#include "CryptoNoteConfig.h"
 
 namespace CryptoNote {
+
+  const command_line::arg_descriptor<std::string> arg_p2p_bind_ip                          = { "p2p-bind-ip", "Interface for p2p network protocol", "0.0.0.0" };
+  const command_line::arg_descriptor<uint16_t>    arg_p2p_bind_port                        = { "p2p-bind-port", "Port for p2p network protocol", P2P_DEFAULT_PORT };
+  const command_line::arg_descriptor<uint16_t>    arg_p2p_external_port                    = { "p2p-external-port", "External port for p2p network protocol (if port forwarding used with NAT)", 0 };
+  const command_line::arg_descriptor<bool>        arg_p2p_allow_local_ip                   = { "allow-local-ip", "Allow local ip add to peer list, mostly in debug purposes" };
+  const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_add_peer           = { "add-peer", "Manually add peer to local peerlist" };
+  const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_add_priority_node  = { "add-priority-node", "Specify list of peers to connect to and attempt to keep the connection open" };
+  const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_add_exclusive_node = { "add-exclusive-node", "Specify list of peers to connect to only."
+                                                                                               " If this option is given the options add-priority-node and seed-node are ignored" };
+  const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_seed_node          = { "seed-node", "Connect to a node to retrieve peer addresses, and disconnect (host:port or ip:port)" };
+  const command_line::arg_descriptor<std::string> arg_ban_list                             = { "ban-list", "Specify ban list file, one IP address per line", "", true };
+  const command_line::arg_descriptor<bool>        arg_p2p_hide_my_port                     = { "hide-my-port", "Do not announce yourself as peerlist candidate", false, true };
+  const command_line::arg_descriptor<uint32_t>    arg_connections_count                    = { "connections", "Set number of connected peers", CryptoNote::P2P_DEFAULT_CONNECTIONS_COUNT };
 
 class NetNodeConfig {
 public:
@@ -29,8 +57,11 @@ public:
   std::vector<NetworkAddress> getPriorityNodes() const;
   std::vector<NetworkAddress> getExclusiveNodes() const;
   std::vector<NetworkAddress> getSeedNodes() const;
+  std::vector<std::string> getSeedNodeStrings() const;
+  std::vector<uint32_t> getBanList() const;
   bool getHideMyPort() const;
   std::string getConfigFolder() const;
+  uint32_t getConnectionsCount() const;
 
   void setP2pStateFilename(const std::string& filename);
   void setTestnet(bool isTestnet);
@@ -42,8 +73,10 @@ public:
   void setPriorityNodes(const std::vector<NetworkAddress>& addresses);
   void setExclusiveNodes(const std::vector<NetworkAddress>& addresses);
   void setSeedNodes(const std::vector<NetworkAddress>& addresses);
+  void setSeedNodeStrings(const std::vector<std::string>& addresses);
   void setHideMyPort(bool hide);
   void setConfigFolder(const std::string& folder);
+  void setConnectionsCount(uint32_t count);
 
 private:
   std::string bindIp;
@@ -54,10 +87,13 @@ private:
   std::vector<NetworkAddress> priorityNodes;
   std::vector<NetworkAddress> exclusiveNodes;
   std::vector<NetworkAddress> seedNodes;
+  std::vector<std::string> seedNodeStrings;
+  std::vector<uint32_t> banList;
   bool hideMyPort;
   std::string configFolder;
   std::string p2pStateFilename;
   bool testnet;
+  uint32_t connectionsCount;
 };
 
 } //namespace nodetool

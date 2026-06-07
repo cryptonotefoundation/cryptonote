@@ -1,12 +1,28 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018-2019, The TurtleCoin Developers
+// Copyright (c) 2016-2019, The Karbo Developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <cstdint>
 #include <cstddef>
 #include <fstream>
+#include <cstdio>
 #include <iomanip>
 #include <iostream>
 #include <list>
@@ -204,7 +220,17 @@ template<class T> bool SwappedVector<T>::open(const std::string& itemFileName, c
       uint32_t itemSize;
       m_indexesFile.read(reinterpret_cast<char*>(&itemSize), sizeof itemSize);
       if (!m_indexesFile) {
-        return false;
+        if (!m_indexesFile.eof()) { //fail it only if the other IO occured
+          return false;
+        }
+        else {
+          std::cout << "Blockchain indexes file appears to be corrupted. Attempting automatic recovery by rewinding to " << std::to_string(i) << std::endl;
+          m_indexesFile.clear(); //clear the error
+          m_indexesFile.seekp(0); //retain compability with C98
+          m_indexesFile.write(reinterpret_cast<char*>(&i), sizeof i); //update the count
+          m_indexesFile.flush(); //commit
+          break;
+        }
       }
 
       offsets.emplace_back(itemsFileSize);

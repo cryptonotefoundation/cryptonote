@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "InProcTestNode.h"
 
@@ -60,7 +73,7 @@ void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
 
   try {
 
-    core.reset(new CryptoNote::core(m_currency, NULL, log));
+    core.reset(new CryptoNote::Core(m_currency, NULL, log, dispatcher));
     protocol.reset(new CryptoNote::CryptoNoteProtocolHandler(m_currency, dispatcher, *core, NULL, log));
     p2pNode.reset(new CryptoNote::NodeServer(dispatcher, *protocol, log));
     protocol->set_p2p_endpoint(p2pNode.get());
@@ -121,11 +134,9 @@ void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
   core.reset();
 }
 
-bool InProcTestNode::startMining(size_t threadsCount, const std::string &address) {
+bool InProcTestNode::startMining(size_t threadsCount, const CryptoNote::AccountKeys& keys) {
   assert(core.get());
-  AccountPublicAddress addr;
-  m_currency.parseAccountAddressString(address, addr);
-  return core->get_miner().start(addr, threadsCount);
+  return core->get_miner().start(keys, threadsCount);
 }
 
 bool InProcTestNode::stopMining() {
@@ -143,11 +154,9 @@ bool InProcTestNode::stopDaemon() {
   return true;
 }
 
-bool InProcTestNode::getBlockTemplate(const std::string &minerAddress, CryptoNote::Block &blockTemplate, uint64_t &difficulty) {
-  AccountPublicAddress addr;
-  m_currency.parseAccountAddressString(minerAddress, addr);
+bool InProcTestNode::getBlockTemplate(const CryptoNote::AccountKeys& minerKeys, CryptoNote::Block& blockTemplate, uint64_t& difficulty) {
   uint32_t height = 0;
-  return core->get_block_template(blockTemplate, addr, difficulty, height, BinaryArray());
+  return core->get_block_template(blockTemplate, minerKeys, difficulty, height, BinaryArray());
 }
 
 bool InProcTestNode::submitBlock(const std::string& block) {
@@ -184,7 +193,7 @@ bool InProcTestNode::makeINode(std::unique_ptr<CryptoNote::INode> &node) {
 }
 
 uint64_t InProcTestNode::getLocalHeight() {
-  return core->get_current_blockchain_height();
+  return core->getCurrentBlockchainHeight();
 }
 
 }

@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CryptoNoteSerialization.h"
 
@@ -36,7 +49,6 @@ size_t getSignaturesCount(const TransactionInput& input) {
   struct txin_signature_size_visitor : public boost::static_visitor < size_t > {
     size_t operator()(const BaseInput& txin) const { return 0; }
     size_t operator()(const KeyInput& txin) const { return txin.outputIndexes.size(); }
-    size_t operator()(const MultisignatureInput& txin) const { return txin.signatureCount; }
   };
 
   return boost::apply_visitor(txin_signature_size_visitor(), input);
@@ -45,9 +57,7 @@ size_t getSignaturesCount(const TransactionInput& input) {
 struct BinaryVariantTagGetter: boost::static_visitor<uint8_t> {
   uint8_t operator()(const CryptoNote::BaseInput) { return  0xff; }
   uint8_t operator()(const CryptoNote::KeyInput) { return  0x2; }
-  uint8_t operator()(const CryptoNote::MultisignatureInput) { return  0x3; }
   uint8_t operator()(const CryptoNote::KeyOutput) { return  0x2; }
-  uint8_t operator()(const CryptoNote::MultisignatureOutput) { return  0x3; }
   uint8_t operator()(const CryptoNote::Transaction) { return  0xcc; }
   uint8_t operator()(const CryptoNote::Block) { return  0xbb; }
 };
@@ -76,12 +86,6 @@ void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNot
     in = v;
     break;
   }
-  case 0x3: {
-    CryptoNote::MultisignatureInput v;
-    serializer(v, "value");
-    in = v;
-    break;
-  }
   default:
     throw std::runtime_error("Unknown variant tag");
   }
@@ -91,12 +95,6 @@ void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNot
   switch(tag) {
   case 0x2: {
     CryptoNote::KeyOutput v;
-    serializer(v, "data");
-    out = v;
-    break;
-  }
-  case 0x3: {
-    CryptoNote::MultisignatureOutput v;
     serializer(v, "data");
     out = v;
     break;
@@ -189,7 +187,9 @@ void serialize(Transaction& tx, ISerializer& serializer) {
   //TODO: make arrays without sizes
 //  serializer.beginArray(sigSize, "signatures");
   
-  if (serializer.type() == ISerializer::INPUT) {
+  //if (serializer.type() == ISerializer::INPUT) {
+  // ignore base transaction
+  if (serializer.type() == ISerializer::INPUT && !(sigSize == 1 && tx.inputs[0].type() == typeid(BaseInput))) {
     tx.signatures.resize(sigSize);
   }
 
@@ -255,10 +255,8 @@ void serialize(KeyInput& key, ISerializer& serializer) {
   serializer(key.keyImage, "k_image");
 }
 
-void serialize(MultisignatureInput& multisignature, ISerializer& serializer) {
-  serializer(multisignature.amount, "amount");
-  serializer(multisignature.signatureCount, "signatures");
-  serializer(multisignature.outputIndex, "outputIndex");
+void serialize(TransactionInputs & inputs, ISerializer & serializer) {
+  serializer(inputs, "vin");
 }
 
 void serialize(TransactionOutput& output, ISerializer& serializer) {
@@ -286,21 +284,96 @@ void serialize(KeyOutput& key, ISerializer& serializer) {
   serializer(key.key, "key");
 }
 
-void serialize(MultisignatureOutput& multisignature, ISerializer& serializer) {
-  serializer(multisignature.keys, "keys");
-  serializer(multisignature.requiredSignatureCount, "required_signatures");
+void serialize(ParentBlockSerializer& pbs, ISerializer& serializer) {
+  serializer(pbs.m_parentBlock.majorVersion, "majorVersion");
+
+  serializer(pbs.m_parentBlock.minorVersion, "minorVersion");
+  serializer(pbs.m_timestamp, "timestamp");
+  serializer(pbs.m_parentBlock.previousBlockHash, "prevId");
+  serializer.binary(&pbs.m_nonce, sizeof(pbs.m_nonce), "nonce");
+
+  if (pbs.m_hashingSerialization) {
+    Crypto::Hash minerTxHash;
+    if (!getObjectHash(pbs.m_parentBlock.baseTransaction, minerTxHash)) {
+      throw std::runtime_error("Get transaction hash error");
+    }
+
+    Crypto::Hash merkleRoot;
+    Crypto::tree_hash_from_branch(pbs.m_parentBlock.baseTransactionBranch.data(), pbs.m_parentBlock.baseTransactionBranch.size(), minerTxHash, 0, merkleRoot);
+
+    serializer(merkleRoot, "merkleRoot");
+  }
+
+  uint64_t txNum = static_cast<uint64_t>(pbs.m_parentBlock.transactionCount);
+  serializer(txNum, "numberOfTransactions");
+  pbs.m_parentBlock.transactionCount = static_cast<uint16_t>(txNum);
+  if (pbs.m_parentBlock.transactionCount < 1) {
+    throw std::runtime_error("Wrong transactions number");
+  }
+
+  if (pbs.m_headerOnly) {
+    return;
+  }
+
+  size_t branchSize = Crypto::tree_depth(pbs.m_parentBlock.transactionCount);
+  if (serializer.type() == ISerializer::OUTPUT) {
+    if (pbs.m_parentBlock.baseTransactionBranch.size() != branchSize) {
+      throw std::runtime_error("Wrong miner transaction branch size");
+    }
+  } else {
+    pbs.m_parentBlock.baseTransactionBranch.resize(branchSize);
+  }
+
+//  serializer(m_parentBlock.baseTransactionBranch, "baseTransactionBranch");
+  //TODO: Make arrays with computable size! This code won't work with json serialization!
+  for (Crypto::Hash& hash: pbs.m_parentBlock.baseTransactionBranch) {
+    serializer(hash, "");
+  }
+
+  serializer(pbs.m_parentBlock.baseTransaction, "minerTx");
+
+  TransactionExtraMergeMiningTag mmTag;
+  if (!getMergeMiningTagFromExtra(pbs.m_parentBlock.baseTransaction.extra, mmTag)) {
+    throw std::runtime_error("Can't get extra merge mining tag");
+  }
+
+  if (mmTag.depth > 8 * sizeof(Crypto::Hash)) {
+    throw std::runtime_error("Wrong merge mining tag depth");
+  }
+
+  if (serializer.type() == ISerializer::OUTPUT) {
+    if (mmTag.depth != pbs.m_parentBlock.blockchainBranch.size()) {
+      throw std::runtime_error("Blockchain branch size must be equal to merge mining tag depth");
+    }
+  } else {
+    pbs.m_parentBlock.blockchainBranch.resize(mmTag.depth);
+  }
+
+//  serializer(m_parentBlock.blockchainBranch, "blockchainBranch");
+  //TODO: Make arrays with computable size! This code won't work with json serialization!
+  for (Crypto::Hash& hash: pbs.m_parentBlock.blockchainBranch) {
+    serializer(hash, "");
+  }
 }
 
 void serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
   serializer(header.majorVersion, "major_version");
-  if (header.majorVersion > BLOCK_MAJOR_VERSION_1) {
+  if (header.majorVersion > BLOCK_MAJOR_VERSION_6) {
     throw std::runtime_error("Wrong major version");
   }
 
   serializer(header.minorVersion, "minor_version");
-  serializer(header.timestamp, "timestamp");
-  serializer(header.previousBlockHash, "prev_id");
-  serializer.binary(&header.nonce, sizeof(header.nonce), "nonce");
+  
+  if (header.majorVersion == BLOCK_MAJOR_VERSION_2 || header.majorVersion == BLOCK_MAJOR_VERSION_3) {
+    serializer(header.previousBlockHash, "prev_id");
+  } else if (header.majorVersion == BLOCK_MAJOR_VERSION_1 || header.majorVersion >= BLOCK_MAJOR_VERSION_4) {
+    serializer(header.timestamp, "timestamp");
+    serializer(header.previousBlockHash, "prev_id");
+    serializer.binary(&header.nonce, sizeof(header.nonce), "nonce");
+  }
+  else {
+    throw std::runtime_error("Wrong major version");
+  }
 }
 
 void serialize(BlockHeader& header, ISerializer& serializer) {
@@ -309,6 +382,15 @@ void serialize(BlockHeader& header, ISerializer& serializer) {
 
 void serialize(Block& block, ISerializer& serializer) {
   serializeBlockHeader(block, serializer);
+
+  if (block.majorVersion >= BLOCK_MAJOR_VERSION_5) {
+    serializer(block.signature, "signature");
+  }
+
+  if (block.majorVersion == BLOCK_MAJOR_VERSION_2 || block.majorVersion == BLOCK_MAJOR_VERSION_3) {
+    auto parentBlockSerializer = makeParentBlockSerializer(block, false, false);
+    serializer(parentBlockSerializer, "parent_block");
+  }
 
   serializer(block.baseTransaction, "miner_tx");
   serializer(block.transactionHashes, "tx_hashes");
@@ -323,6 +405,29 @@ void serialize(AccountKeys& keys, ISerializer& s) {
   s(keys.address, "m_account_address");
   s(keys.spendSecretKey, "m_spend_secret_key");
   s(keys.viewSecretKey, "m_view_secret_key");
+}
+
+void doSerialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer) {
+  uint64_t depth = static_cast<uint64_t>(tag.depth);
+  serializer(depth, "depth");
+  tag.depth = static_cast<size_t>(depth);
+  serializer(tag.merkleRoot, "merkle_root");
+}
+
+void serialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer) {
+  if (serializer.type() == ISerializer::OUTPUT) {
+    std::string field;
+    StringOutputStream os(field);
+    BinaryOutputStreamSerializer output(os);
+    doSerialize(tag, output);
+    serializer(field, "");
+  } else {
+    std::string field;
+    serializer(field, "");
+    MemoryInputStream stream(field.data(), field.size());
+    BinaryInputStreamSerializer input(stream);
+    doSerialize(tag, input);
+  }
 }
 
 void serialize(KeyPair& keyPair, ISerializer& serializer) {

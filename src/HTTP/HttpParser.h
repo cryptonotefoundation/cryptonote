@@ -1,34 +1,27 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2026, The Karbo developers
+//
+// This file is part of Karbo.
 
-#ifndef HTTPPARSER_H_
-#define HTTPPARSER_H_
+#pragma once
 
 #include <iostream>
-#include <map>
-#include <string>
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 
 namespace CryptoNote {
 
-//Blocking HttpParser
 class HttpParser {
 public:
-  HttpParser() {};
+  HttpParser();
 
   void receiveRequest(std::istream& stream, HttpRequest& request);
   void receiveResponse(std::istream& stream, HttpResponse& response);
-  static HttpResponse::HTTP_STATUS parseResponseStatusFromString(const std::string& status);
+
 private:
-  void readWord(std::istream& stream, std::string& word);
-  void readHeaders(std::istream& stream, HttpRequest::Headers &headers);
-  bool readHeader(std::istream& stream, std::string& name, std::string& value);
-  size_t getBodyLen(const HttpRequest::Headers& headers);
-  void readBody(std::istream& stream, std::string& body, const size_t bodyLen);
+  void receiveHeaders(std::istream& stream, HttpRequest::Headers& headers);
+  void receiveBody(std::istream& stream, std::string& body, size_t bodyLength);
+  size_t getContentLength(const HttpRequest::Headers& headers);
 };
 
-} //namespace CryptoNote
-
-#endif /* HTTPPARSER_H_ */
+} // namespace CryptoNote
